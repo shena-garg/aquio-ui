@@ -75,8 +75,10 @@ const COLUMN_DEFS: ColDef[] = [
       <TableHead className={`${TH} ${headCls}`} style={style}>Product Code</TableHead>
     ),
     renderCell: (product, { cellCls, style }) => (
-      <TableCell className={`px-3 text-[13px] text-gray-600 ${cellCls}`} style={style}>
-        {product.sku?.trim() ? product.sku : "—"}
+      <TableCell className={`px-3 ${cellCls}`} style={style}>
+        <span className="text-[13px] font-medium text-[#0F1720]">
+          {product.sku?.trim() ? product.sku : "—"}
+        </span>
       </TableCell>
     ),
   },
