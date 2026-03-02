@@ -5,18 +5,19 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  accessToken: string;
+  user: User;
 }
 
 export const authService = {
   login: (data: LoginPayload) =>
-    apiClient.post<AuthResponse>("/auth/login", data),
-  logout: () => apiClient.post("/auth/logout"),
-  me: () => apiClient.get<AuthResponse["user"]>("/auth/me"),
+    apiClient.post<AuthResponse>("/users/login", data),
+  me: () => apiClient.get<User>("/users/my-own"),
 };
