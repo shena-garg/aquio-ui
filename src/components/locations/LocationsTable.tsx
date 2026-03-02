@@ -30,13 +30,13 @@ function formatAddress(line1: string, line2: string): string {
 function SkeletonRow() {
   return (
     <TableRow className="animate-pulse">
+      <TableCell><div className="h-6 w-6 rounded bg-gray-200" /></TableCell>
       <TableCell><div className="h-3.5 w-32 rounded bg-gray-200" /></TableCell>
       <TableCell><div className="h-3.5 w-40 rounded bg-gray-200" /></TableCell>
       <TableCell><div className="h-3.5 w-20 rounded bg-gray-200" /></TableCell>
       <TableCell><div className="h-3.5 w-24 rounded bg-gray-200" /></TableCell>
       <TableCell><div className="h-3.5 w-16 rounded bg-gray-200" /></TableCell>
       <TableCell><div className="h-3.5 w-28 rounded bg-gray-200" /></TableCell>
-      <TableCell><div className="h-6 w-6 rounded bg-gray-200" /></TableCell>
     </TableRow>
   );
 }
@@ -60,13 +60,13 @@ export function LocationsTable({ locations, isLoading }: LocationsTableProps) {
       <Table>
         <TableHeader>
           <TableRow className="border-b border-gray-200 bg-gray-50 hover:bg-gray-50">
+            <TableHead className={`${TH} w-[50px]`} />
             <TableHead className={TH}>Name</TableHead>
             <TableHead className={TH}>Address</TableHead>
             <TableHead className={TH}>City</TableHead>
             <TableHead className={TH}>State</TableHead>
             <TableHead className={TH}>Zip</TableHead>
             <TableHead className={TH}>GST Number</TableHead>
-            <TableHead className={`${TH} w-[50px]`} />
           </TableRow>
         </TableHeader>
 
@@ -88,6 +88,25 @@ export function LocationsTable({ locations, isLoading }: LocationsTableProps) {
                 key={location._id}
                 className="group border-b border-gray-100 hover:bg-gray-50"
               >
+                <TableCell className="px-3 w-[50px]">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+                        aria-label="More actions"
+                      >
+                        <MoreHorizontal className="h-[15px] w-[15px]" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem
+                        onClick={() => router.push(`/locations/${location._id}/edit`)}
+                      >
+                        Edit Location
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
                 <TableCell className="px-3">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-medium text-[#0F1720]">
@@ -114,25 +133,6 @@ export function LocationsTable({ locations, isLoading }: LocationsTableProps) {
                 </TableCell>
                 <TableCell className="px-3 text-[13px] text-gray-600">
                   {location.gstNumber || "—"}
-                </TableCell>
-                <TableCell className="px-3 w-[50px]">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                        aria-label="More actions"
-                      >
-                        <MoreHorizontal className="h-[15px] w-[15px]" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem
-                        onClick={() => router.push(`/locations/${location._id}/edit`)}
-                      >
-                        Edit Location
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))
