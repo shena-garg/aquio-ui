@@ -24,7 +24,7 @@ const SEARCH_FIELDS: { key: SearchFieldKey; label: string }[] = [
 ];
 
 const SELECT_INPUT_CLASS =
-  "h-8 cursor-pointer rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#4A51D8]";
+  "h-8 cursor-pointer rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]";
 
 // ── Page component ───────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ export default function UsersPage() {
     <Button
       size="sm"
       onClick={() => router.push("/users/new")}
-      className="h-8 gap-1.5 text-[13px] !bg-[#4A51D8] hover:!bg-[#3941C8] text-white"
+      className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
     >
       <Plus className="h-3.5 w-3.5" />
       Add User
@@ -137,7 +137,7 @@ export default function UsersPage() {
               className={cn(
                 "flex items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors whitespace-nowrap",
                 isActive
-                  ? "border-[#4A51D8] text-[#4A51D8]"
+                  ? "border-[#0d9488] text-[#0d9488]"
                   : "border-transparent text-gray-500 hover:text-[#0F1720]"
               )}
             >
@@ -168,14 +168,14 @@ export default function UsersPage() {
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="h-8 w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#4A51D8] focus-visible:ring-[#4A51D8]/20"
+            className="h-8 w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
           />
 
           <Button
             onClick={handleSearch}
             disabled={!searchValue.trim()}
             size="sm"
-            className="h-8 px-4 text-[13px] !bg-[#4A51D8] hover:!bg-[#3941C8] text-white disabled:opacity-50"
+            className="h-8 px-4 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
           >
             Search
           </Button>

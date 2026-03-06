@@ -53,7 +53,7 @@ export function PageHeader({
                   onLimitChange(Number(e.target.value));
                   onPageChange(1);
                 }}
-                className="cursor-pointer rounded-md border border-gray-200 bg-white px-2 py-1 text-[13px] text-[#0F1720] outline-none focus:border-[#4A51D8]"
+                className="cursor-pointer rounded-md border border-gray-200 bg-white px-2 py-1 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
               >
                 {LIMIT_OPTIONS.map((opt) => (
                   <option key={opt} value={opt}>

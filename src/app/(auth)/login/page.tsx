@@ -82,7 +82,7 @@ export default function LoginPage() {
                 placeholder="name@company.com"
                 {...register("email")}
                 aria-invalid={!!errors.email}
-                className="h-[46px] rounded-md border border-gray-200 bg-white text-sm text-[#0F1720] placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#4A51D8]/25 focus-visible:border-[#4A51D8] aria-invalid:border-red-400 aria-invalid:focus-visible:ring-red-200"
+                className="h-[46px] rounded-md border border-gray-200 bg-white text-sm text-[#0F1720] placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#0d9488]/25 focus-visible:border-[#0d9488] aria-invalid:border-red-400 aria-invalid:focus-visible:ring-red-200"
               />
               {errors.email && (
                 <p className="text-xs text-red-500">{errors.email.message}</p>
@@ -103,7 +103,7 @@ export default function LoginPage() {
                 placeholder="••••••••••••"
                 {...register("password")}
                 aria-invalid={!!errors.password}
-                className="h-[46px] rounded-md border border-gray-200 bg-white text-sm text-[#0F1720] placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#4A51D8]/25 focus-visible:border-[#4A51D8] aria-invalid:border-red-400 aria-invalid:focus-visible:ring-red-200"
+                className="h-[46px] rounded-md border border-gray-200 bg-white text-sm text-[#0F1720] placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#0d9488]/25 focus-visible:border-[#0d9488] aria-invalid:border-red-400 aria-invalid:focus-visible:ring-red-200"
               />
               {errors.password && (
                 <p className="text-xs text-red-500">{errors.password.message}</p>
@@ -111,7 +111,7 @@ export default function LoginPage() {
               <div className="flex justify-end">
                 <Link
                   href="/forgot-password"
-                  className="text-[12px] font-medium text-[#4A51D8] hover:underline"
+                  className="text-[12px] font-medium text-[#0d9488] hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -122,7 +122,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isDisabled}
-              className="w-full h-12 rounded-md !bg-[#4A51D8] hover:!bg-[#3941C8] text-white text-sm font-semibold tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-12 rounded-md !bg-[#0d9488] hover:!bg-[#0f766e] text-white text-sm font-semibold tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
@@ -137,7 +137,7 @@ export default function LoginPage() {
             {/* Sign up link */}
             <p className="text-center text-[13px] text-gray-500">
               New to Aquio?{" "}
-              <Link href="/signup" className="text-[#4A51D8] font-medium hover:underline">
+              <Link href="/signup" className="text-[#0d9488] font-medium hover:underline">
                 Sign up
               </Link>
             </p>

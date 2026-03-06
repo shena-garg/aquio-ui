@@ -51,7 +51,10 @@ export interface PurchaseOrder {
   referenceId: string;
   supplierReferenceId: string;
   supplier: Supplier;
-  totalAmount: number;
+  buyer?: { name: string };
+  biller?: { name: string };
+  purchaseOrderPDF?: string;
+  totalAmount: { $numberDecimal: string } | number;
   totalQuantity: number;
   pendingQuantity: number;
   receiptCompletionPercentage: number;
@@ -60,6 +63,9 @@ export interface PurchaseOrder {
   commonUOM: string;
   products?: POProduct[];
   remainingItems?: PORemainingItem[];
+  receipts?: { _id: string }[];
+  notes?: string;
+  termsAndConditions?: string[];
 }
 
 export interface POStatusCounts {
@@ -125,6 +131,9 @@ export interface ForceCloseItem {
 }
 
 export const purchaseOrdersService = {
+  getById: (id: string) =>
+    apiClient.get<PurchaseOrder>(`/purchase-orders/${id}?comprehensive=true`),
+
   cancel: (id: string, body: { cancellationReason: string; cancellationNotes?: string }) =>
     apiClient.patch(`/purchase-orders/${id}/cancel`, body),
 

@@ -60,7 +60,7 @@ export function POSummaryStrip({
         <span className="font-semibold text-gray-900">{poNumber}</span>
         <ExternalLink
           size={14}
-          className="text-gray-400 hover:text-[#4A51D8] cursor-pointer ml-1"
+          className="text-gray-400 hover:text-[#0d9488] cursor-pointer ml-1"
           onClick={() => window.open(`/purchase-orders/${orderId}`, "_blank")}
         />
         <span

@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { PurchaseOrder, POOrderStatus } from "@/services/purchase-orders";
+import { QuantityCell } from "@/components/ui/QuantityCell";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
@@ -69,9 +70,10 @@ interface ReceiptCellProps {
   totalQuantity: number;
   pendingQuantity: number;
   receiptCompletionPercentage: number;
+  uom: string;
 }
 
-function ReceiptCell({ totalQuantity, pendingQuantity, receiptCompletionPercentage }: ReceiptCellProps) {
+function ReceiptCell({ totalQuantity, pendingQuantity, receiptCompletionPercentage, uom }: ReceiptCellProps) {
   const pending = pendingQuantity ?? 0;
   const total = totalQuantity ?? 0;
   const pct = Math.min(100, Math.round(receiptCompletionPercentage ?? 0));
@@ -83,11 +85,11 @@ function ReceiptCell({ totalQuantity, pendingQuantity, receiptCompletionPercenta
   return (
     <div className="flex min-w-[180px] flex-col gap-0.5">
       <span className="text-[12px] font-medium leading-tight text-[#0F1720] whitespace-nowrap">
-        {pending.toLocaleString()} / {total.toLocaleString()} Kg Pending
+        <QuantityCell value={pending} uom={uom} /> / <QuantityCell value={total} uom={uom} /> Pending
       </span>
       <div className="flex items-center gap-1.5">
         <div className="flex-1 rounded-full bg-gray-100 h-1">
-          <div className="bg-[#4A51D8] h-1 rounded-full" style={{ width: `${pct}%` }} />
+          <div className="bg-[#0d9488] h-1 rounded-full" style={{ width: `${pct}%` }} />
         </div>
         <span className="text-[10px] text-gray-400 whitespace-nowrap">{pct.toFixed(0)}%</span>
       </div>
@@ -145,7 +147,7 @@ const COLUMN_DEFS: ColDef[] = [
       <TableCell className={`px-3 ${cellCls}`} style={style}>
         <Link
           href={`/purchase-orders/${order.id}`}
-          className="text-[13px] font-medium text-[#4A51D8] hover:underline"
+          className="text-[13px] font-medium text-[#0d9488] hover:underline"
         >
           {order.poNumber}
         </Link>
@@ -248,6 +250,7 @@ const COLUMN_DEFS: ColDef[] = [
           totalQuantity={order.totalQuantity}
           pendingQuantity={order.pendingQuantity}
           receiptCompletionPercentage={order.receiptCompletionPercentage}
+          uom={order.commonUOM}
         />
       </TableCell>
     ),
@@ -260,7 +263,11 @@ const COLUMN_DEFS: ColDef[] = [
     ),
     renderCell: (order, { cellCls, style }) => (
       <TableCell className={`px-3 text-right text-[13px] font-medium text-[#0F1720] ${cellCls}`} style={style}>
-        {formatIndianAmount(order.totalAmount)}
+        {formatIndianAmount(
+          typeof order.totalAmount === 'number'
+            ? order.totalAmount
+            : parseFloat(order.totalAmount.$numberDecimal)
+        )}
       </TableCell>
     ),
   },
@@ -302,7 +309,7 @@ const COLUMN_DEFS: ColDef[] = [
     renderCell: (order, { cellCls, style }) => (
       <TableCell className={`px-3 text-right text-[13px] text-gray-600 ${cellCls}`} style={style}>
         {order.totalQuantity != null
-          ? `${order.totalQuantity.toLocaleString()} ${order.commonUOM ?? ""}`
+          ? <QuantityCell value={order.totalQuantity} uom={order.commonUOM ?? ""} />
           : "—"}
       </TableCell>
     ),
@@ -316,7 +323,7 @@ const COLUMN_DEFS: ColDef[] = [
     renderCell: (order, { cellCls, style }) => (
       <TableCell className={`px-3 text-right text-[13px] text-gray-600 ${cellCls}`} style={style}>
         {order.pendingQuantity != null
-          ? `${order.pendingQuantity.toLocaleString()} ${order.commonUOM ?? ""}`
+          ? <QuantityCell value={order.pendingQuantity} uom={order.commonUOM ?? ""} />
           : "—"}
       </TableCell>
     ),
@@ -489,7 +496,7 @@ export function POTable({
 
   return (
     <>
-      <div className={`transition-all duration-300 ${flash ? "ring-2 ring-[#4A51D8]/40 rounded-md" : ""}`}>
+      <div className={`transition-all duration-300 ${flash ? "ring-2 ring-[#0d9488]/40 rounded-md" : ""}`}>
         <div className="w-full overflow-x-auto bg-white">
           <Table className="min-w-[1600px]">
             <TableHeader>
@@ -535,7 +542,7 @@ export function POTable({
                       <div className="flex items-center gap-1">
                         <Link
                           href={`/purchase-orders/${order.id}`}
-                          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#4A51D8]"
+                          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0d9488]"
                           aria-label="View"
                         >
                           <Eye className="h-[15px] w-[15px]" />

@@ -38,7 +38,7 @@ export function POTabs({ activeStatus, counts, onChange }: POTabsProps) {
             className={cn(
               "flex items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors whitespace-nowrap",
               isActive
-                ? "border-[#4A51D8] text-[#4A51D8]"
+                ? "border-[#0d9488] text-[#0d9488]"
                 : "border-transparent text-gray-500 hover:text-[#0F1720]"
             )}
           >
@@ -48,7 +48,7 @@ export function POTabs({ activeStatus, counts, onChange }: POTabsProps) {
                 className={cn(
                   "rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none",
                   isActive
-                    ? "bg-[#4A51D8]/10 text-[#4A51D8]"
+                    ? "bg-[#0d9488]/10 text-[#0d9488]"
                     : "bg-gray-100 text-gray-500"
                 )}
               >

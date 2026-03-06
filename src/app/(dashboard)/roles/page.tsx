@@ -20,7 +20,7 @@ export default function RolesPage() {
     <Button
       size="sm"
       onClick={() => router.push("/roles/new")}
-      className="h-8 gap-1.5 text-[13px] !bg-[#4A51D8] hover:!bg-[#3941C8] text-white"
+      className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
     >
       <Plus className="h-3.5 w-3.5" />
       Add Role

@@ -246,7 +246,7 @@ export function CategoriesAccordion({
 
                   {/* Add Subcategory button */}
                   <button
-                    className="w-full text-left text-[#4A51D8] text-sm font-medium pl-10 py-2.5 bg-[#F6F7F8] hover:bg-gray-200 cursor-pointer border-t border-gray-100"
+                    className="w-full text-left text-[#0d9488] text-sm font-medium pl-10 py-2.5 bg-[#F6F7F8] hover:bg-gray-200 cursor-pointer border-t border-gray-100"
                     onClick={() =>
                       router.push(
                         `/categories/${category._id}/subcategories/new`

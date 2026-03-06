@@ -137,7 +137,7 @@ export function ConfirmPOModal({
           <Button
             disabled={isSubmitting}
             onClick={handleSubmit}
-            className="bg-[#4A51D8] hover:bg-[#3941C8] text-white"
+            className="bg-[#0d9488] hover:bg-[#0f766e] text-white"
           >
             {isSubmitting && (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />

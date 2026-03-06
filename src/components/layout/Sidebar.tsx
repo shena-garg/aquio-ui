@@ -1,8 +1,10 @@
 "use client";
 
+import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  LayoutDashboard,
   ShoppingCart,
   Store,
   ClipboardList,
@@ -15,26 +17,27 @@ import {
   ShieldCheck,
   Settings,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navSections = [
   {
-    label: "SOURCING",
+    label: "Sourcing",
     items: [
       { label: "Buy", href: "/buy", icon: ShoppingCart },
       { label: "Sell", href: "/sell", icon: Store },
     ],
   },
   {
-    label: "ORDERS",
+    label: "Orders",
     items: [
       { label: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList },
       { label: "Sales Orders", href: "/sales-orders", icon: FileCheck2 },
     ],
   },
   {
-    label: "CATALOG",
+    label: "Catalog",
     items: [
       { label: "Products", href: "/products", icon: Package },
       { label: "Categories", href: "/categories", icon: LayoutGrid },
@@ -42,7 +45,7 @@ const navSections = [
     ],
   },
   {
-    label: "ORGANIZATION",
+    label: "Organization",
     items: [
       { label: "Locations", href: "/locations", icon: MapPin },
       { label: "Users", href: "/users", icon: Users },
@@ -55,77 +58,121 @@ const navSections = [
 export function Sidebar() {
   const pathname = usePathname();
 
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-[220px] flex-col bg-white border-r border-gray-200">
+    <aside className="fixed inset-y-0 left-0 z-30 flex w-[240px] flex-col bg-[#111827] border-r border-[#e5e7eb]">
 
       {/* Logo */}
-      <div className="flex h-[56px] flex-shrink-0 items-center gap-2.5 border-b border-gray-100 px-5">
-        <div className="h-7 w-7 flex-shrink-0">
+      <div className="flex h-[56px] flex-shrink-0 items-center gap-[10px] border-b border-black px-5">
+        <div className="h-6 w-6 flex-shrink-0">
           <img src="/logo.png" alt="Aquio logo" className="h-full w-full object-contain" />
         </div>
-        <span className="text-[18px] font-extrabold tracking-[0.06em] text-[#0F1720]">
+        <span className="text-[16px] font-semibold text-white">
           Aquio
         </span>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {navSections.map((section) => (
-          <div key={section.label} className="mb-5 last:mb-0">
-            <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
-              {section.label}
-            </p>
-            <ul className="space-y-0.5">
+      {/* Scrollable nav area */}
+      <nav className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-px px-2 pt-2 pb-4">
+
+          {/* Dashboard – standalone top item */}
+          <div className="py-1">
+            <Link
+              href="/dashboard"
+              className={cn(
+                "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
+                isActive("/dashboard")
+                  ? "bg-[#1f2937] border-l-[#0d9488] text-white"
+                  : "rounded-[6px] border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
+              )}
+            >
+              <LayoutDashboard
+                className={cn(
+                  "h-[18px] w-[18px] flex-shrink-0",
+                  isActive("/dashboard") ? "text-white" : "text-[#e5e7eb]"
+                )}
+                strokeWidth={1.5}
+              />
+              Dashboard
+            </Link>
+          </div>
+
+          {/* Sections */}
+          {navSections.map((section) => (
+            <Fragment key={section.label}>
+              <div className="px-3 pt-3 pb-1.5">
+                <span className="text-[11px] font-semibold tracking-[0.55px] text-[#9ca3af]">
+                  {section.label}
+                </span>
+              </div>
+
               {section.items.map((item) => {
-                const isActive =
-                  pathname === item.href || pathname.startsWith(item.href + "/");
+                const active = isActive(item.href);
                 const Icon = item.icon;
                 return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
+                      active
+                        ? "bg-[#1f2937] border-l-[#0d9488] text-white"
+                        : "rounded-[6px] border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
+                    )}
+                  >
+                    <Icon
                       className={cn(
-                        "flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors",
-                        isActive
-                          ? "bg-[#4A51D8] text-white"
-                          : "text-[#374151] hover:bg-gray-100 hover:text-[#0F1720]"
+                        "h-[18px] w-[18px] flex-shrink-0",
+                        active ? "text-white" : "text-[#e5e7eb]"
                       )}
-                    >
-                      <Icon
-                        className={cn(
-                          "h-[15px] w-[15px] flex-shrink-0",
-                          isActive ? "text-white" : "text-gray-400"
-                        )}
-                      />
-                      {item.label}
-                    </Link>
-                  </li>
+                      strokeWidth={1.5}
+                    />
+                    {item.label}
+                  </Link>
                 );
               })}
-            </ul>
-          </div>
-        ))}
+            </Fragment>
+          ))}
+        </div>
       </nav>
 
-      {/* Ask Liora */}
-      <div className="flex-shrink-0 border-t border-gray-100 p-3">
-        <Link
-          href="/ask-liora"
-          className={cn(
-            "flex w-full items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium transition-colors",
-            pathname === "/ask-liora"
-              ? "bg-[#4A51D8] text-white"
-              : "text-[#374151] hover:bg-gray-100 hover:text-[#0F1720]"
-          )}
-        >
-          <Sparkles
+      {/* Bottom section – pinned, never scrolls */}
+      <div className="flex-shrink-0">
+        {/* Ask Liora */}
+        <div className="px-2 pb-2">
+          <Link
+            href="/ask-liora"
             className={cn(
-              "h-[15px] w-[15px] flex-shrink-0",
-              pathname === "/ask-liora" ? "text-white" : "text-gray-400"
+              "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
+              isActive("/ask-liora")
+                ? "bg-[#1f2937] border-l-[#0d9488] text-white"
+                : "rounded-[6px] border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
             )}
-          />
-          Ask Liora
-        </Link>
+          >
+            <Sparkles
+              className={cn(
+                "h-[18px] w-[18px] flex-shrink-0",
+                isActive("/ask-liora") ? "text-white" : "text-[#e5e7eb]"
+              )}
+              strokeWidth={1.5}
+            />
+            Ask Liora
+          </Link>
+        </div>
+
+        {/* Divider */}
+        <div className="mx-4 border-t border-[#e5e7eb]" />
+
+        {/* User bar */}
+        <div className="flex h-[50px] items-center justify-between px-5">
+          <span className="text-[13px] font-semibold text-[#e5e7eb]">
+            Alex Gupta
+          </span>
+          <ChevronDown className="h-4 w-4 text-[#e5e7eb]" strokeWidth={1.33} />
+        </div>
       </div>
 
     </aside>

@@ -102,7 +102,7 @@ const CHIP_FORMATTERS: Record<keyof POActiveFilters, (v: string) => string> = {
 };
 
 const SELECT_INPUT_CLASS =
-  "h-8 cursor-pointer rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#4A51D8]";
+  "h-8 cursor-pointer rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -201,7 +201,7 @@ export function POSearchBar({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="h-8 w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#4A51D8] focus-visible:ring-[#4A51D8]/20"
+            className="h-8 w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
           />
         )}
 
@@ -243,7 +243,7 @@ export function POSearchBar({
           onClick={handleSearch}
           disabled={isSearchDisabled}
           size="sm"
-          className="h-8 px-4 text-[13px] !bg-[#4A51D8] hover:!bg-[#3941C8] text-white disabled:opacity-50"
+          className="h-8 px-4 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
         >
           Search
         </Button>
@@ -264,12 +264,12 @@ export function POSearchBar({
           {activeEntries.map(([key, value]) => (
             <span
               key={key}
-              className="flex items-center gap-1 rounded-full border border-[#4A51D8]/20 bg-[#4A51D8]/10 px-3 py-1 text-xs text-[#4A51D8]"
+              className="flex items-center gap-1 rounded-full border border-[#0d9488]/20 bg-[#0d9488]/10 px-3 py-1 text-xs text-[#0d9488]"
             >
               {CHIP_FORMATTERS[key]?.(value) ?? `${key}: ${value}`}
               <button
                 onClick={() => onRemoveFilter(key)}
-                className="ml-0.5 rounded-full hover:text-[#3941C8]"
+                className="ml-0.5 rounded-full hover:text-[#0f766e]"
                 aria-label={`Remove ${key} filter`}
               >
                 <X className="h-3 w-3" />

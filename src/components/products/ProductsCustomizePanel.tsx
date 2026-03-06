@@ -173,7 +173,7 @@ export function ProductsCustomizePanel({
                       type="checkbox"
                       checked={visibleColumns.includes(col.key)}
                       onChange={(e) => { onVisibilityChange(col.key, e.target.checked); notifyChange(); }}
-                      className="h-3.5 w-3.5 flex-shrink-0 cursor-pointer accent-[#4A51D8]"
+                      className="h-3.5 w-3.5 flex-shrink-0 cursor-pointer accent-[#0d9488]"
                     />
                   )}
                   <span className="text-[13px] text-[#0F1720]">{col.label}</span>
