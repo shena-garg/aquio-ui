@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
@@ -67,220 +68,217 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
     queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
   }
 
+  const leftContent = (
+    <>
+      <span
+        className={`inline-flex items-center rounded-[6px] px-2 h-6 text-[12px] font-medium ${statusBadgeStyles[order.status] ?? ""}`}
+      >
+        {capitalize(order.status)}
+      </span>
+      <span
+        className={`inline-flex items-center rounded-[6px] px-2 h-6 text-[12px] font-medium ${receiptStatusBadgeStyles[order.receiptStatus] ?? ""}`}
+      >
+        {capitalize(order.receiptStatus)}
+      </span>
+      {order.referenceId && (
+        <div className="flex items-center gap-1 ml-2">
+          <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Ref ID:</span>
+          <span className="text-[13px] font-medium text-[#111827]">{order.referenceId}</span>
+        </div>
+      )}
+      {order.supplierReferenceId && (
+        <div className="flex items-center gap-1 ml-2">
+          <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Supplier Ref:</span>
+          <span className="text-[13px] font-medium text-[#111827]">{order.supplierReferenceId}</span>
+        </div>
+      )}
+    </>
+  );
+
+  const rightContent = (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
+        disabled={!order.purchaseOrderPDF}
+        onClick={() => {
+          if (order.purchaseOrderPDF) {
+            window.open(order.purchaseOrderPDF, "_blank");
+          }
+        }}
+      >
+        <Download className="h-4 w-4 mr-1.5" />
+        Download PDF
+      </Button>
+
+      {order.notes && order.notes.trim() !== "" && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="flex flex-col items-center gap-0.5 px-2 py-1 rounded hover:bg-gray-100 text-gray-600">
+              <FileText size={16} />
+              <span className="text-xs">Notes</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="center" className="w-72 text-[13px] text-[#374151]">
+            {order.notes}
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {order.termsAndConditions && order.termsAndConditions.length > 0 && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="flex flex-col items-center gap-0.5 px-2 py-1 rounded hover:bg-gray-100 text-gray-600">
+              <ClipboardList size={16} />
+              <span className="text-xs">Terms</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="center" className="w-80 text-[13px] text-[#374151]">
+            <ol className="list-decimal pl-4 space-y-1">
+              {order.termsAndConditions.map((term, i) => (
+                <li key={i}>{term}</li>
+              ))}
+            </ol>
+          </PopoverContent>
+        </Popover>
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="h-9 w-9 rounded-[6px] p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {status === "cancelled" || status === "completed" ? (
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(
+                  `/purchase-orders/new?duplicateFrom=${order.id}`,
+                )
+              }
+            >
+              Create Duplicate
+            </DropdownMenuItem>
+          ) : status === "draft" ? (
+            <>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/purchase-orders/${order.id}/edit`)
+                }
+              >
+                Edit Order
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(
+                    `/purchase-orders/new?duplicateFrom=${order.id}`,
+                  )
+                }
+              >
+                Create Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setCancelOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Cancel Order
+              </DropdownMenuItem>
+            </>
+          ) : status === "issued" ? (
+            <>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/purchase-orders/${order.id}/edit`)
+                }
+              >
+                Edit Order
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(
+                    `/purchase-orders/new?duplicateFrom=${order.id}`,
+                  )
+                }
+              >
+                Create Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setCancelOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Cancel Order
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
+                Mark as Confirmed
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setForceCloseOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Force Close
+              </DropdownMenuItem>
+            </>
+          ) : status === "confirmed" ? (
+            <>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/purchase-orders/${order.id}/edit`)
+                }
+              >
+                Edit Order
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(
+                    `/purchase-orders/new?duplicateFrom=${order.id}`,
+                  )
+                }
+              >
+                Create Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setCancelOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Cancel Order
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setForceCloseOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Force Close
+              </DropdownMenuItem>
+            </>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {(status === "issued" || status === "confirmed") && (
+        <Button
+          className="h-9 px-3.5 rounded-[6px] bg-[#0d9488] hover:bg-[#0f766e] text-white text-[13px] font-medium"
+          onClick={() => onCreateReceipt?.()}
+        >
+          <Plus className="h-4 w-4 mr-1.5" />
+          Create Receipt
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <>
-      <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-[#e5e7eb]">
-        {/* Left side */}
-        <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-[22px] font-semibold tracking-[-0.22px] text-[#111827]">
-              {order.poNumber}
-            </span>
-            <span
-              className={`inline-flex items-center rounded-[6px] px-2 h-6 text-[12px] font-medium ${statusBadgeStyles[order.status] ?? ""}`}
-            >
-              {capitalize(order.status)}
-            </span>
-            <span
-              className={`inline-flex items-center rounded-[6px] px-2 h-6 text-[12px] font-medium ${receiptStatusBadgeStyles[order.receiptStatus] ?? ""}`}
-            >
-              {capitalize(order.receiptStatus)}
-            </span>
-          </div>
-          {(order.referenceId || order.supplierReferenceId) && (
-            <div className="flex items-center gap-4 mt-1.5">
-              {order.referenceId && (
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Ref ID:</span>
-                  <span className="text-[13px] font-medium text-[#111827]">{order.referenceId}</span>
-                </div>
-              )}
-              {order.supplierReferenceId && (
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Supplier Ref:</span>
-                  <span className="text-[13px] font-medium text-[#111827]">{order.supplierReferenceId}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Right side */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
-            disabled={!order.purchaseOrderPDF}
-            onClick={() => {
-              if (order.purchaseOrderPDF) {
-                window.open(order.purchaseOrderPDF, "_blank");
-              }
-            }}
-          >
-            <Download className="h-4 w-4 mr-1.5" />
-            Download PDF
-          </Button>
-
-          {order.notes && order.notes.trim() !== "" && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="flex flex-col items-center gap-0.5 px-2 py-1 rounded hover:bg-gray-100 text-gray-600">
-                  <FileText size={16} />
-                  <span className="text-xs">Notes</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="center" className="w-72 text-[13px] text-[#374151]">
-                {order.notes}
-              </PopoverContent>
-            </Popover>
-          )}
-
-          {order.termsAndConditions && order.termsAndConditions.length > 0 && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="flex flex-col items-center gap-0.5 px-2 py-1 rounded hover:bg-gray-100 text-gray-600">
-                  <ClipboardList size={16} />
-                  <span className="text-xs">Terms</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="center" className="w-80 text-[13px] text-[#374151]">
-                <ol className="list-decimal pl-4 space-y-1">
-                  {order.termsAndConditions.map((term, i) => (
-                    <li key={i}>{term}</li>
-                  ))}
-                </ol>
-              </PopoverContent>
-            </Popover>
-          )}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-9 w-9 rounded-[6px] p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {status === "cancelled" || status === "completed" ? (
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(
-                      `/purchase-orders/new?duplicateFrom=${order.id}`,
-                    )
-                  }
-                >
-                  Create Duplicate
-                </DropdownMenuItem>
-              ) : status === "draft" ? (
-                <>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/purchase-orders/${order.id}/edit`)
-                    }
-                  >
-                    Edit Order
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(
-                        `/purchase-orders/new?duplicateFrom=${order.id}`,
-                      )
-                    }
-                  >
-                    Create Duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setCancelOpen(true)}
-                    className="text-[#DC2626] focus:text-[#DC2626]"
-                  >
-                    Cancel Order
-                  </DropdownMenuItem>
-                </>
-              ) : status === "issued" ? (
-                <>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/purchase-orders/${order.id}/edit`)
-                    }
-                  >
-                    Edit Order
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(
-                        `/purchase-orders/new?duplicateFrom=${order.id}`,
-                      )
-                    }
-                  >
-                    Create Duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setCancelOpen(true)}
-                    className="text-[#DC2626] focus:text-[#DC2626]"
-                  >
-                    Cancel Order
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
-                    Mark as Confirmed
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setForceCloseOpen(true)}
-                    className="text-[#DC2626] focus:text-[#DC2626]"
-                  >
-                    Force Close
-                  </DropdownMenuItem>
-                </>
-              ) : status === "confirmed" ? (
-                <>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/purchase-orders/${order.id}/edit`)
-                    }
-                  >
-                    Edit Order
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(
-                        `/purchase-orders/new?duplicateFrom=${order.id}`,
-                      )
-                    }
-                  >
-                    Create Duplicate
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setCancelOpen(true)}
-                    className="text-[#DC2626] focus:text-[#DC2626]"
-                  >
-                    Cancel Order
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setForceCloseOpen(true)}
-                    className="text-[#DC2626] focus:text-[#DC2626]"
-                  >
-                    Force Close
-                  </DropdownMenuItem>
-                </>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {(status === "issued" || status === "confirmed") && (
-            <Button
-              className="h-9 px-3.5 rounded-[6px] bg-[#0d9488] hover:bg-[#0f766e] text-white text-[13px] font-medium"
-              onClick={() => onCreateReceipt?.()}
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              Create Receipt
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title={order.poNumber}
+        left={leftContent}
+        right={rightContent}
+      />
 
       {order.delayDays > 0 && (
-        <div className="flex items-center gap-2 px-8 py-2 bg-[#fffbeb] border-l-4 border-l-[#f59e0b]">
+        <div className="flex items-center gap-2 px-8 py-1.5 bg-[#fffbeb] border-l-4 border-l-[#f59e0b]">
           <AlertTriangle size={15} className="text-[#92400e] flex-shrink-0" />
           <span className="text-[13px] font-medium text-[#92400e]">
             Delivery overdue by {order.delayDays}{" "}

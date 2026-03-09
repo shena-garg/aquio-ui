@@ -6,6 +6,8 @@ const LIMIT_OPTIONS = [10, 25, 50, 100];
 
 interface PageHeaderProps {
   title: string;
+  left?: React.ReactNode;
+  right?: React.ReactNode;
   total?: number;
   page?: number;
   limit?: number;
@@ -16,6 +18,8 @@ interface PageHeaderProps {
 
 export function PageHeader({
   title,
+  left,
+  right,
   total,
   page,
   limit,
@@ -29,12 +33,15 @@ export function PageHeader({
   const end = showPagination ? Math.min(page * limit, total) : 0;
 
   return (
-    <div className="flex h-[56px] flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <div className="flex h-[55px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-6">
 
-      {/* Title */}
-      <h1 className="text-[15px] font-semibold text-[#0F1720]">{title}</h1>
+      {/* Left side */}
+      <div className="flex items-center gap-2.5">
+        <span className="text-[18px] font-semibold text-[#111827]">{title}</span>
+        {left}
+      </div>
 
-      {/* Right controls */}
+      {/* Right side */}
       <div className="flex items-center gap-4">
 
         {showPagination && (
@@ -85,8 +92,11 @@ export function PageHeader({
           </>
         )}
 
-        {/* Actions slot */}
+        {/* Actions slot (legacy) */}
         {actions && <div className="flex items-center gap-2">{actions}</div>}
+
+        {/* Right slot */}
+        {right}
 
       </div>
     </div>
