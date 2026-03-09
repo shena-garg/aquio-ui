@@ -67,10 +67,10 @@ function formatIndianAmount(amount: number | undefined | null): string {
 // ── Receipt cell ──────────────────────────────────────────────────────────────
 
 interface ReceiptCellProps {
-  totalQuantity: number;
-  pendingQuantity: number;
+  totalQuantity?: number;
+  pendingQuantity?: number;
   receiptCompletionPercentage: number;
-  uom: string;
+  uom?: string;
 }
 
 function ReceiptCell({ totalQuantity, pendingQuantity, receiptCompletionPercentage, uom }: ReceiptCellProps) {
@@ -85,7 +85,7 @@ function ReceiptCell({ totalQuantity, pendingQuantity, receiptCompletionPercenta
   return (
     <div className="flex min-w-[180px] flex-col gap-0.5">
       <span className="text-[12px] font-medium leading-tight text-[#0F1720] whitespace-nowrap">
-        <QuantityCell value={pending} uom={uom} /> / <QuantityCell value={total} uom={uom} /> Pending
+        <QuantityCell value={pending} uom={uom ?? ""} /> / <QuantityCell value={total} uom={uom ?? ""} /> Pending
       </span>
       <div className="flex items-center gap-1.5">
         <div className="flex-1 rounded-full bg-gray-100 h-1">

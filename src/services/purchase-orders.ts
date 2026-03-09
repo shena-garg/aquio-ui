@@ -40,6 +40,24 @@ export interface PORemainingItem {
   remainingQuantity: number;
 }
 
+export interface POReceiptProduct {
+  productId: string;
+  variantId: string;
+  deliveredQuantity: number;
+  allowExcess: boolean;
+  excessQuantity: number;
+}
+
+export interface POReceipt {
+  _id: string;
+  userId: string;
+  deliveryDate: string;
+  products: POReceiptProduct[];
+  notes: string;
+  files: any[];
+  createdAt: string;
+}
+
 export interface PurchaseOrder {
   _id: string;
   id: string;
@@ -55,15 +73,16 @@ export interface PurchaseOrder {
   biller?: { name: string };
   purchaseOrderPDF?: string;
   totalAmount: { $numberDecimal: string } | number;
-  totalQuantity: number;
-  pendingQuantity: number;
+  totalQuantity?: number;
+  pendingQuantity?: number;
   receiptCompletionPercentage: number;
   delayDays: number;
   paymentTerms: string;
-  commonUOM: string;
+  hasUniformUOM?: boolean;
+  commonUOM?: string;
   products?: POProduct[];
   remainingItems?: PORemainingItem[];
-  receipts?: { _id: string }[];
+  receipts?: POReceipt[];
   notes?: string;
   termsAndConditions?: string[];
 }
@@ -142,6 +161,11 @@ export const purchaseOrdersService = {
 
   forceCloseMultiple: (id: string, items: ForceCloseItem[]) =>
     apiClient.patch(`/purchase-orders/${id}/forcefully-close-multiple`, { items }),
+
+  downloadCSV: (id: string) =>
+    apiClient.patch<Blob>(`/purchase-orders/${id}/csv`, null, {
+      responseType: "blob",
+    }).then((r) => r.data),
 
   exportList: (params: ExportPurchaseOrdersParams) =>
     apiClient.get<Blob>("/purchase-orders/list", {

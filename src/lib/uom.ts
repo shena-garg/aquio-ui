@@ -100,8 +100,11 @@ export function getUOMAbbreviation(uom: string): string {
   return UOM_MAP[uom] ?? uom
 }
 
-export function formatQuantity(value: number, uom: string): { display: string; full: string } {
+export function formatQuantity(value: number | undefined | null, uom: string): { display: string; full: string } {
   const abbr = getUOMAbbreviation(uom)
+  if (value === undefined || value === null || isNaN(value)) {
+    return { display: `— ${abbr}`, full: `— ${uom}` }
+  }
   return {
     display: `${value.toLocaleString('en-IN')} ${abbr}`,
     full: `${value.toLocaleString('en-IN')} ${uom}`

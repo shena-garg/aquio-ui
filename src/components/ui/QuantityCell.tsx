@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { formatQuantity } from '@/lib/uom'
 
 interface QuantityCellProps {
-  value: number
+  value: number | undefined | null
   uom: string
 }
 

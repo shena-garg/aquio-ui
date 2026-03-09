@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { PurchaseOrder } from "@/services/purchase-orders";
+import {
+  purchaseOrdersService,
+  type PurchaseOrder,
+  type POReceipt,
+} from "@/services/purchase-orders";
 import { QuantityCell } from "@/components/ui/QuantityCell";
 
 interface PODetailsTabsProps {
@@ -17,7 +22,9 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
 
   const products = order.products ?? [];
   const receiptsCount = order.receipts?.length ?? 0;
-  const received = order.totalQuantity - order.pendingQuantity;
+  const totalQuantity = order.totalQuantity ?? products.reduce((sum, p) => sum + p.quantity.value, 0);
+  const totalReceived = order.receipts?.reduce((sum, r) => sum + r.products.reduce((s, p) => s + p.deliveredQuantity, 0), 0) ?? 0;
+  const received = totalQuantity - (order.pendingQuantity ?? (totalQuantity - totalReceived));
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "products", label: "Products", count: products.length },
@@ -65,11 +72,528 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
       <div className="flex-1">
         {activeTab === "products" ? (
           <ProductsTable order={order} products={products} received={received} />
+        ) : activeTab === "receipts" ? (
+          <ReceiptsTab order={order} />
         ) : (
           <div className="flex items-center justify-center h-48 text-sm text-gray-400">
             Coming soon
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Receipts tab ──────────────────────────────────────────────────────────── */
+
+function ReceiptsTab({ order }: { order: PurchaseOrder }) {
+  const receipts = order.receipts ?? [];
+  const products = order.products ?? [];
+
+  if (receipts.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-48 text-sm text-[#6b7280]">
+        No receipts recorded yet
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4 py-6">
+      <div className="mx-8">
+        <ReceiptSummaryCard order={order} receipts={receipts} products={products} />
+      </div>
+      {receipts.map((receipt, idx) => (
+        <div key={receipt._id} className="mx-8">
+          <IndividualReceiptCard
+            receipt={receipt}
+            index={idx}
+            products={products}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Receipt Summary Card ──────────────────────────────────────────────────── */
+
+function getProductName(
+  productId: string,
+  products: NonNullable<PurchaseOrder["products"]>,
+): { name: string; variant: string } {
+  const p = products.find((p) => p.product._id === productId);
+  return {
+    name: p?.metadata.product.name ?? "Unknown Product",
+    variant: p?.metadata.variant.name ?? "",
+  };
+}
+
+function getOrderedQuantity(
+  productId: string,
+  variantId: string,
+  products: NonNullable<PurchaseOrder["products"]>,
+): number {
+  const p = products.find(
+    (p) => p.product._id === productId && p.variant._id === variantId,
+  );
+  return p?.quantity.value ?? 0;
+}
+
+function getProductUOM(
+  productId: string,
+  variantId: string,
+  products: NonNullable<PurchaseOrder["products"]>,
+): string {
+  const p = products.find(
+    (p) => p.product._id === productId && p.variant._id === variantId,
+  );
+  return p?.quantity.postfix ?? "";
+}
+
+type ProductReceiptStatus =
+  | "not_started"
+  | "partially_received"
+  | "fully_received"
+  | "excess_received";
+
+function getReceiptStatus(
+  totalReceived: number,
+  ordered: number,
+): ProductReceiptStatus {
+  if (totalReceived === 0) return "not_started";
+  if (totalReceived < ordered) return "partially_received";
+  if (totalReceived > ordered) return "excess_received";
+  return "fully_received";
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const day = d.getDate().toString().padStart(2, "0");
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+function StatusBadge({ status }: { status: ProductReceiptStatus }) {
+  if (status === "not_started") {
+    return (
+      <span className="text-[12px] font-medium leading-[15.6px] text-[#6b7280]">
+        Not Started
+      </span>
+    );
+  }
+
+  const config = {
+    partially_received: {
+      label: "Partially Received",
+      iconColor: "#f59e0b",
+      icon: (
+        <svg width="12" height="11" viewBox="0 0 12 11" fill="none">
+          <path
+            d="M6 1v4M6 9h.005"
+            stroke="#f59e0b"
+            strokeWidth="1.167"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+    },
+    fully_received: {
+      label: "Fully Received",
+      iconColor: "#10b981",
+      icon: (
+        <svg width="9" height="6" viewBox="0 0 9 6" fill="none">
+          <path
+            d="M1 3l2.5 2.5L8 1"
+            stroke="#10b981"
+            strokeWidth="1.167"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+    },
+    excess_received: {
+      label: "Excess Received",
+      iconColor: "#0d9488",
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <circle cx="6" cy="6" r="5" stroke="#0d9488" strokeWidth="1.167" />
+          <path d="M6 3.5v5" stroke="#0d9488" strokeWidth="1.167" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+  } as const;
+
+  const c = config[status];
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-center w-4 h-4 rounded-full bg-[#f3f4f6]">
+        {c.icon}
+      </div>
+      <span className="text-[12px] font-medium leading-[15.6px] text-[#111827]">
+        {c.label}
+      </span>
+    </div>
+  );
+}
+
+function ReceiptSummaryCard({
+  order,
+  receipts,
+  products,
+}: {
+  order: PurchaseOrder;
+  receipts: POReceipt[];
+  products: NonNullable<PurchaseOrder["products"]>;
+}) {
+  // Build a unique list of product+variant combos across all receipts
+  const productKeys = new Map<
+    string,
+    { productId: string; variantId: string }
+  >();
+  for (const r of receipts) {
+    for (const rp of r.products) {
+      const key = `${rp.productId}:${rp.variantId}`;
+      if (!productKeys.has(key)) {
+        productKeys.set(key, {
+          productId: rp.productId,
+          variantId: rp.variantId,
+        });
+      }
+    }
+  }
+  // Also include products from the order that may not have receipts yet
+  for (const p of products) {
+    const key = `${p.product._id}:${p.variant._id}`;
+    if (!productKeys.has(key)) {
+      productKeys.set(key, {
+        productId: p.product._id,
+        variantId: p.variant._id,
+      });
+    }
+  }
+
+  const productList = Array.from(productKeys.values());
+
+  const leftTheadRef = useRef<HTMLTableSectionElement>(null);
+  const rightTheadRef = useRef<HTMLTableSectionElement>(null);
+  const leftTbodyRef = useRef<HTMLTableSectionElement>(null);
+  const rightTbodyRef = useRef<HTMLTableSectionElement>(null);
+
+  useEffect(() => {
+    const syncHeights = (
+      leftRows: NodeListOf<Element>,
+      rightRows: NodeListOf<Element>,
+    ) => {
+      leftRows.forEach((row, i) => {
+        const l = row as HTMLElement;
+        const r = rightRows[i] as HTMLElement;
+        if (!r) return;
+        l.style.height = "auto";
+        r.style.height = "auto";
+        const height = Math.max(l.offsetHeight, r.offsetHeight);
+        l.style.height = `${height}px`;
+        r.style.height = `${height}px`;
+      });
+    };
+    if (leftTheadRef.current && rightTheadRef.current)
+      syncHeights(
+        leftTheadRef.current.querySelectorAll("tr"),
+        rightTheadRef.current.querySelectorAll("tr"),
+      );
+    if (leftTbodyRef.current && rightTbodyRef.current)
+      syncHeights(
+        leftTbodyRef.current.querySelectorAll("tr"),
+        rightTbodyRef.current.querySelectorAll("tr"),
+      );
+  }, [productList, receipts]);
+
+  async function handleDownloadCSV() {
+    try {
+      const blob = await purchaseOrdersService.downloadCSV(order.id ?? order._id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receipt-summary-${order.poNumber}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download CSV:", error);
+    }
+  }
+
+  return (
+    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm pt-4 pb-3">
+      <div className="flex flex-col gap-3">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-1 px-5">
+          <span className="text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">
+            Receipt Summary
+          </span>
+          <button
+            onClick={handleDownloadCSV}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-[#0d9488] hover:text-[#0f766e]"
+          >
+            <Download size={13} />
+            Export CSV
+          </button>
+        </div>
+
+        {/* Split-table layout: frozen left + scrollable right */}
+        <div className="flex">
+          {/* Frozen left panel */}
+          <div className="flex-shrink-0 border-r border-gray-200" style={{ width: '600px' }}>
+            <table style={{ width: '600px', tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '140px' }} />
+                <col style={{ width: '280px' }} />
+                <col style={{ width: '180px' }} />
+              </colgroup>
+              <thead ref={leftTheadRef}>
+                <tr>
+                  <th className="text-left h-[31px] py-2 pr-3 pl-5 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                    Status
+                  </th>
+                  <th className="text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                    Product
+                  </th>
+                  <th className="text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap border-b border-[#e5e7eb]">
+                    Received / Ordered
+                  </th>
+                </tr>
+              </thead>
+              <tbody ref={leftTbodyRef} className="[&>tr:last-child>td]:border-b-0">
+                {productList.map(({ productId, variantId }) => {
+                  const { name, variant } = getProductName(productId, products);
+                  const ordered = getOrderedQuantity(productId, variantId, products);
+                  const uom = getProductUOM(productId, variantId, products);
+                  const totalReceived = receipts.reduce((sum, r) => {
+                    const rp = r.products.find(
+                      (p) => p.productId === productId && p.variantId === variantId,
+                    );
+                    return sum + (rp?.deliveredQuantity ?? 0);
+                  }, 0);
+                  const status = getReceiptStatus(totalReceived, ordered);
+
+                  return (
+                    <tr key={`left-${productId}:${variantId}`}>
+                      <td className="h-[52px] py-2.5 pr-3 pl-5 align-top border-b border-[#e5e7eb]">
+                        <StatusBadge status={status} />
+                      </td>
+                      <td className="h-[52px] py-2.5 pr-3 align-top border-b border-[#e5e7eb]">
+                        <div className="flex flex-col gap-[3px]">
+                          <span className="text-[13px] font-medium leading-[16.9px] text-[#111827] truncate">
+                            {name}
+                          </span>
+                          {variant && (
+                            <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280] truncate">
+                              {variant}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black whitespace-nowrap border-b border-[#e5e7eb]">
+                        <span className="inline-flex gap-1">
+                          <QuantityCell value={totalReceived} uom={uom} />
+                          <span>/</span>
+                          <QuantityCell value={ordered} uom={uom} />
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Scrollable right panel */}
+          <div className="flex-1 overflow-x-auto">
+            <table style={{ minWidth: `${receipts.length * 140 + 120}px` }}>
+              <thead ref={rightTheadRef}>
+                <tr>
+                  {receipts.map((r, idx) => (
+                    <th
+                      key={r._id}
+                      className={cn(
+                        "text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap border-b border-[#e5e7eb]",
+                        idx === 0 && "pl-3",
+                      )}
+                    >
+                      #{idx + 1} · {formatDate(r.deliveryDate)}
+                    </th>
+                  ))}
+                  <th className="text-left h-[31px] py-2 pr-5 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                    Remaining
+                  </th>
+                </tr>
+              </thead>
+              <tbody ref={rightTbodyRef} className="[&>tr:last-child>td]:border-b-0">
+                {productList.map(({ productId, variantId }) => {
+                  const ordered = getOrderedQuantity(productId, variantId, products);
+                  const uom = getProductUOM(productId, variantId, products);
+                  const totalReceived = receipts.reduce((sum, r) => {
+                    const rp = r.products.find(
+                      (p) => p.productId === productId && p.variantId === variantId,
+                    );
+                    return sum + (rp?.deliveredQuantity ?? 0);
+                  }, 0);
+                  const remaining = Math.max(0, ordered - totalReceived);
+
+                  return (
+                    <tr key={`right-${productId}:${variantId}`}>
+                      {receipts.map((r, rIdx) => {
+                        const rp = r.products.find(
+                          (p) =>
+                            p.productId === productId &&
+                            p.variantId === variantId,
+                        );
+                        return (
+                          <td
+                            key={r._id}
+                            className={cn(
+                              "h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black whitespace-nowrap border-b border-[#e5e7eb]",
+                              rIdx === 0 && "pl-3",
+                            )}
+                          >
+                            {rp && rp.deliveredQuantity > 0 ? (
+                              <QuantityCell
+                                value={rp.deliveredQuantity}
+                                uom={uom}
+                              />
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td
+                        className={cn(
+                          "h-[52px] py-2.5 pr-5 align-top text-[13px] leading-[16.9px] whitespace-nowrap border-b border-[#e5e7eb]",
+                          remaining > 0
+                            ? "font-semibold text-[#dc2626]"
+                            : "font-normal text-black",
+                        )}
+                      >
+                        <QuantityCell value={remaining} uom={uom} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Individual Receipt Card ───────────────────────────────────────────────── */
+
+function IndividualReceiptCard({
+  receipt,
+  index,
+  products,
+}: {
+  receipt: POReceipt;
+  index: number;
+  products: NonNullable<PurchaseOrder["products"]>;
+}) {
+  return (
+    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm py-3.5 px-5">
+      <div className="flex flex-col gap-2.5">
+        {/* Header */}
+        <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[13px] font-semibold leading-[16.9px] text-[#111827]">
+              Receipt #{index + 1} · {formatDate(receipt.deliveryDate)}
+            </span>
+          </div>
+        </div>
+
+        {/* Notes & Documents */}
+        {(receipt.notes || (receipt.files && receipt.files.length > 0)) && (
+          <div className="border-t border-[#e5e7eb] pt-2 flex flex-col gap-2">
+            {receipt.notes && (
+              <div className="flex items-start gap-2">
+                <span className="text-[11px] font-semibold leading-[14.3px] text-[#6b7280] shrink-0">
+                  Notes
+                </span>
+                <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280]">
+                  {receipt.notes}
+                </span>
+              </div>
+            )}
+            {receipt.files && receipt.files.length > 0 && (
+              <div className="flex items-start gap-2">
+                <span className="text-[11px] font-semibold leading-[14.3px] text-[#6b7280] shrink-0">
+                  Documents
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {receipt.files.map((file: any, fIdx: number) => (
+                    <span
+                      key={fIdx}
+                      className="text-[12px] font-normal leading-[15.6px] text-[#0d9488]"
+                    >
+                      {file.name ?? file.fileName ?? `File ${fIdx + 1}`}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Products table */}
+        <div className="pt-2">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[#e5e7eb]">
+                <th className="text-left py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">
+                  Product
+                </th>
+                <th className="text-left py-2 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">
+                  Quantity Received
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {receipt.products.map((rp) => {
+                const { name, variant } = getProductName(rp.productId, products);
+                const uom = getProductUOM(rp.productId, rp.variantId, products);
+                return (
+                  <tr
+                    key={`${rp.productId}:${rp.variantId}`}
+                    className="border-b border-[#e5e7eb] last:border-b-0"
+                  >
+                    <td className="py-2.5 pr-3 align-top">
+                      <div className="flex flex-col gap-[3px]">
+                        <span className="text-[13px] font-medium leading-[16.9px] text-[#111827]">
+                          {name}
+                        </span>
+                        {variant && (
+                          <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280]">
+                            {variant}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-2.5 align-top text-[13px] font-semibold leading-[16.9px] text-[#0d9488] whitespace-nowrap">
+                      <QuantityCell value={rp.deliveredQuantity} uom={uom} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -188,13 +712,25 @@ function ProductsTable({
           <tr className="border-t border-gray-200 bg-gray-50 font-bold text-gray-900">
             <td className="px-6 py-3">Total Summary</td>
             <td className="px-6 py-3 text-right whitespace-nowrap">
-              <QuantityCell value={order.totalQuantity} uom={order.commonUOM} />
+              {order.hasUniformUOM !== false ? (
+                <QuantityCell value={order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)} uom={order.commonUOM ?? ""} />
+              ) : (
+                <span className="text-[#6b7280] font-normal">—</span>
+              )}
             </td>
             <td className="px-6 py-3 text-right whitespace-nowrap">
-              <QuantityCell value={totalReceived} uom={order.commonUOM} />
+              {order.hasUniformUOM !== false ? (
+                <QuantityCell value={totalReceived} uom={order.commonUOM ?? ""} />
+              ) : (
+                <span className="text-[#6b7280] font-normal">—</span>
+              )}
             </td>
             <td className="px-6 py-3 text-right whitespace-nowrap">
-              <QuantityCell value={order.pendingQuantity} uom={order.commonUOM} />
+              {order.hasUniformUOM !== false ? (
+                <QuantityCell value={order.pendingQuantity ?? ((order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)) - totalReceived)} uom={order.commonUOM ?? ""} />
+              ) : (
+                <span className="text-[#6b7280] font-normal">—</span>
+              )}
             </td>
             <td className="px-6 py-3" />
             <td className="px-6 py-3" />

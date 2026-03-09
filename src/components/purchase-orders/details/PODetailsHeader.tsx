@@ -47,9 +47,10 @@ function capitalize(str: string) {
 
 interface PODetailsHeaderProps {
   order: PurchaseOrder;
+  onCreateReceipt?: () => void;
 }
 
-export function PODetailsHeader({ order }: PODetailsHeaderProps) {
+export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -62,7 +63,7 @@ export function PODetailsHeader({ order }: PODetailsHeaderProps) {
     setCancelOpen(false);
     setConfirmOpen(false);
     setForceCloseOpen(false);
-    queryClient.invalidateQueries({ queryKey: ["purchase-order", order.id] });
+    queryClient.invalidateQueries({ queryKey: ["purchase-order", order.id ?? order._id] });
     queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
   }
 
@@ -269,9 +270,7 @@ export function PODetailsHeader({ order }: PODetailsHeaderProps) {
           {(status === "issued" || status === "confirmed") && (
             <Button
               className="h-9 px-3.5 rounded-[6px] bg-[#0d9488] hover:bg-[#0f766e] text-white text-[13px] font-medium"
-              onClick={() =>
-                router.push(`/purchase-orders/${order.id}/receipts/new`)
-              }
+              onClick={() => onCreateReceipt?.()}
             >
               <Plus className="h-4 w-4 mr-1.5" />
               Create Receipt
@@ -299,7 +298,7 @@ export function PODetailsHeader({ order }: PODetailsHeaderProps) {
         isOpen={cancelOpen}
         onClose={() => setCancelOpen(false)}
         onSuccess={handleModalSuccess}
-        orderId={order.id}
+        orderId={order.id ?? order._id}
         poNumber={order.poNumber}
         status={order.status}
         receiptStatus={order.receiptStatus}
@@ -310,7 +309,7 @@ export function PODetailsHeader({ order }: PODetailsHeaderProps) {
         isOpen={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onSuccess={handleModalSuccess}
-        orderId={order.id}
+        orderId={order.id ?? order._id}
         poNumber={order.poNumber}
         status={order.status}
         receiptStatus={order.receiptStatus}

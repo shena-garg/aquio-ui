@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { purchaseOrdersService } from "@/services/purchase-orders";
@@ -12,6 +12,7 @@ import { PODetailsMetaStrip } from "@/components/purchase-orders/details/PODetai
 import { PODetailsDateStrip } from "@/components/purchase-orders/details/PODetailsDateStrip";
 import { PODetailsProgress } from "@/components/purchase-orders/details/PODetailsProgress";
 import { PODetailsTabs } from "@/components/purchase-orders/details/PODetailsTabs";
+import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
 
 function FullPageSkeleton() {
   return (
@@ -76,6 +77,8 @@ export default function PurchaseOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
+  const [createReceiptOpen, setCreateReceiptOpen] = useState(false);
+
   const { data: order, isLoading, isError } = useQuery({
     queryKey: ["purchase-order", id],
     queryFn: () => purchaseOrdersService.getById(id).then((r) => r.data),
@@ -117,7 +120,7 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="flex flex-col h-full overflow-auto">
-      <PODetailsHeader order={order} />
+      <PODetailsHeader order={order} onCreateReceipt={() => setCreateReceiptOpen(true)} />
       {/* Parties card: MetaStrip + DateStrip */}
       <div className="mx-8 mt-3">
         <div className="rounded-[10px] border border-[#f3f4f6] bg-white px-4 pt-[10px] pb-2">
@@ -127,6 +130,14 @@ export default function PurchaseOrderDetailPage() {
       </div>
       <PODetailsProgress order={order} />
       <PODetailsTabs order={order} />
+      <ReceiptFormModal
+        mode="create"
+        orderId={order.id ?? order._id}
+        order={order}
+        isOpen={createReceiptOpen}
+        onClose={() => setCreateReceiptOpen(false)}
+        onSuccess={() => setCreateReceiptOpen(false)}
+      />
     </div>
   );
 }
