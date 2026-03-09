@@ -80,18 +80,6 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
       >
         {capitalize(order.receiptStatus)}
       </span>
-      {order.referenceId && (
-        <div className="flex items-center gap-1 ml-2">
-          <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Ref ID:</span>
-          <span className="text-[13px] font-medium text-[#111827]">{order.referenceId}</span>
-        </div>
-      )}
-      {order.supplierReferenceId && (
-        <div className="flex items-center gap-1 ml-2">
-          <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Supplier Ref:</span>
-          <span className="text-[13px] font-medium text-[#111827]">{order.supplierReferenceId}</span>
-        </div>
-      )}
     </>
   );
 
@@ -277,9 +265,26 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         right={rightContent}
       />
 
+      {(order.referenceId || order.supplierReferenceId) && (
+        <div className="flex items-center gap-6 px-6 py-1.5 bg-[#f9fafb] border-b border-[#e5e7eb]">
+          {order.referenceId && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Ref ID:</span>
+              <span className="text-[13px] font-medium text-[#111827]">{order.referenceId}</span>
+            </div>
+          )}
+          {order.supplierReferenceId && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Supplier Ref:</span>
+              <span className="text-[13px] font-medium text-[#111827]">{order.supplierReferenceId}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {order.delayDays > 0 && (
-        <div className="flex items-center gap-2 px-8 py-1.5 bg-[#fffbeb] border-l-4 border-l-[#f59e0b]">
-          <AlertTriangle size={15} className="text-[#92400e] flex-shrink-0" />
+        <div className="flex items-center gap-2 px-6 py-1.5 bg-[#fffbeb] border-b border-[#e5e7eb] border-l-4 border-l-[#f59e0b]">
+          <AlertTriangle size={14} className="text-[#92400e] flex-shrink-0" />
           <span className="text-[13px] font-medium text-[#92400e]">
             Delivery overdue by {order.delayDays}{" "}
             {order.delayDays === 1 ? "day" : "days"} — Expected{" "}
