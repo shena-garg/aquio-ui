@@ -1,9 +1,16 @@
 import apiClient from "@/lib/api-client";
 
+export interface ProductCustomAttribute {
+  label: string;
+  unit: string;
+  value: string;
+  _id: string;
+}
+
 export interface ProductVariant {
   _id: string;
   name: string;
-  customAttributes: any[];
+  customAttributes: ProductCustomAttribute[];
 }
 
 export interface Product {
@@ -17,8 +24,11 @@ export interface Product {
   subCategoryName: string;
   unitOfMeasurement: string;
   gst: number;
-  status: "active" | "inactive";
+  status: "active" | "inactive" | "archived";
+  description?: string;
+  termsOfConditions?: string[];
   variants: ProductVariant[];
+  files?: { id: string; name: string }[];
   createdAt: string;
 }
 
@@ -28,6 +38,9 @@ export interface ProductsResponse {
 }
 
 export const productsService = {
+  getById: (id: string) =>
+    apiClient.get<Product>(`/products/${id}`).then((r) => r.data),
+
   list: (params: {
     page: number;
     limit: number;
@@ -37,5 +50,45 @@ export const productsService = {
     categoryId?: string;
     subCategoryId?: string;
   }) => apiClient.get<ProductsResponse>("/products", { params }),
+
   archive: (id: string) => apiClient.delete(`/products/${id}`),
+
+  getProcurementAnalytics: async (params: {
+    productId: string;
+    variantId: string;
+    fromDate: string;
+    toDate: string;
+  }) => {
+    const response = await apiClient.get(
+      "/purchase-orders/analytics/product-procurement",
+      { params },
+    );
+    return response.data;
+  },
+
+  getSalesAnalytics: async (params: {
+    productId: string;
+    variantId: string;
+    fromDate: string;
+    toDate: string;
+  }) => {
+    const response = await apiClient.get(
+      "/purchase-orders/analytics/product-sales",
+      { params },
+    );
+    return response.data;
+  },
+
+  getMarginAnalytics: async (params: {
+    productId: string;
+    variantId: string;
+    fromDate: string;
+    toDate: string;
+  }) => {
+    const response = await apiClient.get(
+      "/purchase-orders/analytics/product-margin",
+      { params },
+    );
+    return response.data;
+  },
 };

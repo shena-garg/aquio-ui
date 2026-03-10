@@ -296,12 +296,14 @@ export function ProductsTable({
               products.map((product) => (
                 <TableRow
                   key={product._id}
-                  className="group border-b border-gray-100 hover:bg-gray-50"
+                  className="group border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/products/${product._id}`)}
                 >
                   {/* Actions — always sticky at left: 0 */}
                   <TableCell
                     className="w-[50px] px-3 sticky z-10 bg-white group-hover:bg-gray-50"
                     style={{ left: 0 }}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
