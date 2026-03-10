@@ -9,6 +9,13 @@ import {
   type POReceipt,
 } from "@/services/purchase-orders";
 import { QuantityCell } from "@/components/ui/QuantityCell";
+import {
+  getActivityLog,
+  getUsers,
+  type AuditEvent,
+  type User as ActivityUser,
+} from "@/services/activity";
+import { ActivityTimeline } from "@/components/activity";
 
 interface PODetailsTabsProps {
   order: PurchaseOrder;
@@ -19,6 +26,28 @@ type TabKey = (typeof TAB_KEYS)[number];
 
 export function PODetailsTabs({ order }: PODetailsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("products");
+  const [activityEvents, setActivityEvents] = useState<AuditEvent[]>([]);
+  const [activityUsers, setActivityUsers] = useState<ActivityUser[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityFetched, setActivityFetched] = useState(false);
+
+  useEffect(() => {
+    if (activeTab !== "activity" || activityFetched) return;
+    const poId = order.id ?? order._id;
+    setActivityLoading(true);
+    Promise.all([getActivityLog(poId), getUsers()])
+      .then(([events, users]) => {
+        setActivityEvents(events);
+        setActivityUsers(users);
+      })
+      .catch((err) => {
+        console.error("Failed to load activity:", err);
+      })
+      .finally(() => {
+        setActivityFetched(true);
+        setActivityLoading(false);
+      });
+  }, [activeTab, activityFetched, order]);
 
   const products = order.products ?? [];
   const receiptsCount = order.receipts?.length ?? 0;
@@ -74,6 +103,34 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
           <ProductsTable order={order} products={products} received={received} />
         ) : activeTab === "receipts" ? (
           <ReceiptsTab order={order} />
+        ) : activeTab === "activity" ? (
+          <div className="px-8 py-6">
+            {activityLoading ? (
+              <div className="space-y-0">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="bg-white border border-[#e5e7eb] rounded-lg p-4 mb-3">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-[#e5e7eb] flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="animate-pulse bg-[#f3f4f6] rounded h-4 w-3/4 mb-2" />
+                        <div className="animate-pulse bg-[#f3f4f6] rounded h-4 w-1/2" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : activityEvents.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-sm text-[#6b7280]">No activity recorded yet.</p>
+              </div>
+            ) : (
+              <ActivityTimeline
+                events={activityEvents}
+                users={activityUsers}
+                poProducts={order.products ?? []}
+              />
+            )}
+          </div>
         ) : (
           <div className="flex items-center justify-center h-48 text-sm text-gray-400">
             Coming soon
