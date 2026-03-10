@@ -123,7 +123,7 @@ export default function PurchaseOrderDetailPage() {
       <PODetailsHeader order={order} onCreateReceipt={() => setCreateReceiptOpen(true)} />
       {/* Parties card: MetaStrip + DateStrip */}
       <div className="mx-8 mt-3">
-        <div className="rounded-[10px] border border-[#f3f4f6] bg-white px-4 pt-[10px] pb-2">
+        <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-2">
           <PODetailsMetaStrip order={order} />
           <PODetailsDateStrip order={order} />
         </div>
