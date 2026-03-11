@@ -1295,8 +1295,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                               <div className="flex items-center gap-1" title={row.quantity > 0 ? numberToIndianWords(row.quantity) : ""}>
                                 <input
                                   type="text"
-                                  inputMode="numeric"
-                                  value={row.quantity === 0 ? "" : row.quantity.toLocaleString("en-IN")}
+                                  inputMode="decimal"
+                                  value={row.quantity === 0 ? "" : row.quantity.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 3 })}
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                     updateRow(row.id, {
@@ -1321,8 +1321,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                                 <span className="text-[13px] text-[#9ca3af] flex-shrink-0">₹</span>
                                 <input
                                   type="text"
-                                  inputMode="numeric"
-                                  value={row.price === 0 ? "" : row.price.toLocaleString("en-IN")}
+                                  inputMode="decimal"
+                                  value={row.price === 0 ? "" : row.price.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                     updateRow(row.id, {
