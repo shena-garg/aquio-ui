@@ -24,6 +24,7 @@ import { QuantityCell } from "@/components/ui/QuantityCell";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
+import { POQuickView } from "@/components/purchase-orders/POQuickView";
 
 // ── Status badge configs ──────────────────────────────────────────────────────
 
@@ -472,6 +473,7 @@ export function POTable({
   const [cancelModal, setCancelModal] = useState<{ open: boolean; order?: PurchaseOrder }>({ open: false });
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; order?: PurchaseOrder }>({ open: false });
   const [forceCloseModal, setForceCloseModal] = useState<{ open: boolean; order?: PurchaseOrder }>({ open: false });
+  const [quickViewPO, setQuickViewPO] = useState<PurchaseOrder | null>(null);
 
   // Build the ordered, filtered list of active columns
   const activeCols = columnOrder
@@ -540,13 +542,13 @@ export function POTable({
                       style={{ left: 0 }}
                     >
                       <div className="flex items-center gap-1">
-                        <Link
-                          href={`/purchase-orders/${order.id}`}
+                        <button
+                          onClick={() => setQuickViewPO(order)}
                           className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0d9488]"
-                          aria-label="View"
+                          aria-label="Quick view"
                         >
                           <Eye className="h-[15px] w-[15px]" />
-                        </Link>
+                        </button>
 
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -612,6 +614,12 @@ export function POTable({
           onClose={() => setForceCloseModal({ open: false })}
           onSuccess={() => { setForceCloseModal({ open: false }); onRefresh(); }}
           order={forceCloseModal.order}
+        />
+      )}
+      {quickViewPO && (
+        <POQuickView
+          po={quickViewPO}
+          onClose={() => setQuickViewPO(null)}
         />
       )}
     </>
