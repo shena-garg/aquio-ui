@@ -670,18 +670,18 @@ function ProductsTable({
   const remainingItems = order.remainingItems ?? [];
 
   return (
-    <div className="border border-[#e5e7eb] rounded-[10px] overflow-hidden mx-8 mt-6 mb-6">
+    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm mx-8 mt-6 mb-6">
       <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px] text-sm">
+      <table className="w-full min-w-[900px]">
         <thead>
-          <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
-            <th className="px-6 py-3 font-medium">Product</th>
-            <th className="px-6 py-3 font-medium text-right whitespace-nowrap">Ordered Qty</th>
-            <th className="px-6 py-3 font-medium text-right whitespace-nowrap">Received Qty</th>
-            <th className="px-6 py-3 font-medium text-right whitespace-nowrap">Pending Qty</th>
-            <th className="px-6 py-3 font-medium text-right whitespace-nowrap">Unit Price</th>
-            <th className="px-6 py-3 font-medium text-right whitespace-nowrap">Tax %</th>
-            <th className="px-6 py-3 font-medium text-right whitespace-nowrap">Line Total</th>
+          <tr className="border-b border-[#e5e7eb]">
+            <th className="text-left py-2 pl-5 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">Product</th>
+            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Ordered Qty</th>
+            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Received Qty</th>
+            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Pending Qty</th>
+            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Unit Price</th>
+            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Tax %</th>
+            <th className="text-right py-2 pr-5 pl-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Line Total</th>
           </tr>
         </thead>
         <tbody>
@@ -697,38 +697,40 @@ function ProductsTable({
             const receivedPct = ordered > 0 ? (receivedQty / ordered) * 100 : 0;
             const isNotReceived = receivedQty === 0;
             const receivedTextColor = isNotReceived
-              ? "text-gray-400"
-              : "text-green-600";
+              ? "text-[#6b7280]"
+              : "text-[#10b981]";
             const receivedBarColor = isNotReceived
-              ? "bg-gray-300"
-              : "bg-green-500";
+              ? "bg-[#d1d5db]"
+              : "bg-[#10b981]";
 
             return (
               <tr
                 key={`${product.product._id}-${product.variant._id}-${idx}`}
-                className="border-b border-gray-100"
+                className="border-b border-[#e5e7eb] last:border-b-0"
               >
                 {/* Product */}
-                <td className="px-6 py-3">
-                  <div className="font-medium text-gray-900">
-                    {product.metadata.product.name}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {product.metadata.variant.name}
+                <td className="py-2.5 pl-5 pr-3">
+                  <div className="flex flex-col gap-[3px]">
+                    <span className="text-[13px] font-medium leading-[16.9px] text-[#111827]">
+                      {product.metadata.product.name}
+                    </span>
+                    <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280]">
+                      {product.metadata.variant.name}
+                    </span>
                   </div>
                 </td>
 
                 {/* Ordered Qty */}
-                <td className="px-6 py-3 text-right text-gray-700 whitespace-nowrap">
+                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
                   <QuantityCell value={ordered} uom={product.quantity.postfix} />
                 </td>
 
                 {/* Received Qty */}
-                <td className="px-6 py-3 text-right whitespace-nowrap">
-                  <div className={receivedTextColor}>
+                <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                  <div className={receivedTextColor + " text-[13px] font-normal leading-[16.9px]"}>
                     <QuantityCell value={receivedQty} uom={product.quantity.postfix} />
                   </div>
-                  <div className="mt-1 bg-gray-200 rounded h-1 w-20 ml-auto">
+                  <div className="mt-1 bg-[#e5e7eb] rounded h-1 w-20 ml-auto">
                     <div
                       className={cn(receivedBarColor, "rounded h-1")}
                       style={{
@@ -739,22 +741,22 @@ function ProductsTable({
                 </td>
 
                 {/* Pending Qty */}
-                <td className="px-6 py-3 text-right text-gray-700 whitespace-nowrap">
+                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
                   <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
                 </td>
 
                 {/* Unit Price */}
-                <td className="px-6 py-3 text-right text-gray-700 whitespace-nowrap">
+                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
                   ₹ {product.price.value.$numberDecimal}
                 </td>
 
                 {/* Tax% */}
-                <td className="px-6 py-3 text-right text-gray-700 whitespace-nowrap">
+                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
                   {product.gst.value}%
                 </td>
 
                 {/* Line Total */}
-                <td className="px-6 py-3 text-right font-medium text-gray-900 whitespace-nowrap">
+                <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
                   ₹ {parseFloat(
                     product.totalAmount.$numberDecimal,
                   ).toLocaleString("en-IN")}
@@ -766,32 +768,32 @@ function ProductsTable({
 
         {/* Footer Total Summary */}
         <tfoot>
-          <tr className="border-t border-gray-200 bg-gray-50 font-bold text-gray-900">
-            <td className="px-6 py-3">Total Summary</td>
-            <td className="px-6 py-3 text-right whitespace-nowrap">
+          <tr className="border-t border-[#e5e7eb]">
+            <td className="py-2.5 pl-5 pr-3 text-[13px] font-semibold leading-[16.9px] text-[#111827]">Total Summary</td>
+            <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
               {order.hasUniformUOM !== false ? (
                 <QuantityCell value={order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)} uom={order.commonUOM ?? ""} />
               ) : (
                 <span className="text-[#6b7280] font-normal">—</span>
               )}
             </td>
-            <td className="px-6 py-3 text-right whitespace-nowrap">
+            <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
               {order.hasUniformUOM !== false ? (
                 <QuantityCell value={totalReceived} uom={order.commonUOM ?? ""} />
               ) : (
                 <span className="text-[#6b7280] font-normal">—</span>
               )}
             </td>
-            <td className="px-6 py-3 text-right whitespace-nowrap">
+            <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
               {order.hasUniformUOM !== false ? (
                 <QuantityCell value={order.pendingQuantity ?? ((order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)) - totalReceived)} uom={order.commonUOM ?? ""} />
               ) : (
                 <span className="text-[#6b7280] font-normal">—</span>
               )}
             </td>
-            <td className="px-6 py-3" />
-            <td className="px-6 py-3" />
-            <td className="px-6 py-3 text-right whitespace-nowrap">
+            <td className="py-2.5 px-3" />
+            <td className="py-2.5 px-3" />
+            <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
               ₹ {(typeof order.totalAmount === "number"
                 ? order.totalAmount
                 : parseFloat(order.totalAmount.$numberDecimal)
