@@ -201,6 +201,19 @@ export async function createPurchaseOrder(
   return data;
 }
 
+export async function updatePurchaseOrder(
+  id: string,
+  payload: CreatePOPayload
+): Promise<any> {
+  const { data } = await apiClient.put(`/purchase-orders/${id}`, payload);
+  return data;
+}
+
+export async function getOrderForEdit(id: string): Promise<any> {
+  const { data } = await apiClient.get(`/purchase-orders/${id}?comprehensive=true`);
+  return data;
+}
+
 // ---------------------------------------------------------------------------
 // Helper functions
 // ---------------------------------------------------------------------------
