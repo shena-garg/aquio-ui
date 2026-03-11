@@ -370,7 +370,7 @@ function ActionMenu({ order, onCancel, onConfirm, onForceClose }: ActionMenuProp
     <DropdownMenuContent align="start" className="w-48">
       {status === "cancelled" || status === "completed" ? (
         <DropdownMenuItem
-          onClick={() => router.push(`/purchase-orders/new?duplicateFrom=${order.id}`)}
+          onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
         >
           Create Duplicate
         </DropdownMenuItem>
@@ -380,7 +380,7 @@ function ActionMenu({ order, onCancel, onConfirm, onForceClose }: ActionMenuProp
             Edit Order
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(`/purchase-orders/new?duplicateFrom=${order.id}`)}
+            onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
           >
             Create Duplicate
           </DropdownMenuItem>
@@ -398,7 +398,7 @@ function ActionMenu({ order, onCancel, onConfirm, onForceClose }: ActionMenuProp
             Edit Order
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(`/purchase-orders/new?duplicateFrom=${order.id}`)}
+            onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
           >
             Create Duplicate
           </DropdownMenuItem>
@@ -425,7 +425,7 @@ function ActionMenu({ order, onCancel, onConfirm, onForceClose }: ActionMenuProp
             Edit Order
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(`/purchase-orders/new?duplicateFrom=${order.id}`)}
+            onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
           >
             Create Duplicate
           </DropdownMenuItem>

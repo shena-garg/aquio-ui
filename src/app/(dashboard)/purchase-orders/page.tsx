@@ -265,7 +265,7 @@ export default function PurchaseOrdersPage() {
 
       <Button
         size="sm"
-        onClick={() => router.push("/purchase-orders/new")}
+        onClick={() => router.push("/purchase-orders/create")}
         className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
       >
         <Plus className="h-3.5 w-3.5" />

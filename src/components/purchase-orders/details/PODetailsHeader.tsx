@@ -142,7 +142,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
             <DropdownMenuItem
               onClick={() =>
                 router.push(
-                  `/purchase-orders/new?duplicateFrom=${order.id}`,
+                  `/purchase-orders/create?duplicateFrom=${order.id}`,
                 )
               }
             >
@@ -160,7 +160,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
               <DropdownMenuItem
                 onClick={() =>
                   router.push(
-                    `/purchase-orders/new?duplicateFrom=${order.id}`,
+                    `/purchase-orders/create?duplicateFrom=${order.id}`,
                   )
                 }
               >
@@ -186,7 +186,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
               <DropdownMenuItem
                 onClick={() =>
                   router.push(
-                    `/purchase-orders/new?duplicateFrom=${order.id}`,
+                    `/purchase-orders/create?duplicateFrom=${order.id}`,
                   )
                 }
               >
@@ -221,7 +221,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
               <DropdownMenuItem
                 onClick={() =>
                   router.push(
-                    `/purchase-orders/new?duplicateFrom=${order.id}`,
+                    `/purchase-orders/create?duplicateFrom=${order.id}`,
                   )
                 }
               >
