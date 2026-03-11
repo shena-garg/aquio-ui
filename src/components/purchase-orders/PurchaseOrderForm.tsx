@@ -449,9 +449,10 @@ function ProductTypeahead({
 
 interface PurchaseOrderFormProps {
   editId?: string;
+  duplicateFromId?: string;
 }
 
-export function PurchaseOrderForm({ editId }: PurchaseOrderFormProps) {
+export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderFormProps) {
   const isEditMode = !!editId;
   const router = useRouter();
 
@@ -462,6 +463,7 @@ export function PurchaseOrderForm({ editId }: PurchaseOrderFormProps) {
   const [settings, setSettings] = useState<POFormSettings | null>(null);
 
   useEffect(() => {
+    const fetchId = editId || duplicateFromId;
     const promises: [
       Promise<VendorCompany[]>,
       Promise<Organization>,
@@ -471,17 +473,19 @@ export function PurchaseOrderForm({ editId }: PurchaseOrderFormProps) {
       getVendorCompaniesWithLocations(),
       getMyOrganization(),
       getPOFormSettings(),
-      editId ? getOrderForEdit(editId) : Promise.resolve(null),
+      fetchId ? getOrderForEdit(fetchId) : Promise.resolve(null),
     ];
 
     Promise.all(promises)
-      .then(([v, org, s, editOrder]) => {
+      .then(([v, org, s, sourceOrder]) => {
         setVendors(v);
         setOwnOrg(org);
         setSettings(s);
 
-        if (editOrder) {
-          populateFromOrder(editOrder, v, org);
+        if (sourceOrder && editId) {
+          populateFromOrder(sourceOrder, v, org);
+        } else if (sourceOrder && duplicateFromId) {
+          populateForDuplicate(sourceOrder, v, org);
         }
       })
       .catch(() => {
@@ -489,7 +493,7 @@ export function PurchaseOrderForm({ editId }: PurchaseOrderFormProps) {
       })
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editId]);
+  }, [editId, duplicateFromId]);
 
   // ── Build unified company list ──────────────────────────────────────────
   const companies: CompanyOption[] = ownOrg
@@ -647,6 +651,87 @@ export function PurchaseOrderForm({ editId }: PurchaseOrderFormProps) {
       });
       setProductRows(rows);
     }
+  }
+
+  // ── Populate form for duplicate (only copy relevant fields) ───────────
+  function populateForDuplicate(
+    order: any,
+    vendorList: VendorCompany[],
+    org: Organization
+  ) {
+    // Partners
+    if (order.supplier?.id) {
+      setSupplierCompanyId(order.supplier.id);
+      if (order.supplier.address?._id) setSupplierLocationId(order.supplier.address._id);
+    }
+    const buyerData = order.buyer ?? order.biller;
+    const billerData = order.biller ?? order.buyer;
+    if (buyerData?.id) {
+      setConsigneeCompanyId(buyerData.id);
+      if (buyerData.address?._id) setConsigneeLocationId(buyerData.address._id);
+    }
+    if (billerData?.id) {
+      setBuyerCompanyId(billerData.id);
+      if (billerData.address?._id) setBuyerLocationId(billerData.address._id);
+    }
+    const buyerSame =
+      buyerData?.id === billerData?.id &&
+      buyerData?.address?._id === billerData?.address?._id;
+    setSameAsConsignee(buyerSame);
+    didPreselect.current = true;
+
+    // Payment terms
+    if (order.paymentTerms) setPaymentTerms(order.paymentTerms);
+
+    // Terms & Conditions
+    if (order.termsAndConditions) setTerms(order.termsAndConditions);
+
+    // Files
+    if (order.files && Array.isArray(order.files)) {
+      setFiles(
+        order.files.map((f: any) => ({
+          id: f.id ?? f._id ?? "",
+          name: f.name ?? f.fileName ?? "",
+        }))
+      );
+    }
+
+    // Products
+    if (order.products && Array.isArray(order.products) && order.products.length > 0) {
+      const rows: ProductRow[] = order.products.map((p: any) => {
+        const productName = p.metadata?.product?.name ?? p.product?.name ?? "";
+        const variantName = p.metadata?.variant?.name ?? p.variant?.name ?? "";
+        const productId = p.product?._id ?? p.product?.id ?? "";
+        const variantId = p.variant?._id ?? p.variant?.id ?? "";
+        const uom = p.quantity?.postfix ?? "";
+        const gst = p.gst?.value ?? 0;
+        const qty = p.quantity?.value ?? 0;
+        const price = typeof p.price?.value === "object"
+          ? parseFloat(p.price.value.$numberDecimal ?? "0")
+          : (p.price?.value ?? 0);
+
+        const variant: ProductVariant = { _id: variantId, name: variantName };
+        const product: ProductSearchResult = {
+          _id: productId,
+          name: productName,
+          unitOfMeasurement: uom,
+          gst,
+          variants: [variant],
+        };
+
+        return {
+          id: nextRowId(),
+          product,
+          variant,
+          quantity: qty,
+          price,
+        };
+      });
+      setProductRows(rows);
+    }
+
+    // Leave blank: PO Number, Issue Date (already today), Delivery Date (already default),
+    // Reference ID, Supplier Reference ID, Internal Notes
   }
 
   // ── Order details state ─────────────────────────────────────────────────
