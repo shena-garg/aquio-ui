@@ -15,6 +15,16 @@ export interface Role {
   permissionsPerEntity: RolePermission[];
 }
 
+export interface CreateRolePayload {
+  name: string;
+  description: string;
+  permissionsPerEntity: RolePermission[];
+}
+
 export const rolesService = {
   list: () => apiClient.get<Role[]>("/roles"),
+  getById: (id: string) => apiClient.get<Role>(`/roles/${id}`),
+  create: (payload: CreateRolePayload) => apiClient.post("/roles", payload),
+  update: (id: string, payload: CreateRolePayload) =>
+    apiClient.put(`/roles/${id}`, payload),
 };
