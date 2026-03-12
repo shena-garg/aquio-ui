@@ -27,6 +27,9 @@ export interface CreateUserPayload {
 export const usersService = {
   list: (params: { page: number; limit: number; status: "active" | "inactive" }) =>
     apiClient.get<UsersResponse>("/users", { params }),
+  getById: (id: string) => apiClient.get<User>(`/users/${id}`),
   create: (payload: CreateUserPayload) => apiClient.post("/users", payload),
+  update: (id: string, payload: CreateUserPayload) =>
+    apiClient.put(`/users/${id}`, payload),
   deactivate: (id: string) => apiClient.delete(`/users/${id}`),
 };
