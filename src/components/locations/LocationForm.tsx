@@ -252,35 +252,52 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
               </div>
 
               {/* Set as Default */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsDefault(!isDefault)}
-                  className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
-                    isDefault
-                      ? "border-[#0d9488] bg-[#0d9488]"
-                      : "border-gray-300 bg-white hover:border-[#0d9488]"
-                  }`}
-                >
-                  {isDefault && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path
-                        d="M1.5 5.5L3.5 7.5L8.5 2.5"
-                        stroke="white"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </button>
-                <label
-                  className="text-sm text-gray-700 cursor-pointer select-none"
-                  onClick={() => setIsDefault(!isDefault)}
-                >
-                  Set as default location
-                </label>
-              </div>
+              {(() => {
+                const alreadyDefault = isEdit && initialValues?.isDefault;
+                return (
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={!!alreadyDefault}
+                        onClick={() => {
+                          if (!alreadyDefault) setIsDefault(!isDefault);
+                        }}
+                        className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
+                          isDefault
+                            ? "border-[#0d9488] bg-[#0d9488]"
+                            : "border-gray-300 bg-white hover:border-[#0d9488]"
+                        } ${alreadyDefault ? "opacity-60 cursor-not-allowed" : ""}`}
+                      >
+                        {isDefault && (
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path
+                              d="M1.5 5.5L3.5 7.5L8.5 2.5"
+                              stroke="white"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                      <label
+                        className={`text-sm text-gray-700 select-none ${alreadyDefault ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                        onClick={() => {
+                          if (!alreadyDefault) setIsDefault(!isDefault);
+                        }}
+                      >
+                        Set as default location
+                      </label>
+                    </div>
+                    {alreadyDefault && (
+                      <p className="text-[12px] text-gray-400 mt-1">
+                        To change the default, select another location from the locations list.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Action buttons */}
