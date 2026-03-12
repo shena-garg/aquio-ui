@@ -29,7 +29,7 @@ export const usersService = {
     apiClient.get<UsersResponse>("/users", { params }),
   getById: (id: string) => apiClient.get<User>(`/users/${id}`),
   create: (payload: CreateUserPayload) => apiClient.post("/users", payload),
-  update: (id: string, payload: CreateUserPayload) =>
-    apiClient.put(`/users/${id}`, payload),
+  update: (id: string, payload: Partial<CreateUserPayload>) =>
+    apiClient.patch(`/users/${id}`, payload),
   deactivate: (id: string) => apiClient.delete(`/users/${id}`),
 };

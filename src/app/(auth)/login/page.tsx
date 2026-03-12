@@ -8,8 +8,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth";
 
 const loginSchema = z.object({
@@ -69,44 +67,46 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="px-10 py-8 flex flex-col gap-6">
 
             {/* Email field */}
-            <div className="flex flex-col gap-2">
-              <Label
+            <div className="flex flex-col gap-1.5">
+              <label
                 htmlFor="email"
-                className="text-[11px] font-light uppercase tracking-[0.1em] text-gray-500"
+                className="text-sm font-medium text-gray-700"
               >
-                Email
-              </Label>
-              <Input
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
                 id="email"
                 type="email"
                 placeholder="name@company.com"
                 {...register("email")}
-                aria-invalid={!!errors.email}
-                className="h-[46px] rounded-md border border-gray-200 bg-white text-sm text-[#0F1720] placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#0d9488]/25 focus-visible:border-[#0d9488] aria-invalid:border-red-400 aria-invalid:focus-visible:ring-red-200"
+                className={`w-full border ${
+                  errors.email ? "border-[#dc2626]" : "border-gray-300"
+                } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
               />
               {errors.email && (
-                <p className="text-xs text-red-500">{errors.email.message}</p>
+                <p className="text-[12px] text-[#dc2626] mt-1">{errors.email.message}</p>
               )}
             </div>
 
             {/* Password field */}
-            <div className="flex flex-col gap-2">
-              <Label
+            <div className="flex flex-col gap-1.5">
+              <label
                 htmlFor="password"
-                className="text-[11px] font-light uppercase tracking-[0.1em] text-gray-500"
+                className="text-sm font-medium text-gray-700"
               >
-                Password
-              </Label>
-              <Input
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
                 id="password"
                 type="password"
                 placeholder="••••••••••••"
                 {...register("password")}
-                aria-invalid={!!errors.password}
-                className="h-[46px] rounded-md border border-gray-200 bg-white text-sm text-[#0F1720] placeholder:text-gray-400 shadow-none focus-visible:ring-2 focus-visible:ring-[#0d9488]/25 focus-visible:border-[#0d9488] aria-invalid:border-red-400 aria-invalid:focus-visible:ring-red-200"
+                className={`w-full border ${
+                  errors.password ? "border-[#dc2626]" : "border-gray-300"
+                } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
               />
               {errors.password && (
-                <p className="text-xs text-red-500">{errors.password.message}</p>
+                <p className="text-[12px] text-[#dc2626] mt-1">{errors.password.message}</p>
               )}
               <div className="flex justify-end">
                 <Link

@@ -81,7 +81,8 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
     setIsSubmitting(true);
     try {
       if (mode === "edit" && userId) {
-        await usersService.update(userId, payload);
+        const { email: _email, ...editPayload } = payload;
+        await usersService.update(userId, editPayload);
         toast.success("User updated successfully");
       } else {
         await usersService.create(payload);
@@ -156,9 +157,9 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
                   <input
                     type="text"
                     placeholder="Enter mobile number"
-                    value={phoneNumber}
+                    value={phoneNumber.length > 5 ? `${phoneNumber.slice(0, 5)} ${phoneNumber.slice(5)}` : phoneNumber}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                       setPhoneNumber(val);
                     }}
                     className={`flex-1 border ${
