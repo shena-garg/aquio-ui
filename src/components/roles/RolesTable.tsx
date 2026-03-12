@@ -194,9 +194,11 @@ export function RolesTable({ roles, isLoading }: RolesTableProps) {
                   {/* Permissions */}
                   <TableCell className="px-3">
                     <div className="flex flex-wrap gap-1.5">
-                      {role.permissionsPerEntity?.map((perm) => (
-                        <PermissionChip key={perm.entity} perm={perm} />
-                      ))}
+                      {role.permissionsPerEntity
+                        ?.filter((perm) => perm.access !== "none")
+                        .map((perm) => (
+                          <PermissionChip key={perm.entity} perm={perm} />
+                        ))}
                     </div>
                   </TableCell>
                 </TableRow>
