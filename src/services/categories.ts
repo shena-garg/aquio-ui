@@ -18,4 +18,8 @@ export interface CategoriesResponse {
 
 export const categoriesService = {
   list: () => apiClient.get<CategoriesResponse>("/categories"),
+  getById: (id: string) => apiClient.get<Category>(`/categories/${id}`),
+  create: (payload: { name: string }) => apiClient.post("/categories", payload),
+  update: (id: string, payload: { name: string }) =>
+    apiClient.patch(`/categories/${id}`, payload),
 };
