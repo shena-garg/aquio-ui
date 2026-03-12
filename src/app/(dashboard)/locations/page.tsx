@@ -16,7 +16,7 @@ export default function LocationsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["locations", page, limit],
     queryFn: () =>
       locationsService.list({ page, limit }).then((res) => res.data),
@@ -60,6 +60,7 @@ export default function LocationsPage() {
         <LocationsTable
           locations={data?.locations ?? []}
           isLoading={isLoading}
+          onRefresh={refetch}
         />
       </div>
     </div>

@@ -24,4 +24,6 @@ export interface LocationsResponse {
 export const locationsService = {
   list: (params: { page: number; limit: number }) =>
     apiClient.get<LocationsResponse>("/locations", { params }),
+  update: (id: string, payload: Partial<Omit<Location, "_id" | "createdAt" | "updatedAt" | "status">>) =>
+    apiClient.patch(`/locations/${id}`, payload),
 };
