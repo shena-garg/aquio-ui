@@ -56,6 +56,8 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
     const errs: FormErrors = {};
     if (!name.trim()) errs.name = "Name is required";
     if (!phoneNumber.trim()) errs.phoneNumber = "Mobile number is required";
+    else if (!/^\d{10}$/.test(phoneNumber.trim()))
+      errs.phoneNumber = "Enter a valid 10-digit mobile number";
     if (!email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       errs.email = "Enter a valid email address";
@@ -183,9 +185,12 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
                   placeholder="Enter email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  readOnly={isEdit}
                   className={`w-full border ${
                     errors.email ? "border-[#dc2626]" : "border-gray-300"
-                  } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
+                  } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]${
+                    isEdit ? " bg-[#f9fafb] text-gray-500 cursor-not-allowed" : ""
+                  }`}
                 />
                 {errors.email && (
                   <p className="text-[12px] text-[#dc2626] mt-1">
