@@ -24,14 +24,34 @@ function makeEmptyRow(): AttributeRow {
 }
 
 interface SubCategoryFormProps {
+  mode: "create" | "edit";
   parentCategoryId: string;
+  subCategoryId?: string;
+  initialValues?: {
+    name: string;
+    customAttributes?: CustomAttribute[];
+  };
 }
 
-export function SubCategoryForm({ parentCategoryId }: SubCategoryFormProps) {
+export function SubCategoryForm({
+  mode,
+  parentCategoryId,
+  subCategoryId,
+  initialValues,
+}: SubCategoryFormProps) {
   const router = useRouter();
+  const isEdit = mode === "edit";
 
-  const [name, setName] = useState("");
-  const [attributes, setAttributes] = useState<AttributeRow[]>([makeEmptyRow()]);
+  const [name, setName] = useState(initialValues?.name ?? "");
+  const [attributes, setAttributes] = useState<AttributeRow[]>(() => {
+    if (initialValues?.customAttributes?.length) {
+      return initialValues.customAttributes.map((attr) => ({
+        ...attr,
+        id: crypto.randomUUID(),
+      }));
+    }
+    return [makeEmptyRow()];
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [nameError, setNameError] = useState("");
@@ -96,18 +116,26 @@ export function SubCategoryForm({ parentCategoryId }: SubCategoryFormProps) {
         return attr;
       });
 
-      await categoriesService.createSubCategory({
-        name: trimmedName,
-        parentId: parentCategoryId,
-        customAttributes,
-      });
+      if (isEdit && subCategoryId) {
+        await categoriesService.updateSubCategory(subCategoryId, {
+          name: trimmedName,
+          customAttributes,
+        });
+        toast.success("Subcategory updated successfully");
+      } else {
+        await categoriesService.createSubCategory({
+          name: trimmedName,
+          parentId: parentCategoryId,
+          customAttributes,
+        });
+        toast.success("Subcategory created successfully");
+      }
 
-      toast.success("Subcategory created successfully");
       router.push("/categories");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Failed to create subcategory";
+          ?.message ?? `Failed to ${isEdit ? "update" : "create"} subcategory`;
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -128,7 +156,7 @@ export function SubCategoryForm({ parentCategoryId }: SubCategoryFormProps) {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <span className="text-[18px] font-semibold text-[#111827]">
-          Create Subcategory
+          {isEdit ? "Edit Subcategory" : "Create Subcategory"}
         </span>
       </div>
 
@@ -315,7 +343,7 @@ export function SubCategoryForm({ parentCategoryId }: SubCategoryFormProps) {
               {isSubmitting && (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               )}
-              Create Subcategory
+              {isEdit ? "Update Subcategory" : "Create Subcategory"}
             </Button>
           </div>
         </div>

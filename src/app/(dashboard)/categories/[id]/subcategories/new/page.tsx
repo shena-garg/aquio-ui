@@ -9,5 +9,5 @@ export default function CreateSubCategoryPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  return <SubCategoryForm parentCategoryId={id} />;
+  return <SubCategoryForm mode="create" parentCategoryId={id} />;
 }
