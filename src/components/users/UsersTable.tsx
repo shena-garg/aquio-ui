@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
-import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -19,20 +18,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import type { User } from "@/services/users";
-import { usersService } from "@/services/users";
 import type { Role } from "@/services/roles";
-import axios from "axios";
+import { DeactivateUserModal } from "@/components/users/DeactivateUserModal";
 
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 
@@ -67,30 +55,10 @@ interface UsersTableProps {
 export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: UsersTableProps) {
   const router = useRouter();
   const [deactivateUser, setDeactivateUser] = useState<User | null>(null);
-  const [isDeactivating, setIsDeactivating] = useState(false);
 
   function getRoleName(roleId: string): string {
     const role = roles.find((r) => r._id === roleId);
     return role?.name ?? "—";
-  }
-
-  async function handleDeactivate() {
-    if (!deactivateUser) return;
-    setIsDeactivating(true);
-    try {
-      await usersService.deactivate(deactivateUser._id);
-      toast.success(`${deactivateUser.name} has been deactivated`);
-      setDeactivateUser(null);
-      onRefresh();
-    } catch (error) {
-      const message =
-        axios.isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : "Failed to deactivate user";
-      toast.error(message);
-    } finally {
-      setIsDeactivating(false);
-    }
   }
 
   const showActions = activeTab === "active";
@@ -178,34 +146,16 @@ export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: Us
         </Table>
       </div>
 
-      {/* Deactivation confirmation dialog */}
-      <AlertDialog
-        open={!!deactivateUser}
-        onOpenChange={(open) => {
-          if (!open) setDeactivateUser(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate User</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to deactivate {deactivateUser?.name}? They
-              will lose access to Aquio immediately and won&apos;t be able to log
-              in until reactivated.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeactivating}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeactivate}
-              disabled={isDeactivating}
-              className="bg-[#DC2626] text-white hover:bg-[#B91C1C]"
-            >
-              {isDeactivating ? "Deactivating…" : "Deactivate"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Deactivation confirmation modal */}
+      {deactivateUser && (
+        <DeactivateUserModal
+          isOpen={!!deactivateUser}
+          onClose={() => setDeactivateUser(null)}
+          onSuccess={onRefresh}
+          userId={deactivateUser._id}
+          userName={deactivateUser.name}
+        />
+      )}
     </>
   );
 }
