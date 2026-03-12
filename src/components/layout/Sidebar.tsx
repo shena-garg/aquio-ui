@@ -59,6 +59,7 @@ const navSections = [
       { label: "Users", href: "/users", icon: Users },
       { label: "Roles", href: "/roles", icon: ShieldCheck },
       { label: "Settings", href: "/settings", icon: Settings },
+      { label: "Company", href: "/company", icon: Building2 },
     ],
   },
 ];
