@@ -216,7 +216,7 @@ export default function DashboardPage() {
             {/* Card 4 — Open Purchase Orders */}
             <KpiCard
               label="Open Purchase Orders"
-              smallLabel
+
               value={String(kpis.openPOCount ?? 0)}
               valueColor={
                 (kpis.openPOCount ?? 0) > 10 ? "text-[#d97706]" : "text-[#111827]"
@@ -227,7 +227,7 @@ export default function DashboardPage() {
             {/* Card 5 — Open Sales Orders */}
             <KpiCard
               label="Open Sales Orders"
-              smallLabel
+
               value={String(kpis.openSOCount ?? 0)}
               valueColor="text-[#111827]"
               subValue={formatCrore(kpis.openSOValue ?? 0)}
@@ -288,24 +288,17 @@ function KpiCard({
   valueColor,
   subValue,
   trend,
-  smallLabel,
 }: {
   label: string;
   value: string;
   valueColor: string;
   subValue?: string;
   trend?: { text: string; colorClass: string } | null;
-  smallLabel?: boolean;
 }) {
   return (
     <div className="border border-[#e5e7eb] rounded-lg bg-white p-4">
       <div
-        className={cn(
-          "font-semibold uppercase text-[#6b7280]",
-          smallLabel
-            ? "text-[9px] tracking-normal"
-            : "text-[10px] tracking-[0.8px]",
-        )}
+        className="font-semibold uppercase text-[#6b7280] text-[10px] tracking-[0.8px]"
       >
         {label}
       </div>
