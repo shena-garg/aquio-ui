@@ -1,8 +1,8 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -18,8 +18,16 @@ import {
   Settings,
   Sparkles,
   ChevronDown,
+  LogOut,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navSections = [
   {
@@ -57,6 +65,20 @@ const navSections = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const user = JSON.parse(stored);
+        setUserName(user.userName ?? user.name ?? "");
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -168,10 +190,35 @@ export function Sidebar() {
 
         {/* User bar */}
         <div className="flex h-[50px] items-center justify-between px-5">
-          <span className="text-[13px] font-semibold text-[#e5e7eb]">
-            Alex Gupta
+          <span className="text-[13px] font-semibold text-[#e5e7eb] truncate">
+            {userName || "—"}
           </span>
-          <ChevronDown className="h-4 w-4 text-[#e5e7eb]" strokeWidth={1.33} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="rounded p-1 text-[#e5e7eb] transition-colors hover:bg-[#1f2937] hover:text-white"
+                aria-label="User menu"
+              >
+                <ChevronDown className="h-4 w-4" strokeWidth={1.33} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="w-44 mb-1">
+              <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <User className="h-4 w-4 mr-2" />
+                My Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  localStorage.removeItem("accessToken");
+                  localStorage.removeItem("user");
+                  router.push("/login");
+                }}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
