@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, X, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
@@ -278,7 +284,7 @@ function GstListInput({
       </div>
       {items.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {items.map((item, i) => (
+          {[...items].sort((a, b) => a - b).map((item, i) => (
             <span
               key={`${item}-${i}`}
               className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[12px] text-gray-700"
@@ -302,9 +308,11 @@ function GstListInput({
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabValue>("po");
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["organization-settings"],
@@ -338,6 +346,64 @@ export default function SettingsPage() {
   const [skuPrefix, setSkuPrefix] = useState("");
   const [skuSeparator, setSkuSeparator] = useState("");
   const [nextSKUNumber, setNextSKUNumber] = useState(1);
+
+  // ── Dirty check ──
+
+  const isDirty = !!settings && (
+    JSON.stringify(poCancelReasons) !== JSON.stringify(settings.poCancelReasons ?? []) ||
+    JSON.stringify(paymentTerms) !== JSON.stringify(settings.paymentTerms ?? []) ||
+    isPOReferenceIDInternal !== (settings.isPOReferenceIDInternal ?? false) ||
+    generatePOAutomatically !== (settings.generatePOAutomatically ?? false) ||
+    poPrefix !== (settings.poPrefix ?? "") ||
+    poSeparator !== (settings.poSeparator ?? "") ||
+    nextPONumber !== (settings.nextPONumber ?? 1) ||
+    JSON.stringify(soCancelReasons) !== JSON.stringify(settings.soCancelReasons ?? []) ||
+    JSON.stringify(soPaymentTerms) !== JSON.stringify(settings.soPaymentTerms ?? []) ||
+    isSOReferenceIDInternal !== (settings.isSOReferenceIDInternal ?? false) ||
+    generateSOAutomatically !== (settings.generateSOAutomatically ?? false) ||
+    soPrefix !== (settings.soPrefix ?? "") ||
+    soSeparator !== (settings.soSeparator ?? "") ||
+    nextSONumber !== (settings.nextSONumber ?? 1) ||
+    JSON.stringify(applicableGst) !== JSON.stringify(settings.applicableGst ?? []) ||
+    generateSKUAutomatically !== (settings.generateSKUAutomatically ?? false) ||
+    skuPrefix !== (settings.skuPrefix ?? "") ||
+    skuSeparator !== (settings.skuSeparator ?? "") ||
+    nextSKUNumber !== (settings.nextSKUNumber ?? 1)
+  );
+
+  // Warn on browser close / refresh
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  // Warn on in-app navigation (intercept link clicks)
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("http") || href === "#") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavUrl(href);
+    };
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [isDirty]);
+
+  const handleDiscardAndLeave = useCallback(() => {
+    if (pendingNavUrl) {
+      const url = pendingNavUrl;
+      setPendingNavUrl(null);
+      router.push(url);
+    }
+  }, [pendingNavUrl, router]);
 
   // Hydrate from API
   useEffect(() => {
@@ -418,15 +484,22 @@ export default function SettingsPage() {
       <PageHeader
         title="Settings"
         actions={
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="h-8 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
-          >
-            {isSaving && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-            Save Changes
-          </Button>
+          <div className="flex items-center gap-3">
+            {isDirty && (
+              <span className="text-[12px] text-amber-600 font-medium">
+                Unsaved changes
+              </span>
+            )}
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving || !isDirty}
+              className="h-8 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
+            >
+              {isSaving && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+              Save Changes
+            </Button>
+          </div>
         }
       />
 
@@ -611,6 +684,54 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Unsaved changes modal */}
+      <Dialog
+        open={!!pendingNavUrl}
+        onOpenChange={(open) => {
+          if (!open) setPendingNavUrl(null);
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-[480px] p-0 gap-0"
+        >
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <DialogTitle className="text-base font-semibold text-gray-900">
+              Unsaved Changes
+            </DialogTitle>
+            <button
+              onClick={() => setPendingNavUrl(null)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="px-5 py-4">
+            <p className="text-sm text-gray-700">
+              You have unsaved changes that will be lost if you leave this page.
+              Would you like to save your changes before leaving?
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={handleDiscardAndLeave}
+            >
+              Discard & Leave
+            </Button>
+            <Button
+              onClick={() => setPendingNavUrl(null)}
+              className="bg-[#0d9488] hover:bg-[#0f766e] text-white"
+            >
+              Stay & Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
