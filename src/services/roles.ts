@@ -2,7 +2,7 @@ import apiClient from "@/lib/api-client";
 
 export interface RolePermission {
   entity: string;
-  access: "full" | "custom";
+  access: "full" | "custom" | "none";
   permissions: string[];
 }
 
