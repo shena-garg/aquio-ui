@@ -106,13 +106,15 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
     <div className="flex flex-1 flex-col">
       {/* Header */}
       <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-6">
-        <button
-          onClick={() => router.push("/users")}
-          className="mr-3 rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-          aria-label="Back to users"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
+        {isEdit && (
+          <button
+            onClick={() => router.push("/users")}
+            className="mr-3 rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+            aria-label="Back to users"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+        )}
         <span className="text-[18px] font-semibold text-[#111827]">
           {isEdit ? "Edit User" : "Create User"}
         </span>

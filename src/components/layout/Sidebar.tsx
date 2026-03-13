@@ -16,7 +16,6 @@ import {
   Users,
   ShieldCheck,
   Settings,
-  Sparkles,
   ChevronDown,
   LogOut,
   User,
@@ -164,36 +163,17 @@ export function Sidebar() {
 
       {/* Bottom section – pinned, never scrolls */}
       <div className="flex-shrink-0">
-        {/* Ask Liora */}
-        <div className="px-2 pb-2">
-          <Link
-            href="/ask-liora"
-            className={cn(
-              "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
-              isActive("/ask-liora")
-                ? "bg-[#1f2937] border-l-[#0d9488] text-white"
-                : "rounded-[6px] border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
-            )}
-          >
-            <Sparkles
-              className={cn(
-                "h-[18px] w-[18px] flex-shrink-0",
-                isActive("/ask-liora") ? "text-white" : "text-[#e5e7eb]"
-              )}
-              strokeWidth={1.5}
-            />
-            Ask Liora
-          </Link>
-        </div>
-
         {/* Divider */}
-        <div className="mx-4 border-t border-[#e5e7eb]" />
+        <div className="border-t border-[#e5e7eb]" />
 
         {/* User bar */}
         <div className="flex h-[50px] items-center justify-between px-5">
-          <span className="text-[13px] font-semibold text-[#e5e7eb] truncate">
-            {userName || "—"}
-          </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <User className="h-4 w-4 flex-shrink-0 text-[#e5e7eb]" strokeWidth={1.5} />
+            <span className="text-[13px] font-semibold text-[#e5e7eb] truncate">
+              {userName || "—"}
+            </span>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
