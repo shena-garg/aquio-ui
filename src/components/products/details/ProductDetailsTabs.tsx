@@ -2,8 +2,15 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Paperclip } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  categoriesService,
+  type CustomAttribute,
+} from "@/services/categories";
+import { productsService, type CreateProductPayload } from "@/services/products";
 import {
   LineChart,
   Line,
@@ -18,27 +25,27 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import { getUOMAbbreviation } from "@/lib/uom";
-import { productsService } from "@/services/products";
 import type { Product } from "@/services/products";
 
 interface ProductDetailsTabsProps {
   product: Product;
 }
 
-const TAB_KEYS = ["variants", "details", "analytics"] as const;
+const TAB_KEYS = ["variants", "analytics"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
-export function ProductDetailsTabs({ product }: ProductDetailsTabsProps) {
+export function ProductDetailsTabs({
+  product,
+}: ProductDetailsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("variants");
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "variants", label: "Variants", count: product.variants.length },
-    { key: "details", label: "Details" },
     { key: "analytics", label: "Analytics" },
   ];
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 mt-2">
       {/* Tab bar */}
       <div className="flex border-b border-[#e5e7eb] bg-white px-6">
         {tabs.map((tab) => {
@@ -76,8 +83,6 @@ export function ProductDetailsTabs({ product }: ProductDetailsTabsProps) {
       <div className="flex-1">
         {activeTab === "variants" ? (
           <VariantsTab product={product} />
-        ) : activeTab === "details" ? (
-          <DetailsTab product={product} />
         ) : activeTab === "analytics" ? (
           <AnalyticsTab product={product} />
         ) : null}
@@ -92,13 +97,501 @@ function formatAttrLabel(label: string, unit: string) {
   return unit ? `${label} (${unit})` : label;
 }
 
+/* ── Variant Edit Dialog ─────────────────────────────────────────────────── */
+
+interface VariantEditData {
+  name: string;
+  customAttributes: { label: string; unit: string; value: string }[];
+}
+
+function VariantEditDialog({
+  initial,
+  subCategoryAttrs,
+  onSave,
+  onCancel,
+  isSaving,
+  title,
+}: {
+  initial: VariantEditData;
+  subCategoryAttrs: CustomAttribute[];
+  onSave: (data: VariantEditData) => void;
+  onCancel: () => void;
+  isSaving: boolean;
+  title: string;
+}) {
+  const [name, setName] = useState(initial.name);
+  const [attrs, setAttrs] = useState(initial.customAttributes);
+  const [errors, setErrors] = useState<Set<number>>(new Set());
+
+  function updateAttrValue(index: number, value: string) {
+    const updated = [...attrs];
+    updated[index] = { ...updated[index], value };
+    setAttrs(updated);
+    // Clear error on change
+    if (errors.has(index)) {
+      const next = new Set(errors);
+      next.delete(index);
+      setErrors(next);
+    }
+  }
+
+  function addCustomAttr() {
+    setAttrs([...attrs, { label: "", unit: "", value: "" }]);
+  }
+
+  function updateAttrField(
+    index: number,
+    field: "label" | "unit",
+    value: string,
+  ) {
+    const updated = [...attrs];
+    updated[index] = { ...updated[index], [field]: value };
+    setAttrs(updated);
+  }
+
+  function removeAttr(index: number) {
+    const attr = attrs[index];
+    const isFromSubCat = subCategoryAttrs.some((s) => s.label === attr.label);
+    if (isFromSubCat) return;
+    setAttrs(attrs.filter((_, i) => i !== index));
+  }
+
+  function validate(): boolean {
+    const errs = new Set<number>();
+    attrs.forEach((attr, i) => {
+      const subCatAttr = subCategoryAttrs.find((s) => s.label === attr.label);
+      if (subCatAttr?.required && !attr.value.trim()) {
+        errs.add(i);
+      }
+    });
+    setErrors(errs);
+    return errs.size === 0;
+  }
+
+  function handleSave() {
+    if (!validate()) return;
+    onSave({ name, customAttributes: attrs });
+  }
+
+  const inputCls =
+    "h-8 w-full rounded-[6px] border border-[#e5e7eb] bg-white px-3 text-[13px] text-[#111827] outline-none focus:border-[#0d9488] focus:ring-1 focus:ring-[#0d9488]";
+  const inputErrorCls =
+    "h-8 w-full rounded-[6px] border border-[#dc2626] bg-white px-3 text-[13px] text-[#111827] outline-none focus:border-[#dc2626] focus:ring-1 focus:ring-[#dc2626]";
+
+  return (
+    <div className="mx-6 mt-4 mb-6 border border-[#0d9488]/30 rounded-lg bg-white">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
+        <span className="text-[13px] font-semibold text-[#111827]">{title}</span>
+        <button type="button" onClick={onCancel} className="text-[#9ca3af] hover:text-[#6b7280]">
+          <X size={16} />
+        </button>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* Variant Name */}
+        <div>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] mb-1 block">
+            Variant Name
+          </label>
+          <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="e.g. Standard, Premium…" />
+        </div>
+
+        {/* Attributes Table */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
+              Custom Attributes
+            </label>
+            <button
+              type="button"
+              onClick={addCustomAttr}
+              className="flex items-center gap-1 text-[12px] text-[#0d9488] font-medium hover:text-[#0f766e]"
+            >
+              <Plus size={12} />
+              Add Attribute
+            </button>
+          </div>
+
+          {attrs.length > 0 ? (
+            <div className="border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-[#f9fafb] border-b border-[#e5e7eb]">
+                    <th className="text-left py-2 px-3 text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">Label</th>
+                    <th className="text-left py-2 px-3 text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] w-[120px]">Unit</th>
+                    <th className="text-left py-2 px-3 text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">Value</th>
+                    <th className="w-10" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {attrs.map((attr, i) => {
+                    const subCatAttr = subCategoryAttrs.find(
+                      (s) => s.label === attr.label,
+                    );
+                    const isFromSubCat = !!subCatAttr;
+                    const isRequired = subCatAttr?.required === true;
+                    const isDropdown = subCatAttr?.valueType === "dropdown";
+                    const dropdownOptions = isDropdown
+                      ? (subCatAttr.values ?? "").split(",").map((v) => v.trim()).filter(Boolean)
+                      : [];
+                    const hasError = errors.has(i);
+
+                    return (
+                      <tr key={i} className="border-b border-[#e5e7eb] last:border-b-0">
+                        <td className="py-2 px-3">
+                          {isFromSubCat ? (
+                            <span className="text-[13px] text-[#111827]">
+                              {attr.label}
+                              {isRequired && <span className="text-[#dc2626] ml-0.5">*</span>}
+                            </span>
+                          ) : (
+                            <input
+                              value={attr.label}
+                              onChange={(e) => updateAttrField(i, "label", e.target.value)}
+                              className={inputCls}
+                              placeholder="Attribute name"
+                            />
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {isFromSubCat ? (
+                            <span className="text-[13px] text-[#6b7280]">{attr.unit || "—"}</span>
+                          ) : (
+                            <input
+                              value={attr.unit}
+                              onChange={(e) => updateAttrField(i, "unit", e.target.value)}
+                              className={inputCls}
+                              placeholder="Unit"
+                            />
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {isDropdown ? (
+                            <select
+                              value={attr.value}
+                              onChange={(e) => updateAttrValue(i, e.target.value)}
+                              className={hasError ? inputErrorCls : inputCls}
+                            >
+                              <option value="">Select…</option>
+                              {dropdownOptions.map((opt) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              value={attr.value}
+                              onChange={(e) => updateAttrValue(i, e.target.value)}
+                              className={hasError ? inputErrorCls : inputCls}
+                              placeholder={isRequired ? "Required" : "Value"}
+                            />
+                          )}
+                          {hasError && (
+                            <p className="text-[11px] text-[#dc2626] mt-0.5">This field is required</p>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          {!isFromSubCat && (
+                            <button
+                              type="button"
+                              onClick={() => removeAttr(i)}
+                              className="p-1 text-[#9ca3af] hover:text-[#dc2626]"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-[13px] text-[#9ca3af]">No attributes defined</p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            disabled={isSaving}
+            className="h-8 text-[13px]"
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isSaving || !name.trim()}
+            className="h-8 text-[13px] bg-[#0F1720] text-white hover:bg-[#1a2533]"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              "Save Variant"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Variants Tab ─────────────────────────────────────────────────────────── */
+
 function VariantsTab({ product }: { product: Product }) {
   const { variants } = product;
+  const queryClient = useQueryClient();
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Always fetch subcategory custom attributes so they're ready when dialog opens
+  const { data: subCategoryData, isLoading: isSubCatLoading } = useQuery({
+    queryKey: ["subcategory", product.subCategoryId],
+    queryFn: () =>
+      categoriesService
+        .getSubCategoryById(product.subCategoryId)
+        .then((r) => r.data),
+    enabled: !!product.subCategoryId,
+    staleTime: Infinity,
+  });
+
+  const subCategoryAttrs: CustomAttribute[] =
+    subCategoryData?.customAttributes ?? [];
+
+  // Build the full payload from product + optional variant changes
+  function buildPayload(
+    updatedVariants: {
+      name: string;
+      customAttributes: { label: string; unit: string; value?: string }[];
+    }[],
+  ): CreateProductPayload {
+    return {
+      name: product.name,
+      unitOfMeasurement: product.unitOfMeasurement,
+      categoryId: product.categoryId,
+      subCategoryId: product.subCategoryId,
+      hsnCode: product.hsnCode,
+      gst: product.gst,
+      description: product.description || undefined,
+      termsOfConditions: product.termsOfConditions,
+      files: product.files,
+      variants: updatedVariants,
+    };
+  }
+
+  async function handleSaveVariant(data: VariantEditData) {
+    setIsSaving(true);
+    try {
+      const updatedVariants = editingVariantId
+        ? // Edit existing
+          variants.map((v) =>
+            v._id === editingVariantId
+              ? {
+                  name: data.name,
+                  customAttributes: data.customAttributes.map((a) => ({
+                    label: a.label,
+                    unit: a.unit,
+                    value: a.value || undefined,
+                  })),
+                }
+              : {
+                  name: v.name,
+                  customAttributes: v.customAttributes.map((a) => ({
+                    label: a.label,
+                    unit: a.unit,
+                    value: a.value || undefined,
+                  })),
+                },
+          )
+        : // Add new
+          [
+            ...variants.map((v) => ({
+              name: v.name,
+              customAttributes: v.customAttributes.map((a) => ({
+                label: a.label,
+                unit: a.unit,
+                value: a.value || undefined,
+              })),
+            })),
+            {
+              name: data.name,
+              customAttributes: data.customAttributes.map((a) => ({
+                label: a.label,
+                unit: a.unit,
+                value: a.value || undefined,
+              })),
+            },
+          ];
+
+      await productsService.update(product._id, buildPayload(updatedVariants));
+      toast.success(
+        editingVariantId ? "Variant updated" : "Variant added",
+      );
+      queryClient.invalidateQueries({ queryKey: ["product", product._id] });
+      setEditingVariantId(null);
+      setIsAdding(false);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to save variant.";
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDeleteVariant(variantId: string) {
+    if (variants.length <= 1) {
+      toast.error("Product must have at least one variant.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const updatedVariants = variants
+        .filter((v) => v._id !== variantId)
+        .map((v) => ({
+          name: v.name,
+          customAttributes: v.customAttributes.map((a) => ({
+            label: a.label,
+            unit: a.unit,
+            value: a.value || undefined,
+          })),
+        }));
+
+      await productsService.update(product._id, buildPayload(updatedVariants));
+      toast.success("Variant deleted");
+      queryClient.invalidateQueries({ queryKey: ["product", product._id] });
+    } catch {
+      toast.error("Failed to delete variant");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function handleEditVariant(variantId: string) {
+    setIsAdding(false);
+    setEditingVariantId(variantId);
+  }
+
+  function handleStartAdd() {
+    setEditingVariantId(null);
+    setIsAdding(true);
+  }
+
+  // ── Editing/Adding inline form ──
+  if (editingVariantId || isAdding) {
+    // Show loading while subcategory attributes are being fetched
+    if (isSubCatLoading && product.subCategoryId) {
+      return (
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="h-6 w-6 animate-spin text-[#9ca3af]" />
+        </div>
+      );
+    }
+
+    if (editingVariantId) {
+      const variant = variants.find((v) => v._id === editingVariantId);
+      if (!variant) return null;
+
+      // Merge: start with subcategory attrs (pre-filled with existing values),
+      // then append any extra custom attrs the variant has
+      const mergedAttrs: { label: string; unit: string; value: string }[] = [];
+      const usedLabels = new Set<string>();
+
+      // First: subcategory attributes with existing values overlaid
+      for (const sa of subCategoryAttrs) {
+        const existing = variant.customAttributes.find(
+          (a) => a.label === sa.label,
+        );
+        mergedAttrs.push({
+          label: sa.label,
+          unit: sa.unit,
+          value: existing?.value ?? "",
+        });
+        usedLabels.add(sa.label);
+      }
+
+      // Then: any extra attributes from the variant not in subcategory
+      for (const a of variant.customAttributes) {
+        if (!usedLabels.has(a.label)) {
+          mergedAttrs.push({
+            label: a.label,
+            unit: a.unit,
+            value: a.value ?? "",
+          });
+        }
+      }
+
+      return (
+        <VariantEditDialog
+          title={`Edit Variant: ${variant.name}`}
+          initial={{
+            name: variant.name,
+            customAttributes: mergedAttrs,
+          }}
+          subCategoryAttrs={subCategoryAttrs}
+          onSave={handleSaveVariant}
+          onCancel={() => setEditingVariantId(null)}
+          isSaving={isSaving}
+        />
+      );
+    }
+
+    // Adding new variant — pre-fill with subcategory custom attributes
+    const initialAttrs = subCategoryAttrs.map((a) => ({
+      label: a.label,
+      unit: a.unit,
+      value: "",
+    }));
+
+    return (
+      <VariantEditDialog
+        title="Add Variant"
+        initial={{ name: "", customAttributes: initialAttrs }}
+        subCategoryAttrs={subCategoryAttrs}
+        onSave={handleSaveVariant}
+        onCancel={() => setIsAdding(false)}
+        isSaving={isSaving}
+      />
+    );
+  }
+
+  // ── View mode ──
+  const isActive = product.status === "active";
+
+  const addColumnHeader = isActive && (
+    <th className="h-[52px] px-2 bg-white align-middle border-l border-[#f3f4f6]" style={{ width: 52 }}>
+      <button
+        onClick={handleStartAdd}
+        className="flex items-center justify-center w-8 h-8 rounded-[6px] border border-dashed border-[#d1d5db] text-[#9ca3af] hover:border-[#0d9488] hover:text-[#0d9488] hover:bg-[#f0fdfa] transition-colors"
+        title="Add Variant"
+      >
+        <Plus size={16} />
+      </button>
+    </th>
+  );
 
   if (variants.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-sm text-[#6b7280]">
         No variants defined
+        {isActive && (
+          <button
+            onClick={handleStartAdd}
+            className="ml-2 flex items-center gap-1 text-[13px] text-[#0d9488] font-medium hover:text-[#0f766e]"
+          >
+            <Plus size={14} />
+            Add Variant
+          </button>
+        )}
       </div>
     );
   }
@@ -119,21 +612,38 @@ function VariantsTab({ product }: { product: Product }) {
     // No custom attributes — just show variant names
     return (
       <div className="mx-6 mt-4 mb-6">
-        <div className="border border-[#e5e7eb] rounded-lg overflow-hidden">
+        <div className="border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
           <table className="w-full">
             <thead>
               <tr className="bg-[#f9fafb] border-b border-[#e5e7eb]">
                 <th className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
                   Variant Name
                 </th>
+                {isActive && (
+                  <th className="w-20" />
+                )}
+                {addColumnHeader}
               </tr>
             </thead>
             <tbody>
               {variants.map((v) => (
-                <tr key={v._id} className="border-b border-[#e5e7eb] last:border-b-0">
+                <tr key={v._id} className="border-b border-[#e5e7eb] last:border-b-0 group">
                   <td className="py-2.5 px-4 text-[13px] font-medium text-[#111827]">
                     {v.name}
                   </td>
+                  {isActive && (
+                    <td className="py-2.5 px-2">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleEditVariant(v._id)} className="p-1 text-[#6b7280] hover:text-[#0d9488]">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => handleDeleteVariant(v._id)} className="p-1 text-[#6b7280] hover:text-[#dc2626]">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                  {isActive && <td />}
                 </tr>
               ))}
             </tbody>
@@ -149,6 +659,9 @@ function VariantsTab({ product }: { product: Product }) {
       <SplitVariantsTable
         variants={variants}
         attributeRows={attributeRows}
+        onEdit={isActive ? handleEditVariant : undefined}
+        onDelete={isActive ? handleDeleteVariant : undefined}
+        onAdd={isActive ? handleStartAdd : undefined}
       />
     );
   }
@@ -156,7 +669,7 @@ function VariantsTab({ product }: { product: Product }) {
   // Regular single table for 1-2 variants
   return (
     <div className="mx-6 mt-4 mb-6">
-      <div className="border border-[#e5e7eb] rounded-lg overflow-hidden">
+      <div className="border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
         <table className="w-full">
           <thead>
             <tr className="bg-[#f9fafb] border-b border-[#e5e7eb]">
@@ -168,9 +681,22 @@ function VariantsTab({ product }: { product: Product }) {
                   key={v._id}
                   className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.8px] text-[#111827] whitespace-nowrap"
                 >
-                  {v.name}
+                  <div className="flex items-center gap-2">
+                    {v.name}
+                    {isActive && (
+                      <div className="flex items-center gap-0.5">
+                        <button onClick={() => handleEditVariant(v._id)} className="p-0.5 text-[#9ca3af] hover:text-[#0d9488]">
+                          <Pencil size={12} />
+                        </button>
+                        <button onClick={() => handleDeleteVariant(v._id)} className="p-0.5 text-[#9ca3af] hover:text-[#dc2626]">
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </th>
               ))}
+              {addColumnHeader}
             </tr>
           </thead>
           <tbody>
@@ -190,6 +716,7 @@ function VariantsTab({ product }: { product: Product }) {
                     </td>
                   );
                 })}
+                {isActive && <td />}
               </tr>
             ))}
           </tbody>
@@ -204,9 +731,15 @@ function VariantsTab({ product }: { product: Product }) {
 function SplitVariantsTable({
   variants,
   attributeRows,
+  onEdit,
+  onDelete,
+  onAdd,
 }: {
   variants: Product["variants"];
   attributeRows: [string, string][];
+  onEdit?: (variantId: string) => void;
+  onDelete?: (variantId: string) => void;
+  onAdd?: () => void;
 }) {
   const leftHeaderRef = useRef<HTMLTableRowElement>(null);
   const rightHeaderRef = useRef<HTMLTableRowElement>(null);
@@ -275,9 +808,36 @@ function SplitVariantsTable({
                     key={v._id}
                     className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-[0.8px] text-[#111827] whitespace-nowrap"
                   >
-                    {v.name}
+                    <div className="flex items-center gap-2">
+                      {v.name}
+                      {(onEdit || onDelete) && (
+                        <div className="flex items-center gap-0.5">
+                          {onEdit && (
+                            <button onClick={() => onEdit(v._id)} className="p-0.5 text-[#9ca3af] hover:text-[#0d9488]">
+                              <Pencil size={12} />
+                            </button>
+                          )}
+                          {onDelete && (
+                            <button onClick={() => onDelete(v._id)} className="p-0.5 text-[#9ca3af] hover:text-[#dc2626]">
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </th>
                 ))}
+                {onAdd && (
+                  <th className="h-[52px] px-2 bg-white align-middle border-l border-[#f3f4f6]" style={{ width: 52 }}>
+                    <button
+                      onClick={onAdd}
+                      className="flex items-center justify-center w-8 h-8 rounded-[6px] border border-dashed border-[#d1d5db] text-[#9ca3af] hover:border-[#0d9488] hover:text-[#0d9488] hover:bg-[#f0fdfa] transition-colors"
+                      title="Add Variant"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody ref={rightBodyRef}>
@@ -294,82 +854,11 @@ function SplitVariantsTable({
                       </td>
                     );
                   })}
+                  {onAdd && <td />}
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Details Tab (Description + Terms + Files) ───────────────────────────── */
-
-function DetailsTab({ product }: { product: Product }) {
-  const description = product.description?.trim();
-  const terms = product.termsOfConditions;
-  const files = product.files;
-
-  return (
-    <div className="overflow-y-auto">
-      <div className="mx-8 mt-3 border border-[#f3f4f6] rounded-[10px] bg-white px-4 py-3">
-        {/* Description */}
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] mb-2">
-            Description
-          </div>
-          {description ? (
-            <p className="text-[13px] text-[#111827] leading-relaxed whitespace-pre-wrap">
-              {description}
-            </p>
-          ) : (
-            <p className="text-[13px] text-[#111827]">—</p>
-          )}
-        </div>
-
-        <div className="border-b border-[#e5e7eb] my-3" />
-
-        {/* Terms & Conditions */}
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] mb-2">
-            Terms & Conditions
-          </div>
-          {terms && terms.length > 0 ? (
-            <ol className="list-decimal pl-5 space-y-1.5">
-              {terms.map((term, i) => (
-                <li key={i} className="text-[13px] text-[#111827] leading-relaxed">
-                  {term}
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="text-[13px] text-[#111827]">—</p>
-          )}
-        </div>
-
-        <div className="border-b border-[#e5e7eb] my-3" />
-
-        {/* Files */}
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] mb-2">
-            Files
-          </div>
-          {files && files.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {files.map((file, idx) => (
-                <div
-                  key={`${file.id}-${idx}`}
-                  className="flex items-center gap-1.5 bg-[#f3f4f6] rounded px-2.5 py-1.5"
-                >
-                  <Paperclip size={12} className="text-[#6b7280]" />
-                  <span className="text-[12px] text-[#111827]">{file.name}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[13px] text-[#111827]">—</p>
-          )}
         </div>
       </div>
     </div>

@@ -1,20 +1,35 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { productsService } from "@/services/products";
+import { productsService, type CreateProductPayload } from "@/services/products";
 import { ProductDetailsHeader } from "@/components/products/details/ProductDetailsHeader";
 import { ProductDetailsInfoCard } from "@/components/products/details/ProductDetailsInfoCard";
+import { ProductDetailsExtra } from "@/components/products/details/ProductDetailsExtra";
 import { ProductDetailsTabs } from "@/components/products/details/ProductDetailsTabs";
+
+export interface ProductEditState {
+  name: string;
+  sku: string;
+  categoryId: string;
+  categoryName: string;
+  subCategoryId: string;
+  subCategoryName: string;
+  hsnCode: string;
+  gst: number;
+  unitOfMeasurement: string;
+  description: string;
+  termsOfConditions: string[];
+  files: { id: string; name: string }[];
+}
 
 function FullPageSkeleton() {
   return (
     <div className="flex flex-col h-full gap-0 animate-pulse">
-      {/* Header skeleton */}
       <div className="flex items-center justify-between px-6 h-[55px] border-b border-[#e5e7eb]">
         <div className="flex items-center gap-3">
           <div className="h-5 w-48 rounded bg-gray-200" />
@@ -25,8 +40,6 @@ function FullPageSkeleton() {
           <div className="h-8 w-8 rounded bg-gray-200" />
         </div>
       </div>
-
-      {/* Info card skeleton */}
       <div className="mx-8 mt-3 rounded-[10px] border border-[#f3f4f6] px-4 pt-[10px] pb-2">
         {[0, 1].map((row) => (
           <div key={row} className={`grid grid-cols-3 gap-4 ${row === 1 ? "border-t border-[#e5e7eb] pt-2 mt-2" : ""}`}>
@@ -39,13 +52,10 @@ function FullPageSkeleton() {
           </div>
         ))}
       </div>
-
-      {/* Tabs skeleton */}
       <div className="flex gap-4 border-b border-[#e5e7eb] px-6 py-3">
-        <div className="h-4 w-20 rounded bg-gray-200" />
-        <div className="h-4 w-20 rounded bg-gray-200" />
-        <div className="h-4 w-20 rounded bg-gray-200" />
-        <div className="h-4 w-20 rounded bg-gray-200" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-4 w-20 rounded bg-gray-200" />
+        ))}
       </div>
       <div className="flex-1 p-6 flex flex-col gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -56,9 +66,43 @@ function FullPageSkeleton() {
   );
 }
 
+function buildEditState(product: {
+  name: string;
+  sku: string;
+  categoryId: string;
+  categoryName: string;
+  subCategoryId: string;
+  subCategoryName: string;
+  hsnCode: string;
+  gst: number;
+  unitOfMeasurement: string;
+  description?: string;
+  termsOfConditions?: string[];
+  files?: { id: string; name: string }[];
+}): ProductEditState {
+  return {
+    name: product.name,
+    sku: product.sku,
+    categoryId: product.categoryId,
+    categoryName: product.categoryName,
+    subCategoryId: product.subCategoryId,
+    subCategoryName: product.subCategoryName,
+    hsnCode: product.hsnCode,
+    gst: product.gst,
+    unitOfMeasurement: product.unitOfMeasurement,
+    description: product.description ?? "",
+    termsOfConditions: product.termsOfConditions ?? [],
+    files: product.files ?? [],
+  };
+}
+
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editState, setEditState] = useState<ProductEditState | null>(null);
 
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ["product", id],
@@ -71,6 +115,57 @@ export default function ProductDetailPage() {
       toast.error("Failed to load product. Please try again.");
     }
   }, [isError]);
+
+  function handleEditStart() {
+    if (!product) return;
+    setEditState(buildEditState(product));
+    setIsEditing(true);
+  }
+
+  function handleEditCancel() {
+    setIsEditing(false);
+    setEditState(null);
+  }
+
+  async function handleSave() {
+    if (!product || !editState) return;
+
+    setIsSaving(true);
+    try {
+      const payload: CreateProductPayload = {
+        name: editState.name.trim(),
+        unitOfMeasurement: editState.unitOfMeasurement,
+        categoryId: editState.categoryId,
+        subCategoryId: editState.subCategoryId,
+        hsnCode: editState.hsnCode.trim(),
+        gst: editState.gst,
+        description: editState.description.trim() || undefined,
+        termsOfConditions: editState.termsOfConditions.filter((t) => t.trim()),
+        files: editState.files.length > 0 ? editState.files : undefined,
+        variants: product.variants.map((v) => ({
+          name: v.name,
+          customAttributes: v.customAttributes.map((a) => ({
+            label: a.label,
+            unit: a.unit,
+            value: a.value || undefined,
+          })),
+        })),
+      };
+
+      await productsService.update(product._id, payload);
+      toast.success("Product updated successfully.");
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      setIsEditing(false);
+      setEditState(null);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to update product.";
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -101,9 +196,29 @@ export default function ProductDetailPage() {
 
   return (
     <div className="flex flex-col h-full overflow-auto">
-      <ProductDetailsHeader product={product} />
-      <ProductDetailsInfoCard product={product} />
-      <ProductDetailsTabs product={product} />
+      <ProductDetailsHeader
+        product={product}
+        isEditing={isEditing}
+        isSaving={isSaving}
+        onEditStart={handleEditStart}
+        onEditCancel={handleEditCancel}
+        onSave={handleSave}
+      />
+      <ProductDetailsInfoCard
+        product={product}
+        isEditing={isEditing}
+        editState={editState}
+        onEditStateChange={setEditState}
+      />
+      <ProductDetailsExtra
+        product={product}
+        isEditing={isEditing}
+        editState={editState}
+        onEditStateChange={setEditState}
+      />
+      <ProductDetailsTabs
+        product={product}
+      />
     </div>
   );
 }

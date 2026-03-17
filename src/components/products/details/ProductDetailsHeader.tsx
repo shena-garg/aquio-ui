@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal } from "lucide-react";
+import { Loader2, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,9 +29,21 @@ function capitalize(str: string) {
 
 interface ProductDetailsHeaderProps {
   product: Product;
+  isEditing?: boolean;
+  isSaving?: boolean;
+  onEditStart?: () => void;
+  onEditCancel?: () => void;
+  onSave?: () => void;
 }
 
-export function ProductDetailsHeader({ product }: ProductDetailsHeaderProps) {
+export function ProductDetailsHeader({
+  product,
+  isEditing,
+  isSaving,
+  onEditStart,
+  onEditCancel,
+  onSave,
+}: ProductDetailsHeaderProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isArchiving, setIsArchiving] = useState(false);
@@ -58,13 +70,38 @@ export function ProductDetailsHeader({ product }: ProductDetailsHeaderProps) {
     </span>
   );
 
-  const rightContent = (
+  const rightContent = isEditing ? (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
+        onClick={onEditCancel}
+        disabled={isSaving}
+      >
+        Cancel
+      </Button>
+      <Button
+        className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium bg-[#0F1720] text-white hover:bg-[#1a2533]"
+        onClick={onSave}
+        disabled={isSaving}
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            Saving…
+          </>
+        ) : (
+          "Save"
+        )}
+      </Button>
+    </div>
+  ) : (
     <div className="flex items-center gap-2">
       {product.status === "active" && (
         <Button
           variant="outline"
           className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
-          onClick={() => router.push(`/products/${product._id}/edit`)}
+          onClick={onEditStart}
         >
           Edit
         </Button>

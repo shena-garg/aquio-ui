@@ -70,6 +70,9 @@ export const productsService = {
     subCategoryId?: string;
   }) => apiClient.get<ProductsResponse>("/products", { params }),
 
+  update: (id: string, payload: CreateProductPayload) =>
+    apiClient.patch<Product>(`/products/${id}`, payload),
+
   archive: (id: string) => apiClient.delete(`/products/${id}`),
 
   getProcurementAnalytics: async (params: {
