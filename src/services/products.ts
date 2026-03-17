@@ -37,7 +37,26 @@ export interface ProductsResponse {
   totalCount: number;
 }
 
+export interface CreateProductPayload {
+  name: string;
+  unitOfMeasurement: string;
+  categoryId: string;
+  subCategoryId: string;
+  hsnCode: string;
+  gst: number;
+  description?: string;
+  termsOfConditions?: string[];
+  files?: { id: string; name: string }[];
+  variants: {
+    name: string;
+    customAttributes: { label: string; unit: string; value?: string }[];
+  }[];
+}
+
 export const productsService = {
+  create: (payload: CreateProductPayload) =>
+    apiClient.post<Product>("/products", payload),
+
   getById: (id: string) =>
     apiClient.get<Product>(`/products/${id}`).then((r) => r.data),
 
