@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 
@@ -111,26 +112,28 @@ export function CategoriesAccordion({
               <div className="flex-1" />
 
               {/* Three-dot menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                    aria-label="More actions"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreHorizontal className="h-[15px] w-[15px]" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/categories/${category._id}/edit`)
-                    }
-                  >
-                    Edit Category
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RequirePermission permission="category.edit">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+                      aria-label="More actions"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-[15px] w-[15px]" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() =>
+                        router.push(`/categories/${category._id}/edit`)
+                      }
+                    >
+                      Edit Category
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </RequirePermission>
             </div>
 
             {/* Expanded subcategories */}
@@ -153,41 +156,45 @@ export function CategoriesAccordion({
                     <div className="flex-1" />
 
                     {/* Three-dot menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                          aria-label="More actions"
-                        >
-                          <MoreHorizontal className="h-[15px] w-[15px]" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            router.push(
-                              `/categories/${category._id}/subcategories/${sub._id}/edit`
-                            )
-                          }
-                        >
-                          Edit Subcategory
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <RequirePermission permission="category.edit">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+                            aria-label="More actions"
+                          >
+                            <MoreHorizontal className="h-[15px] w-[15px]" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              router.push(
+                                `/categories/${category._id}/subcategories/${sub._id}/edit`
+                              )
+                            }
+                          >
+                            Edit Subcategory
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </RequirePermission>
                   </div>
                 ))}
 
                 {/* Add Subcategory button */}
-                <button
-                  className="w-full text-left text-[#0d9488] text-sm font-medium pl-10 py-2.5 bg-[#F6F7F8] hover:bg-gray-200 cursor-pointer border-t border-gray-100"
-                  onClick={() =>
-                    router.push(
-                      `/categories/${category._id}/subcategories/new`
-                    )
-                  }
-                >
-                  + Add Subcategory
-                </button>
+                <RequirePermission permission="category.add">
+                  <button
+                    className="w-full text-left text-[#0d9488] text-sm font-medium pl-10 py-2.5 bg-[#F6F7F8] hover:bg-gray-200 cursor-pointer border-t border-gray-100"
+                    onClick={() =>
+                      router.push(
+                        `/categories/${category._id}/subcategories/new`
+                      )
+                    }
+                  >
+                    + Add Subcategory
+                  </button>
+                </RequirePermission>
               </div>
             )}
           </div>

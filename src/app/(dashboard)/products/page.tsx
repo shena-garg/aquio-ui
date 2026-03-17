@@ -14,6 +14,7 @@ import { ProductsCustomizePanel } from "@/components/products/ProductsCustomizeP
 import type { ColumnConfig } from "@/components/products/ProductsCustomizePanel";
 import { productsService } from "@/services/products";
 import { categoriesService } from "@/services/categories";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 import type { Category } from "@/services/categories";
 
 // ── Column config ─────────────────────────────────────────────────────────────
@@ -269,14 +270,16 @@ export default function ProductsPage() {
         Customize
       </Button>
 
-      <Button
-        size="sm"
-        onClick={() => router.push("/products/new")}
-        className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        Add Product
-      </Button>
+      <RequirePermission permission="product.add">
+        <Button
+          size="sm"
+          onClick={() => router.push("/products/new")}
+          className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add Product
+        </Button>
+      </RequirePermission>
     </>
   );
 

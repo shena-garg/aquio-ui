@@ -1,6 +1,8 @@
 "use client";
 
 import { Sidebar } from "@/components/layout/Sidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 
 export default function DashboardLayout({
   children,
@@ -8,11 +10,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#f9fafb]">
-      <Sidebar />
-      <div className="ml-[240px] flex min-h-screen flex-col">
-        {children}
+    <AuthProvider>
+      <div className="min-h-screen bg-[#f9fafb]">
+        <Sidebar />
+        <div className="ml-[240px] flex min-h-screen flex-col">
+          <RouteGuard>{children}</RouteGuard>
+        </div>
       </div>
-    </div>
+    </AuthProvider>
   );
 }

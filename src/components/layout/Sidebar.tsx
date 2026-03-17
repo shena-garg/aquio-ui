@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -27,28 +27,42 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
+import type { LucideIcon } from "lucide-react";
 
-const navSections = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  permission?: string;
+}
+
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
   {
     label: "Sourcing",
     items: [
-      { label: "Buy", href: "/buy", icon: ShoppingCart },
-      { label: "Sell", href: "/sell", icon: Store },
+      { label: "Buy", href: "/buy", icon: ShoppingCart, permission: "auction-buy.view" },
+      { label: "Sell", href: "/sell", icon: Store, permission: "auction-sale.view" },
     ],
   },
   {
     label: "Orders",
     items: [
-      { label: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList },
-      { label: "Sales Orders", href: "/sales-orders", icon: FileCheck2 },
+      { label: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList, permission: "purchase-order.view" },
+      { label: "Sales Orders", href: "/sales-orders", icon: FileCheck2, permission: "sales-order.view" },
     ],
   },
   {
     label: "Catalog",
     items: [
-      { label: "Products", href: "/products", icon: Package },
-      { label: "Categories", href: "/categories", icon: LayoutGrid },
-      { label: "Partners", href: "/partners", icon: Building2 },
+      { label: "Products", href: "/products", icon: Package, permission: "product.view" },
+      { label: "Categories", href: "/categories", icon: LayoutGrid, permission: "category.view" },
+      { label: "Partners", href: "/partners", icon: Building2, permission: "vendor.view" },
     ],
   },
   {
@@ -66,19 +80,7 @@ const navSections = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [userName, setUserName] = useState("");
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const user = JSON.parse(stored);
-        setUserName(user.userName ?? user.name ?? "");
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
+  const { user, hasPermission, isLoading, logout } = useAuth();
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -123,41 +125,49 @@ export function Sidebar() {
           </div>
 
           {/* Sections */}
-          {navSections.map((section) => (
-            <Fragment key={section.label}>
-              <div className="px-3 pt-3 pb-1.5">
-                <span className="text-[11px] font-semibold tracking-[0.55px] text-[#9ca3af]">
-                  {section.label}
-                </span>
-              </div>
+          {navSections.map((section) => {
+            const visibleItems = section.items.filter(
+              (item) => !item.permission || isLoading || hasPermission(item.permission)
+            );
 
-              {section.items.map((item) => {
-                const active = isActive(item.href);
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
-                      active
-                        ? "bg-[#1f2937] border-l-[#0d9488] text-white"
-                        : "rounded-[6px] border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
-                    )}
-                  >
-                    <Icon
+            if (visibleItems.length === 0) return null;
+
+            return (
+              <Fragment key={section.label}>
+                <div className="px-3 pt-3 pb-1.5">
+                  <span className="text-[11px] font-semibold tracking-[0.55px] text-[#9ca3af]">
+                    {section.label}
+                  </span>
+                </div>
+
+                {visibleItems.map((item) => {
+                  const active = isActive(item.href);
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
                       className={cn(
-                        "h-[18px] w-[18px] flex-shrink-0",
-                        active ? "text-white" : "text-[#e5e7eb]"
+                        "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
+                        active
+                          ? "bg-[#1f2937] border-l-[#0d9488] text-white"
+                          : "rounded-[6px] border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
                       )}
-                      strokeWidth={1.5}
-                    />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </Fragment>
-          ))}
+                    >
+                      <Icon
+                        className={cn(
+                          "h-[18px] w-[18px] flex-shrink-0",
+                          active ? "text-white" : "text-[#e5e7eb]"
+                        )}
+                        strokeWidth={1.5}
+                      />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </Fragment>
+            );
+          })}
         </div>
       </nav>
 
@@ -171,7 +181,7 @@ export function Sidebar() {
           <div className="flex items-center gap-2 min-w-0">
             <User className="h-4 w-4 flex-shrink-0 text-[#e5e7eb]" strokeWidth={1.5} />
             <span className="text-[13px] font-semibold text-[#e5e7eb] truncate">
-              {userName || "—"}
+              {user?.name || "—"}
             </span>
           </div>
           <DropdownMenu>
@@ -188,13 +198,7 @@ export function Sidebar() {
                 <User className="h-4 w-4 mr-2" />
                 My Profile
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  localStorage.removeItem("accessToken");
-                  localStorage.removeItem("user");
-                  router.push("/login");
-                }}
-              >
+              <DropdownMenuItem onClick={logout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>

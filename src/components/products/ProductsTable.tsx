@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Product } from "@/services/products";
 import { productsService } from "@/services/products";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 
 // ── Column widths (px) for sticky offset calculation ──────────────────────────
 
@@ -317,30 +318,38 @@ export function ProductsTable({
                       <DropdownMenuContent align="start" className="w-48">
                         {activeTab === "active" ? (
                           <>
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/products/${product._id}/edit`)}
-                            >
-                              Edit Product
-                            </DropdownMenuItem>
+                            <RequirePermission permission="product.edit">
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/products/${product._id}/edit`)}
+                              >
+                                Edit Product
+                              </DropdownMenuItem>
+                            </RequirePermission>
+                            <RequirePermission permission="product.add">
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
+                              >
+                                Create Duplicate
+                              </DropdownMenuItem>
+                            </RequirePermission>
+                            <RequirePermission permission="product.archive">
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setArchiveProduct(product)}
+                                className="text-[#DC2626] focus:text-[#DC2626]"
+                              >
+                                Archive
+                              </DropdownMenuItem>
+                            </RequirePermission>
+                          </>
+                        ) : (
+                          <RequirePermission permission="product.add">
                             <DropdownMenuItem
                               onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
                             >
                               Create Duplicate
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setArchiveProduct(product)}
-                              className="text-[#DC2626] focus:text-[#DC2626]"
-                            >
-                              Archive
-                            </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <DropdownMenuItem
-                            onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
-                          >
-                            Create Duplicate
-                          </DropdownMenuItem>
+                          </RequirePermission>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { PurchaseOrder, POOrderStatus } from "@/services/purchase-orders";
 import { QuantityCell } from "@/components/ui/QuantityCell";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
@@ -370,79 +371,105 @@ function ActionMenu({ order, onCancel, onConfirm, onForceClose }: ActionMenuProp
   return (
     <DropdownMenuContent align="start" className="w-48">
       {status === "cancelled" || status === "completed" ? (
-        <DropdownMenuItem
-          onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
-        >
-          Create Duplicate
-        </DropdownMenuItem>
-      ) : status === "draft" ? (
-        <>
-          <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order.id}/edit`)}>
-            Edit Order
-          </DropdownMenuItem>
+        <RequirePermission permission="purchase-order.add">
           <DropdownMenuItem
             onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
           >
             Create Duplicate
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={onCancel}
-            className="text-[#DC2626] focus:text-[#DC2626]"
-          >
-            Cancel Order
-          </DropdownMenuItem>
+        </RequirePermission>
+      ) : status === "draft" ? (
+        <>
+          <RequirePermission permission="purchase-order.edit">
+            <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order.id}/edit`)}>
+              Edit Order
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.add">
+            <DropdownMenuItem
+              onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
+            >
+              Create Duplicate
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.cancel">
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onCancel}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Cancel Order
+            </DropdownMenuItem>
+          </RequirePermission>
         </>
       ) : status === "issued" ? (
         <>
-          <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order.id}/edit`)}>
-            Edit Order
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
-          >
-            Create Duplicate
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={onCancel}
-            className="text-[#DC2626] focus:text-[#DC2626]"
-          >
-            Cancel Order
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onConfirm}>
-            Mark as Confirmed
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={onForceClose}
-            className="text-[#DC2626] focus:text-[#DC2626]"
-          >
-            Force Close
-          </DropdownMenuItem>
+          <RequirePermission permission="purchase-order.edit">
+            <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order.id}/edit`)}>
+              Edit Order
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.add">
+            <DropdownMenuItem
+              onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
+            >
+              Create Duplicate
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.cancel">
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onCancel}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Cancel Order
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.confirm">
+            <DropdownMenuItem onClick={onConfirm}>
+              Mark as Confirmed
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.force-close">
+            <DropdownMenuItem
+              onClick={onForceClose}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Force Close
+            </DropdownMenuItem>
+          </RequirePermission>
         </>
       ) : status === "confirmed" ? (
         <>
-          <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order.id}/edit`)}>
-            Edit Order
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
-          >
-            Create Duplicate
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={onCancel}
-            className="text-[#DC2626] focus:text-[#DC2626]"
-          >
-            Cancel Order
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={onForceClose}
-            className="text-[#DC2626] focus:text-[#DC2626]"
-          >
-            Force Close
-          </DropdownMenuItem>
+          <RequirePermission permission="purchase-order.edit">
+            <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order.id}/edit`)}>
+              Edit Order
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.add">
+            <DropdownMenuItem
+              onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order.id}`)}
+            >
+              Create Duplicate
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.cancel">
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onCancel}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Cancel Order
+            </DropdownMenuItem>
+          </RequirePermission>
+          <RequirePermission permission="purchase-order.force-close">
+            <DropdownMenuItem
+              onClick={onForceClose}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Force Close
+            </DropdownMenuItem>
+          </RequirePermission>
         </>
       ) : null}
     </DropdownMenuContent>

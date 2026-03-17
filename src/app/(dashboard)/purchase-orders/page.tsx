@@ -20,6 +20,7 @@ import { POCustomizePanel } from "@/components/purchase-orders/POCustomizePanel"
 import type { ColumnConfig } from "@/components/purchase-orders/POCustomizePanel";
 import { purchaseOrdersService } from "@/services/purchase-orders";
 import type { POFilterStatus, POActiveFilters, CsvPattern } from "@/services/purchase-orders";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 
 // ── Column config ─────────────────────────────────────────────────────────────
 
@@ -226,32 +227,34 @@ export default function PurchaseOrdersPage() {
 
   const actions = (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isExporting}
-            className="h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
-          >
-            {isExporting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="h-3.5 w-3.5" />
-            )}
-            Export
-            <ChevronDown className="h-3 w-3 opacity-60" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => handleExport("basic")}>
-            Basic Export
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("comprehensive")}>
-            Comprehensive Export
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RequirePermission permission="purchase-order.download-csv">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isExporting}
+              className="h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              Export
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => handleExport("basic")}>
+              Basic Export
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport("comprehensive")}>
+              Comprehensive Export
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </RequirePermission>
 
       <Button
         variant="outline"
@@ -263,14 +266,16 @@ export default function PurchaseOrdersPage() {
         Customize
       </Button>
 
-      <Button
-        size="sm"
-        onClick={() => router.push("/purchase-orders/create")}
-        className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        New
-      </Button>
+      <RequirePermission permission="purchase-order.add">
+        <Button
+          size="sm"
+          onClick={() => router.push("/purchase-orders/create")}
+          className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          New
+        </Button>
+      </RequirePermission>
     </>
   );
 

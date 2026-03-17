@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { CategoriesAccordion } from "@/components/categories/CategoriesAccordion";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 import { categoriesService } from "@/services/categories";
 
 export default function CategoriesPage() {
@@ -30,14 +31,16 @@ export default function CategoriesPage() {
   }
 
   const actions = (
-    <Button
-      size="sm"
-      onClick={() => router.push("/categories/new")}
-      className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
-    >
-      <Plus className="h-3.5 w-3.5" />
-      Add Category
-    </Button>
+    <RequirePermission permission="category.add">
+      <Button
+        size="sm"
+        onClick={() => router.push("/categories/new")}
+        className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Add Category
+      </Button>
+    </RequirePermission>
   );
 
   return (
