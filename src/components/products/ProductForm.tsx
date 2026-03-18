@@ -297,7 +297,7 @@ function SKUSettingsDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-[10px] shadow-xl w-full max-w-[440px] p-0">
+      <div className="bg-white rounded-[10px] shadow-xl w-full max-w-[440px] mx-4 sm:mx-auto p-0">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
           <h3 className="text-[15px] font-semibold text-[#111827]">
             Product Code Settings
@@ -409,7 +409,7 @@ function SKUSettingsDialog({
 function FullPageSkeleton() {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-4 sm:px-6">
         <div className="h-5 w-48 rounded bg-gray-200 animate-pulse" />
       </div>
       <div className="flex-1 overflow-auto">
@@ -417,10 +417,10 @@ function FullPageSkeleton() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-[10px] border border-[#e5e7eb] bg-white p-6 animate-pulse"
+              className="rounded-[10px] border border-[#e5e7eb] bg-white p-4 sm:p-6 animate-pulse"
             >
               <div className="h-4 w-32 rounded bg-gray-200 mb-4" />
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {Array.from({ length: 3 }).map((_, j) => (
                   <div key={j} className="space-y-3">
                     <div className="h-3 w-20 rounded bg-gray-200" />
@@ -757,15 +757,15 @@ export function ProductForm({ editId }: ProductFormProps) {
   return (
     <div className="flex flex-col h-full">
       {/* ── Sticky top bar ──────────────────────────────────────────── */}
-      <div className="flex h-[55px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-6 sticky top-0 z-10">
-        <span className="text-[18px] font-semibold text-[#111827]">
+      <div className="flex h-[55px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4 sm:px-6 sticky top-0 z-10">
+        <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">
           {isEditMode ? "Edit Product" : "New Product"}
         </span>
       </div>
 
       {/* ── Error banner ──────────────────────────────────────────── */}
       {(submitError || Object.keys(fieldErrors).length > 0) && (
-        <div className="flex items-start justify-between bg-[#fef2f2] border-b border-[#fecaca] px-6 py-2.5">
+        <div className="flex items-start justify-between bg-[#fef2f2] border-b border-[#fecaca] px-4 sm:px-6 py-2.5">
           <div className="flex flex-col gap-0.5">
             {submitError && (
               <span className="text-[13px] text-[#b91c1c]">{submitError}</span>
@@ -794,8 +794,8 @@ export function ProductForm({ editId }: ProductFormProps) {
       <div className="flex-1 overflow-auto">
         <div className="mx-4 pt-3 pb-6">
           {/* ── Product Details card ──────────────────────────────── */}
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-4 mb-3">
-            <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-4 pt-[10px] pb-4 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Product Name */}
               <div>
                 <label className="block text-[13px] font-medium text-[#111827] mb-1.5">
@@ -938,7 +938,7 @@ export function ProductForm({ editId }: ProductFormProps) {
               </div>
 
               {/* Description — spans 2 columns */}
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-[13px] font-medium text-[#111827] mb-1.5">
                   Description
                 </label>
@@ -1186,9 +1186,9 @@ export function ProductForm({ editId }: ProductFormProps) {
           </div>
 
           {/* ── Terms & Attachments side by side ──────────────────── */}
-          <div className="grid grid-cols-2 gap-4 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
             {/* Terms & Conditions */}
-            <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-5">
+            <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-4 sm:p-5">
               <label className="block text-[13px] font-medium text-[#111827] mb-2">
                 Terms & Conditions
               </label>
@@ -1236,7 +1236,7 @@ export function ProductForm({ editId }: ProductFormProps) {
             </div>
 
             {/* Attachments */}
-            <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-5">
+            <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-4 sm:p-5">
               <label className="block text-[13px] font-medium text-[#111827] mb-2">
                 Attachments
               </label>
