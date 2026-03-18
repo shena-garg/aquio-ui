@@ -355,6 +355,29 @@ function SkeletonRow({ colCount }: { colCount: number }) {
   );
 }
 
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="h-4 w-28 rounded bg-gray-200" />
+        <div className="h-4 w-20 rounded bg-gray-200" />
+      </div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="h-3.5 w-36 rounded bg-gray-200" />
+        <div className="h-5 w-16 rounded bg-gray-200" />
+      </div>
+      <div className="flex items-center gap-3 mb-2">
+        <div className="h-3 w-20 rounded bg-gray-200" />
+        <div className="h-3 w-24 rounded bg-gray-200" />
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="h-3 w-32 rounded bg-gray-200" />
+        <div className="flex-1 h-1 rounded bg-gray-200" />
+      </div>
+    </div>
+  );
+}
+
 // ── Status-based dropdown menu ────────────────────────────────────────────────
 
 interface ActionMenuProps {
@@ -497,6 +520,7 @@ export function POTable({
   flash = false,
   onRefresh,
 }: POTableProps) {
+  const router = useRouter();
   const [cancelModal, setCancelModal] = useState<{ open: boolean; order?: PurchaseOrder }>({ open: false });
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; order?: PurchaseOrder }>({ open: false });
   const [forceCloseModal, setForceCloseModal] = useState<{ open: boolean; order?: PurchaseOrder }>({ open: false });
@@ -523,9 +547,108 @@ export function POTable({
 
   const totalCols = 1 + activeCols.length;
 
+  // Reusable actions trigger for mobile cards
+  function CardActionsMenu({ order }: { order: PurchaseOrder }) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="rounded p-2.5 -m-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+            aria-label="More actions"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <ActionMenu
+          order={order}
+          onCancel={() => setCancelModal({ open: true, order })}
+          onConfirm={() => setConfirmModal({ open: true, order })}
+          onForceClose={() => setForceCloseModal({ open: true, order })}
+        />
+      </DropdownMenu>
+    );
+  }
+
   return (
     <>
-      <div className={`transition-all duration-300 ${flash ? "ring-2 ring-[#0d9488]/40 rounded-md" : ""}`}>
+      {/* ── Mobile card list ── */}
+      <div className="lg:hidden flex flex-col gap-3 p-4">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : orders.length === 0 ? (
+          <p className="text-center text-[13px] text-gray-400 py-12">No purchase orders found.</p>
+        ) : (
+          orders.map((order) => {
+            const statusCfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.draft;
+            const amount =
+              typeof order.totalAmount === "number"
+                ? order.totalAmount
+                : parseFloat(order.totalAmount.$numberDecimal);
+            const pending = order.pendingQuantity ?? 0;
+            const total = order.totalQuantity ?? 0;
+            const pct = Math.min(100, Math.round(order.receiptCompletionPercentage ?? 0));
+
+            return (
+              <div
+                key={order.id}
+                onClick={() => router.push(`/purchase-orders/${order.id}`)}
+                className="rounded-lg border border-gray-200 bg-white p-4 cursor-pointer active:bg-gray-50"
+              >
+                {/* Row 1: PO Number | Amount */}
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[13px] font-medium text-[#0d9488]">
+                    {order.poNumber}
+                  </span>
+                  <span className="text-[13px] font-medium text-[#0F1720]">
+                    {formatIndianAmount(amount)}
+                  </span>
+                </div>
+                {/* Row 2: Supplier | Status */}
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[13px] text-gray-600 truncate mr-2">
+                    {order.supplier.name}
+                  </span>
+                  <span className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium flex-shrink-0 ${statusCfg.className}`}>
+                    {statusCfg.label}
+                  </span>
+                </div>
+                {/* Row 3: Issue Date | Delivery Date + Overdue | Three-dot menu */}
+                <div className="flex items-center gap-3 text-[12px] text-gray-400 mb-2">
+                  <span>{formatDate(order.issueDate)}</span>
+                  <span className="text-gray-300">→</span>
+                  <span>{formatDate(order.deliveryDate)}</span>
+                  {order.delayDays > 0 && (
+                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                      Overdue {order.delayDays}d
+                    </span>
+                  )}
+                  <div className="ml-auto flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <CardActionsMenu order={order} />
+                  </div>
+                </div>
+                {/* Row 4: Receipt progress */}
+                {total > 0 ? (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[11px] font-medium text-[#0F1720]">
+                      <QuantityCell value={pending} uom={order.commonUOM ?? ""} /> / <QuantityCell value={total} uom={order.commonUOM ?? ""} /> Pending
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex-1 rounded-full bg-gray-100 h-1">
+                        <div className="bg-[#0d9488] h-1 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-[10px] text-gray-400">{pct}%</span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* ── Desktop table ── */}
+      <div className={`hidden lg:block transition-all duration-300 ${flash ? "ring-2 ring-[#0d9488]/40 rounded-md" : ""}`}>
         <div className="w-full overflow-x-auto bg-white">
           <Table className="min-w-[1600px]">
             <TableHeader>

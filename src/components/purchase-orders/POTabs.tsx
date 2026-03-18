@@ -26,7 +26,7 @@ interface POTabsProps {
 
 export function POTabs({ activeStatus, counts, onChange }: POTabsProps) {
   return (
-    <div className="flex border-b border-gray-200 bg-white px-6">
+    <div className="flex overflow-x-auto border-b border-gray-200 bg-white px-4 sm:px-6">
       {TABS.map((tab) => {
         const isActive = tab.status === activeStatus;
         const count = counts?.[tab.countKey] ?? 0;

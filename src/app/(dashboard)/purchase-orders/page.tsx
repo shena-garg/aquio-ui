@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, SlidersHorizontal, Plus, ChevronDown, Loader2 } from "lucide-react";
+import { Download, SlidersHorizontal, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -232,17 +232,16 @@ export default function PurchaseOrdersPage() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               disabled={isExporting}
-              className="h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
+              className="h-9 w-9 min-h-[44px] min-w-[44px] sm:h-8 sm:w-auto sm:min-h-0 sm:min-w-0 sm:px-3 sm:gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
             >
               {isExporting ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-4 w-4 sm:h-3.5 sm:w-3.5 animate-spin" />
               ) : (
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
               )}
-              Export
-              <ChevronDown className="h-3 w-3 opacity-60" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
@@ -260,7 +259,7 @@ export default function PurchaseOrdersPage() {
         variant="outline"
         size="sm"
         onClick={() => setShowCustomize(true)}
-        className="h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
+        className="hidden lg:inline-flex h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
       >
         <SlidersHorizontal className="h-3.5 w-3.5" />
         Customize
@@ -268,12 +267,12 @@ export default function PurchaseOrdersPage() {
 
       <RequirePermission permission="purchase-order.add">
         <Button
-          size="sm"
+          size="icon"
           onClick={() => router.push("/purchase-orders/create")}
-          className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
+          className="h-9 w-9 min-h-[44px] min-w-[44px] sm:h-8 sm:w-auto sm:min-h-0 sm:min-w-0 sm:px-3 sm:gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
         >
-          <Plus className="h-3.5 w-3.5" />
-          New
+          <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+          <span className="hidden sm:inline">New</span>
         </Button>
       </RequirePermission>
     </>

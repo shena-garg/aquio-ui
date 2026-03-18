@@ -180,10 +180,10 @@ export function RolesTable({ roles, isLoading }: RolesTableProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+            className="rounded p-2.5 sm:p-1 -m-1.5 sm:m-0 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
             aria-label="More actions"
           >
-            <MoreHorizontal className="h-[15px] w-[15px]" />
+            <MoreHorizontal className="h-4 w-4 sm:h-[15px] sm:w-[15px]" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">

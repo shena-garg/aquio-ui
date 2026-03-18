@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { POActiveFilters } from "@/services/purchase-orders";
@@ -125,6 +125,7 @@ export function POSearchBar({
   const [inputValue, setInputValue] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const currentField = FIELDS.find((f) => f.key === selectedField)!;
 
@@ -176,118 +177,248 @@ export function POSearchBar({
 
   const hasFilters = activeEntries.length > 0;
 
-  return (
-    <div className="bg-white">
+  const searchFields = (
+    <>
+      {/* Field selector */}
+      <select
+        value={selectedField}
+        onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
+        className={SELECT_INPUT_CLASS}
+      >
+        {FIELDS.map((f) => (
+          <option key={f.key} value={f.key}>{f.label}</option>
+        ))}
+      </select>
 
-      {/* ── Search row ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 px-6 py-3">
+      {/* Text input */}
+      {currentField.type === "text" && (
+        <Input
+          type="text"
+          placeholder={`Search by ${currentField.label}…`}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          className="h-8 w-full lg:w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+        />
+      )}
 
-        {/* Field selector */}
+      {/* Select input */}
+      {currentField.type === "select" && (
         <select
-          value={selectedField}
-          onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           className={SELECT_INPUT_CLASS}
         >
-          {FIELDS.map((f) => (
-            <option key={f.key} value={f.key}>{f.label}</option>
+          <option value="">Select {currentField.label}…</option>
+          {currentField.options.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
+      )}
 
-        {/* Text input */}
-        {currentField.type === "text" && (
-          <Input
-            type="text"
-            placeholder={`Search by ${currentField.label}…`}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="h-8 w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+      {/* Date range inputs */}
+      {currentField.type === "dateRange" && (
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] text-gray-500">From</span>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className={`${SELECT_INPUT_CLASS} w-[130px]`}
           />
-        )}
-
-        {/* Select input */}
-        {currentField.type === "select" && (
-          <select
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className={SELECT_INPUT_CLASS}
-          >
-            <option value="">Select {currentField.label}…</option>
-            {currentField.options.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        )}
-
-        {/* Date range inputs */}
-        {currentField.type === "dateRange" && (
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-gray-500">From</span>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className={SELECT_INPUT_CLASS}
-            />
-            <span className="text-[13px] text-gray-500">To</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className={SELECT_INPUT_CLASS}
-            />
-          </div>
-        )}
-
-        <Button
-          onClick={handleSearch}
-          disabled={isSearchDisabled}
-          size="sm"
-          className="h-8 px-4 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
-        >
-          Search
-        </Button>
-
-        <Button
-          onClick={handleReset}
-          variant="outline"
-          size="sm"
-          className="h-8 border-gray-200 px-4 text-[13px] text-gray-600 hover:text-[#0F1720]"
-        >
-          Reset
-        </Button>
-      </div>
-
-      {/* ── Active filter chips ─────────────────────────────────────────── */}
-      {hasFilters && (
-        <div className="flex flex-wrap items-center gap-2 px-6 pb-3">
-          {activeEntries.map(([key, value]) => (
-            <span
-              key={key}
-              className="flex items-center gap-1 rounded-full border border-[#0d9488]/20 bg-[#0d9488]/10 px-3 py-1 text-xs text-[#0d9488]"
-            >
-              {CHIP_FORMATTERS[key]?.(value) ?? `${key}: ${value}`}
-              <button
-                onClick={() => onRemoveFilter(key)}
-                className="ml-0.5 rounded-full hover:text-[#0f766e]"
-                aria-label={`Remove ${key} filter`}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-
-          {activeEntries.length > 1 && (
-            <button
-              onClick={onReset}
-              className="text-xs text-gray-400 underline hover:text-red-500"
-            >
-              Clear All
-            </button>
-          )}
+          <span className="text-[13px] text-gray-500">To</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className={`${SELECT_INPUT_CLASS} w-[130px]`}
+          />
         </div>
       )}
 
+      <Button
+        onClick={handleSearch}
+        disabled={isSearchDisabled}
+        size="sm"
+        className="h-8 px-4 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
+      >
+        Search
+      </Button>
+
+      <Button
+        onClick={handleReset}
+        variant="outline"
+        size="sm"
+        className="h-8 border-gray-200 px-4 text-[13px] text-gray-600 hover:text-[#0F1720]"
+      >
+        Reset
+      </Button>
+    </>
+  );
+
+  const filterChips = hasFilters && (
+    <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 pb-3">
+      {activeEntries.map(([key, value]) => (
+        <span
+          key={key}
+          className="flex items-center gap-1 rounded-full border border-[#0d9488]/20 bg-[#0d9488]/10 px-3 py-1 text-xs text-[#0d9488]"
+        >
+          {CHIP_FORMATTERS[key]?.(value) ?? `${key}: ${value}`}
+          <button
+            onClick={() => onRemoveFilter(key)}
+            className="ml-0.5 rounded-full hover:text-[#0f766e]"
+            aria-label={`Remove ${key} filter`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+
+      {activeEntries.length > 1 && (
+        <button
+          onClick={onReset}
+          className="text-xs text-gray-400 underline hover:text-red-500"
+        >
+          Clear All
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="bg-white">
+      {/* ── Desktop search row ── */}
+      <div className="hidden lg:flex flex-wrap items-center gap-2 px-6 py-3">
+        {searchFields}
+      </div>
+
+      {/* ── Mobile: Filter button + chips ── */}
+      <div className="lg:hidden px-4 py-3">
+        {!mobileFilterOpen && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {activeEntries.map(([key, value]) => (
+              <span
+                key={key}
+                className="flex items-center gap-1 rounded-full border border-[#0d9488]/20 bg-[#0d9488]/10 px-2.5 py-1 text-[11px] text-[#0d9488]"
+              >
+                {CHIP_FORMATTERS[key]?.(value) ?? `${key}: ${value}`}
+                <button
+                  onClick={() => onRemoveFilter(key)}
+                  className="ml-0.5 rounded-full hover:text-[#0f766e]"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            {activeEntries.length > 1 && (
+              <button onClick={onReset} className="text-[11px] text-gray-400 underline hover:text-red-500">
+                Clear All
+              </button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMobileFilterOpen(true)}
+              className="ml-auto h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              Filters
+              {hasFilters && (
+                <span className="ml-1 rounded-full bg-[#0d9488] text-white text-[10px] px-1.5 py-0.5 leading-none">
+                  {activeEntries.length}
+                </span>
+              )}
+            </Button>
+          </div>
+        )}
+        {mobileFilterOpen && (
+          <div className="space-y-2">
+            <span className="text-[11px] text-gray-400">Filter by</span>
+            {/* Row 1: Field selector + Value input */}
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedField}
+                onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
+                className="h-9 w-[130px] flex-shrink-0 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+              >
+                {FIELDS.map((f) => (
+                  <option key={f.key} value={f.key}>{f.label}</option>
+                ))}
+              </select>
+              {currentField.type === "text" && (
+                <Input
+                  type="text"
+                  placeholder={`${currentField.label}…`}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  className="h-9 flex-1 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+                />
+              )}
+              {currentField.type === "select" && (
+                <select
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="h-9 flex-1 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+                >
+                  <option value="">Select…</option>
+                  {currentField.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              )}
+              {currentField.type === "dateRange" && (
+                <div className="flex items-center gap-1.5 flex-1">
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className="h-9 flex-1 rounded-md border border-gray-200 bg-white px-2 text-[12px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+                  />
+                  <span className="text-[12px] text-gray-400">–</span>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="h-9 flex-1 rounded-md border border-gray-200 bg-white px-2 text-[12px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Row 2: Reset link + Search button */}
+            <div className="flex items-center">
+              <button
+                onClick={() => setMobileFilterOpen(false)}
+                className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Close
+              </button>
+              <div className="ml-auto flex items-center gap-3">
+                <button
+                  onClick={() => { handleReset(); setMobileFilterOpen(false); }}
+                  className="text-[13px] text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  Reset
+                </button>
+                <Button
+                  onClick={() => { handleSearch(); setMobileFilterOpen(false); }}
+                  disabled={isSearchDisabled}
+                  size="sm"
+                  className="h-9 px-6 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
+                >
+                  Search
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Desktop filter chips ── */}
+      <div className="hidden lg:block">
+        {filterChips}
+      </div>
     </div>
   );
 }
