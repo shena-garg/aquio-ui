@@ -241,17 +241,35 @@ export function ProductDetailsInfoCard({
   // ── View mode ──
   if (!isEditing || !editState || !onEditStateChange) {
     return (
-      <div className="mx-8 mt-3">
+      <div className="mx-4 sm:mx-8 mt-3">
         <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-2">
-          <div className="grid grid-cols-3 gap-4">
-            <Cell label="Product Code / SKU" value={product.sku} />
-            <Cell label="Category" value={product.categoryName} />
-            <Cell label="Subcategory" value={product.subCategoryName} />
+          {/* Desktop: 3 cols × 2 rows */}
+          <div className="hidden sm:block">
+            <div className="grid grid-cols-3 gap-4">
+              <Cell label="Product Code / SKU" value={product.sku} />
+              <Cell label="Category" value={product.categoryName} />
+              <Cell label="Subcategory" value={product.subCategoryName} />
+            </div>
+            <div className="grid grid-cols-3 gap-4 border-t border-[#e5e7eb] pt-2 mt-2">
+              <Cell label="HSN Code" value={product.hsnCode} />
+              <Cell label="GST" value={`${product.gst}%`} />
+              <Cell label="Unit of Measurement" value={product.unitOfMeasurement} />
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-4 border-t border-[#e5e7eb] pt-2 mt-2">
-            <Cell label="HSN Code" value={product.hsnCode} />
-            <Cell label="GST" value={`${product.gst}%`} />
-            <Cell label="Unit of Measurement" value={product.unitOfMeasurement} />
+          {/* Mobile: 2 cols × 3 rows */}
+          <div className="sm:hidden">
+            <div className="grid grid-cols-2 gap-4">
+              <Cell label="Product Code / SKU" value={product.sku} />
+              <Cell label="HSN Code" value={product.hsnCode} />
+            </div>
+            <div className="grid grid-cols-2 gap-4 border-t border-[#e5e7eb] pt-2 mt-2">
+              <Cell label="Category" value={product.categoryName} />
+              <Cell label="Subcategory" value={product.subCategoryName} />
+            </div>
+            <div className="grid grid-cols-2 gap-4 border-t border-[#e5e7eb] pt-2 mt-2">
+              <Cell label="GST" value={`${product.gst}%`} />
+              <Cell label="Unit of Measurement" value={product.unitOfMeasurement} />
+            </div>
           </div>
         </div>
       </div>
@@ -261,11 +279,87 @@ export function ProductDetailsInfoCard({
   const inputCls =
     "h-8 w-full rounded-[6px] border border-[#e5e7eb] bg-white px-3 text-[13px] text-[#111827] outline-none focus:border-[#0d9488] focus:ring-1 focus:ring-[#0d9488]";
 
+  // ── Shared edit fields ──
+  const skuField = (
+    <EditCell label="Product Code / SKU">
+      <input
+        value={editState.sku}
+        readOnly
+        tabIndex={-1}
+        className="h-8 w-full rounded-[6px] border border-[#e5e7eb] bg-[#f3f4f6] px-3 text-[13px] text-[#6b7280] cursor-not-allowed outline-none"
+      />
+    </EditCell>
+  );
+  const hsnField = (
+    <EditCell label="HSN Code">
+      <input
+        value={editState.hsnCode}
+        onChange={(e) => updateField("hsnCode", e.target.value)}
+        className={inputCls}
+      />
+    </EditCell>
+  );
+  const categoryField = (
+    <EditCell label="Category">
+      <SearchableSelect
+        value={editState.categoryId}
+        options={categoryOptions}
+        onChange={(v, label) => {
+          onEditStateChange({
+            ...editState,
+            categoryId: v,
+            categoryName: label,
+            subCategoryId: "",
+            subCategoryName: "",
+          });
+        }}
+        placeholder="Search category…"
+      />
+    </EditCell>
+  );
+  const subCategoryField = (
+    <EditCell label="Subcategory">
+      <SearchableSelect
+        value={editState.subCategoryId}
+        options={subCategoryOptions}
+        onChange={(v, label) => {
+          onEditStateChange({
+            ...editState,
+            subCategoryId: v,
+            subCategoryName: label,
+          });
+        }}
+        placeholder="Search subcategory…"
+        disabled={!editState.categoryId}
+      />
+    </EditCell>
+  );
+  const gstField = (
+    <EditCell label="GST">
+      <SearchableSelect
+        value={String(editState.gst)}
+        options={gstOptions}
+        onChange={(v) => updateField("gst", Number(v))}
+        placeholder="Search GST…"
+      />
+    </EditCell>
+  );
+  const uomField = (
+    <EditCell label="Unit of Measurement">
+      <SearchableSelect
+        value={editState.unitOfMeasurement}
+        options={uomOptions}
+        onChange={(v) => updateField("unitOfMeasurement", v)}
+        placeholder="Search UOM…"
+      />
+    </EditCell>
+  );
+
   // ── Edit mode ──
   return (
-    <div className="mx-8 mt-3">
+    <div className="mx-4 sm:mx-8 mt-3">
       <div className="rounded-[10px] border border-[#0d9488]/30 bg-white px-4 pt-[10px] pb-3">
-        {/* Row 1: Product Name (full width) */}
+        {/* Product Name (full width) */}
         <div>
           <EditCell label="Product Name">
             <input
@@ -276,74 +370,34 @@ export function ProductDetailsInfoCard({
           </EditCell>
         </div>
 
-        {/* Row 2: SKU, Category, Subcategory (matches view layout) */}
-        <div className="grid grid-cols-3 gap-4 border-t border-[#e5e7eb] pt-3 mt-3">
-          <EditCell label="Product Code / SKU">
-            <input
-              value={editState.sku}
-              readOnly
-              tabIndex={-1}
-              className="h-8 w-full rounded-[6px] border border-[#e5e7eb] bg-[#f3f4f6] px-3 text-[13px] text-[#6b7280] cursor-not-allowed outline-none"
-            />
-          </EditCell>
-          <EditCell label="Category">
-            <SearchableSelect
-              value={editState.categoryId}
-              options={categoryOptions}
-              onChange={(v, label) => {
-                onEditStateChange({
-                  ...editState,
-                  categoryId: v,
-                  categoryName: label,
-                  subCategoryId: "",
-                  subCategoryName: "",
-                });
-              }}
-              placeholder="Search category…"
-            />
-          </EditCell>
-          <EditCell label="Subcategory">
-            <SearchableSelect
-              value={editState.subCategoryId}
-              options={subCategoryOptions}
-              onChange={(v, label) => {
-                onEditStateChange({
-                  ...editState,
-                  subCategoryId: v,
-                  subCategoryName: label,
-                });
-              }}
-              placeholder="Search subcategory…"
-              disabled={!editState.categoryId}
-            />
-          </EditCell>
+        {/* Desktop: 3 cols × 2 rows */}
+        <div className="hidden sm:block">
+          <div className="grid grid-cols-3 gap-4 border-t border-[#e5e7eb] pt-3 mt-3">
+            {skuField}
+            {categoryField}
+            {subCategoryField}
+          </div>
+          <div className="grid grid-cols-3 gap-4 border-t border-[#e5e7eb] pt-3 mt-3">
+            {hsnField}
+            {gstField}
+            {uomField}
+          </div>
         </div>
 
-        {/* Row 3: HSN, GST, UOM (matches view layout) */}
-        <div className="grid grid-cols-3 gap-4 border-t border-[#e5e7eb] pt-3 mt-3">
-          <EditCell label="HSN Code">
-            <input
-              value={editState.hsnCode}
-              onChange={(e) => updateField("hsnCode", e.target.value)}
-              className={inputCls}
-            />
-          </EditCell>
-          <EditCell label="GST">
-            <SearchableSelect
-              value={String(editState.gst)}
-              options={gstOptions}
-              onChange={(v) => updateField("gst", Number(v))}
-              placeholder="Search GST…"
-            />
-          </EditCell>
-          <EditCell label="Unit of Measurement">
-            <SearchableSelect
-              value={editState.unitOfMeasurement}
-              options={uomOptions}
-              onChange={(v) => updateField("unitOfMeasurement", v)}
-              placeholder="Search UOM…"
-            />
-          </EditCell>
+        {/* Mobile: 2 cols × 3 rows */}
+        <div className="sm:hidden">
+          <div className="grid grid-cols-2 gap-4 border-t border-[#e5e7eb] pt-3 mt-3">
+            {skuField}
+            {hsnField}
+          </div>
+          <div className="grid grid-cols-2 gap-4 border-t border-[#e5e7eb] pt-3 mt-3">
+            {categoryField}
+            {subCategoryField}
+          </div>
+          <div className="grid grid-cols-2 gap-4 border-t border-[#e5e7eb] pt-3 mt-3">
+            {gstField}
+            {uomField}
+          </div>
         </div>
       </div>
     </div>

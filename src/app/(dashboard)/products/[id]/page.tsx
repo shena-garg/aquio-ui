@@ -30,7 +30,7 @@ export interface ProductEditState {
 function FullPageSkeleton() {
   return (
     <div className="flex flex-col h-full gap-0 animate-pulse">
-      <div className="flex items-center justify-between px-6 h-[55px] border-b border-[#e5e7eb]">
+      <div className="flex items-center justify-between px-4 sm:px-6 h-[55px] border-b border-[#e5e7eb]">
         <div className="flex items-center gap-3">
           <div className="h-5 w-48 rounded bg-gray-200" />
           <div className="h-5 w-16 rounded bg-gray-200" />
@@ -40,17 +40,33 @@ function FullPageSkeleton() {
           <div className="h-8 w-8 rounded bg-gray-200" />
         </div>
       </div>
-      <div className="mx-8 mt-3 rounded-[10px] border border-[#f3f4f6] px-4 pt-[10px] pb-2">
-        {[0, 1].map((row) => (
-          <div key={row} className={`grid grid-cols-3 gap-4 ${row === 1 ? "border-t border-[#e5e7eb] pt-2 mt-2" : ""}`}>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex flex-col gap-1">
-                <div className="h-3 w-16 rounded bg-gray-200" />
-                <div className="h-4 w-24 rounded bg-gray-200" />
-              </div>
-            ))}
-          </div>
-        ))}
+      <div className="mx-4 sm:mx-8 mt-3 rounded-[10px] border border-[#f3f4f6] px-4 pt-[10px] pb-2">
+        {/* Desktop skeleton: 3 cols × 2 rows */}
+        <div className="hidden sm:block">
+          {[0, 1].map((row) => (
+            <div key={row} className={`grid grid-cols-3 gap-4 ${row === 1 ? "border-t border-[#e5e7eb] pt-2 mt-2" : ""}`}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-1">
+                  <div className="h-3 w-16 rounded bg-gray-200" />
+                  <div className="h-4 w-24 rounded bg-gray-200" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        {/* Mobile skeleton: 2 cols × 3 rows */}
+        <div className="sm:hidden">
+          {[0, 1, 2].map((row) => (
+            <div key={row} className={`grid grid-cols-2 gap-4 ${row > 0 ? "border-t border-[#e5e7eb] pt-2 mt-2" : ""}`}>
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-1">
+                  <div className="h-3 w-16 rounded bg-gray-200" />
+                  <div className="h-4 w-24 rounded bg-gray-200" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
       <div className="flex gap-4 border-b border-[#e5e7eb] px-6 py-3">
         {Array.from({ length: 3 }).map((_, i) => (
