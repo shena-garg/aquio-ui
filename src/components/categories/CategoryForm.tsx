@@ -53,7 +53,7 @@ export function CategoryForm({ mode, categoryId, initialValues }: CategoryFormPr
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
-      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-4 sm:px-6">
         {isEdit && (
           <button
             onClick={() => router.push("/categories")}
@@ -63,15 +63,15 @@ export function CategoryForm({ mode, categoryId, initialValues }: CategoryFormPr
             <ArrowLeft className="h-4 w-4" />
           </button>
         )}
-        <span className="text-[18px] font-semibold text-[#111827]">
+        <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">
           {isEdit ? "Edit Category" : "Create Category"}
         </span>
       </div>
 
       {/* Body */}
       <div className="flex-1 overflow-auto bg-[#f9fafb]">
-        <div className="mx-auto max-w-[600px] p-6">
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+        <div className="mx-auto max-w-[600px] p-4 sm:p-6">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5">
             <div className="flex flex-col gap-5">
               {/* Name */}
               <div>

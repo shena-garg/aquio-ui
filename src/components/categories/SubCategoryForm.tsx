@@ -147,7 +147,7 @@ export function SubCategoryForm({
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
-      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-4 sm:px-6">
         {isEdit && (
           <button
             onClick={() => router.push("/categories")}
@@ -157,16 +157,16 @@ export function SubCategoryForm({
             <ArrowLeft className="h-4 w-4" />
           </button>
         )}
-        <span className="text-[18px] font-semibold text-[#111827]">
+        <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">
           {isEdit ? "Edit Subcategory" : "Create Subcategory"}
         </span>
       </div>
 
       {/* Body */}
       <div className="flex-1 overflow-auto bg-[#f9fafb]">
-        <div className="mx-auto max-w-[900px] p-6">
+        <div className="mx-auto max-w-[900px] p-4 sm:p-6">
           {/* Subcategory Name */}
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Subcategory Name <span className="text-red-500">*</span>
@@ -188,7 +188,7 @@ export function SubCategoryForm({
 
           {/* Custom Attributes */}
           <div className="mt-4 rounded-[10px] border border-[#e5e7eb] bg-white overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#e5e7eb]">
+            <div className="px-3 sm:px-6 py-4 border-b border-[#e5e7eb]">
               <h3 className="text-sm font-medium text-[#111827]">Custom Attributes</h3>
             </div>
 

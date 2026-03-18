@@ -124,7 +124,7 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
       <div className="flex-1 overflow-auto bg-[#f9fafb]">
         <div className="mx-auto grid max-w-[1100px] grid-cols-1 lg:grid-cols-2 gap-6 p-4 sm:p-6">
           {/* ── Left column: Form ── */}
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5">
             <div className="flex flex-col gap-5">
               {/* Name */}
               <div>
@@ -253,7 +253,7 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
           </div>
 
           {/* ── Right column: Permissions panel ── */}
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-5 py-5 h-fit">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5 h-fit">
             <h3 className="text-sm font-semibold text-[#111827] mb-4">
               Role Permissions
             </h3>

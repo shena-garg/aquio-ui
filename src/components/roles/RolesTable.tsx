@@ -22,6 +22,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { Role, RolePermission } from "@/services/roles";
 
 // -- Entity label mapping --
@@ -72,9 +77,9 @@ function PermissionChip({ perm }: { perm: RolePermission }) {
   );
 }
 
-// -- Permission chip (no tooltip, for mobile) --
+// -- Permission chip (tap to reveal, for mobile) --
 
-function PermissionChipSimple({ perm }: { perm: RolePermission }) {
+function PermissionChipMobile({ perm }: { perm: RolePermission }) {
   const label = entityLabels[perm.entity] ?? perm.entity;
   const isFull = perm.access === "full";
 
@@ -82,12 +87,28 @@ function PermissionChipSimple({ perm }: { perm: RolePermission }) {
     ? "bg-green-100 text-green-700"
     : "bg-blue-100 text-blue-700";
 
+  const tooltipText = isFull
+    ? "Full Access"
+    : perm.permissions
+        .map((p) => {
+          const parts = p.split(".");
+          return parts[parts.length - 1];
+        })
+        .join(" | ");
+
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${chipClass}`}
-    >
-      {label}
-    </span>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${chipClass}`}
+        >
+          {label}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto px-3 py-1.5 text-[12px]" side="top">
+        {tooltipText}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -206,7 +227,7 @@ export function RolesTable({ roles, isLoading }: RolesTableProps) {
                   {role.permissionsPerEntity
                     .filter((perm) => perm.access !== "none")
                     .map((perm) => (
-                      <PermissionChipSimple key={perm.entity} perm={perm} />
+                      <PermissionChipMobile key={perm.entity} perm={perm} />
                     ))}
                 </div>
               )}

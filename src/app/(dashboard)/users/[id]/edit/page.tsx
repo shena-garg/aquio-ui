@@ -13,7 +13,7 @@ function EditSkeleton() {
       </div>
       <div className="flex-1 bg-[#f9fafb] p-4 sm:p-6">
         <div className="mx-auto grid max-w-[1100px] grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5">
             <div className="flex flex-col gap-5">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i}>
@@ -23,7 +23,7 @@ function EditSkeleton() {
               ))}
             </div>
           </div>
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-5 py-5 h-fit">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5 h-fit">
             <div className="h-4 w-32 rounded bg-gray-200 animate-pulse mb-4" />
             <div className="h-3.5 w-56 rounded bg-gray-200 animate-pulse" />
           </div>

@@ -253,7 +253,7 @@ function AccessToggle({
             key={opt.val}
             type="button"
             onClick={() => onChange(opt.val)}
-            className={`px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+            className={`px-2.5 sm:px-3.5 py-1.5 text-[12px] sm:text-[13px] font-medium transition-colors ${
               isActive
                 ? activeColors[opt.val]
                 : "bg-white text-gray-600 hover:bg-gray-50"
@@ -316,7 +316,7 @@ function EntitySection({
           {entityDef.permissions.map((perm) => (
             <div
               key={perm.key}
-              className="flex items-center justify-between pl-8 pr-4 py-2.5"
+              className="flex items-center justify-between pl-4 sm:pl-8 pr-2 sm:pr-4 py-2.5"
             >
               <div className="pr-4">
                 <p className="text-[13px] font-medium text-[#111827]">
@@ -425,7 +425,7 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
-      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-4 sm:px-6">
         {isEdit && (
           <button
             onClick={() => router.push("/roles")}
@@ -435,16 +435,16 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
             <ArrowLeft className="h-4 w-4" />
           </button>
         )}
-        <span className="text-[18px] font-semibold text-[#111827]">
+        <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">
           {isEdit ? "Edit Role" : "Create Role"}
         </span>
       </div>
 
       {/* Body */}
       <div className="flex-1 overflow-auto bg-[#f9fafb]">
-        <div className="mx-auto max-w-[800px] p-6">
+        <div className="mx-auto max-w-[800px] p-4 sm:p-6">
           {/* Name & Description card */}
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5 mb-6">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5 mb-4 sm:mb-6">
             <div className="flex flex-col gap-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -482,7 +482,7 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
           </div>
 
           {/* Permissions card */}
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5 mb-6">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 sm:px-6 py-4 sm:py-5 mb-4 sm:mb-6">
             <div className="mb-4">
               <h3 className="text-[15px] font-semibold text-[#111827]">
                 Permissions
