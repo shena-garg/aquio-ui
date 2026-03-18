@@ -33,26 +33,26 @@ export function PageHeader({
   const end = showPagination ? Math.min(page * limit, total) : 0;
 
   return (
-    <div className="flex h-[55px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-6">
+    <div className="flex flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4 sm:px-6 min-h-[55px] gap-3 flex-wrap py-2 sm:py-0 sm:flex-nowrap sm:h-[55px]">
 
       {/* Left side */}
-      <div className="flex items-center gap-2.5">
-        <span className="text-[18px] font-semibold text-[#111827]">{title}</span>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827] truncate">{title}</span>
         {left}
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
 
         {showPagination && (
           <>
             {/* Record range */}
-            <span className="text-[13px] text-gray-500">
+            <span className="text-[12px] sm:text-[13px] text-gray-500 whitespace-nowrap">
               {start}–{end} of {total}
             </span>
 
-            {/* Rows per page */}
-            <div className="flex items-center gap-1.5">
+            {/* Rows per page – hidden on very small screens */}
+            <div className="hidden sm:flex items-center gap-1.5">
               <span className="text-[13px] text-gray-500">Rows</span>
               <select
                 value={limit}

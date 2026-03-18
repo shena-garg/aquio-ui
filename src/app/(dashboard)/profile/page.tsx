@@ -27,7 +27,7 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
-      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-4 sm:px-6">
         <button
           onClick={() => router.back()}
           className="mr-3 rounded p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
@@ -35,14 +35,14 @@ export default function ProfilePage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <span className="text-[18px] font-semibold text-[#111827]">
+        <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">
           My Profile
         </span>
       </div>
 
       {/* Body */}
       <div className="flex-1 overflow-auto bg-[#f9fafb]">
-        <div className="mx-auto max-w-[600px] p-6 flex flex-col gap-6">
+        <div className="mx-auto max-w-[600px] p-4 sm:p-6 flex flex-col gap-6">
           <ProfileSection user={user} />
           <ChangePasswordSection />
         </div>
@@ -97,7 +97,7 @@ function ProfileSection({ user }: { user: UserData | undefined }) {
   }
 
   return (
-    <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+    <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
       <h3 className="text-sm font-semibold text-[#111827] mb-5">Profile Information</h3>
       <div className="flex flex-col gap-5">
         {/* Name */}
@@ -220,7 +220,7 @@ function ChangePasswordSection() {
   }
 
   return (
-    <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+    <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
       <h3 className="text-sm font-semibold text-[#111827] mb-5">Change Password</h3>
       <div className="flex flex-col gap-5">
         {/* Current Password */}

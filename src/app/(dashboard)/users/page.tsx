@@ -127,7 +127,7 @@ export default function UsersPage() {
       />
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 bg-white px-6">
+      <div className="flex overflow-x-auto border-b border-gray-200 bg-white px-4 sm:px-6">
         {TABS.map((tab) => {
           const isActive = tab.value === activeTab;
           return (
@@ -149,7 +149,7 @@ export default function UsersPage() {
 
       {/* Search bar */}
       <div className="bg-white">
-        <div className="flex flex-wrap items-center gap-2 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3">
           <select
             value={searchField}
             onChange={(e) => setSearchField(e.target.value as SearchFieldKey)}
@@ -168,7 +168,7 @@ export default function UsersPage() {
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="h-8 w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+            className="h-8 w-full sm:w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
           />
 
           <Button

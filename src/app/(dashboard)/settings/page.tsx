@@ -174,7 +174,7 @@ function AutoNumberConfig({
 
   return (
     <div className="ml-0 mt-3 rounded-lg bg-[#f9fafb] p-4">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label className="block text-[12px] font-medium text-gray-500 mb-1">
             Prefix
@@ -504,7 +504,7 @@ export default function SettingsPage() {
       />
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 bg-white px-6">
+      <div className="flex overflow-x-auto border-b border-gray-200 bg-white px-4 sm:px-6">
         {TABS.map((tab) => {
           const isActive = tab.value === activeTab;
           return (
@@ -526,11 +526,11 @@ export default function SettingsPage() {
 
       {/* Tab content */}
       <div className="flex-1 overflow-auto bg-[#f9fafb]">
-        <div className="mx-auto max-w-[700px] p-6">
+        <div className="mx-auto max-w-[700px] p-4 pb-8 sm:p-6 sm:pb-6">
           {/* ── Purchase Order ── */}
           {activeTab === "po" && (
             <div className="flex flex-col gap-6">
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
                 <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
                   Numbering
                 </h3>
@@ -561,7 +561,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
                 <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
                   Lists
                 </h3>
@@ -588,7 +588,7 @@ export default function SettingsPage() {
           {/* ── Sales Order ── */}
           {activeTab === "so" && (
             <div className="flex flex-col gap-6">
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
                 <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
                   Numbering
                 </h3>
@@ -619,7 +619,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
                 <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
                   Lists
                 </h3>
@@ -646,7 +646,7 @@ export default function SettingsPage() {
           {/* ── Product ── */}
           {activeTab === "product" && (
             <div className="flex flex-col gap-6">
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
                 <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
                   Product Code
                 </h3>
@@ -671,7 +671,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
                 <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
                   Tax
                 </h3>

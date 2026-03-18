@@ -47,14 +47,14 @@ export default function LoginPage() {
   const isDisabled = isSubmitting || !isDirty || !isValid;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F6F7F8]">
+    <div className="min-h-screen flex flex-col items-center justify-start pt-16 sm:justify-center sm:pt-0 bg-[#F6F7F8] px-4 sm:px-6">
       <div className="w-full max-w-[520px] flex flex-col items-center gap-7">
 
         {/* Card */}
         <div className="w-full bg-white rounded-xl shadow-md border border-gray-200">
 
           {/* Header */}
-          <div className="flex items-center justify-center gap-3 px-10 pt-8 pb-6">
+          <div className="flex items-center justify-center gap-3 px-6 sm:px-10 pt-8 pb-6">
             <div className="w-8 h-8 flex-shrink-0">
               <img src="/logo.png" alt="Aquio logo" className="w-full h-full object-contain" />
             </div>
@@ -64,7 +64,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="px-10 py-8 flex flex-col gap-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="px-6 sm:px-10 py-8 flex flex-col gap-6">
 
             {/* Email field */}
             <div className="flex flex-col gap-1.5">

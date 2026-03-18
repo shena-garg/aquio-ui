@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -19,6 +19,8 @@ import {
   ChevronDown,
   LogOut,
   User,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -81,21 +83,44 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, hasPermission, isLoading, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [mobileOpen]);
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
-  return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-[240px] flex-col bg-[#111827] border-r border-[#e5e7eb]">
-
+  const sidebarContent = (
+    <>
       {/* Logo */}
-      <div className="flex h-[56px] flex-shrink-0 items-center gap-[10px] border-b border-black px-5">
-        <div className="h-6 w-6 flex-shrink-0">
-          <img src="/logo.png" alt="Aquio logo" className="h-full w-full object-contain" />
+      <div className="flex h-[56px] flex-shrink-0 items-center justify-between border-b border-black px-5">
+        <div className="flex items-center gap-[10px]">
+          <div className="h-6 w-6 flex-shrink-0">
+            <img src="/logo.png" alt="Aquio logo" className="h-full w-full object-contain" />
+          </div>
+          <span className="text-[16px] font-semibold text-white">
+            Aquio
+          </span>
         </div>
-        <span className="text-[16px] font-semibold text-white">
-          Aquio
-        </span>
+        {/* Close button – mobile only */}
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="lg:hidden rounded p-1 text-[#e5e7eb] hover:bg-[#1f2937] hover:text-white"
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Scrollable nav area */}
@@ -206,7 +231,50 @@ export function Sidebar() {
           </DropdownMenu>
         </div>
       </div>
+    </>
+  );
 
-    </aside>
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="fixed top-0 left-0 right-0 z-40 flex h-[56px] items-center justify-between border-b border-[#e5e7eb] bg-[#111827] px-4 lg:hidden">
+        <div className="flex items-center gap-[10px]">
+          <div className="h-6 w-6 flex-shrink-0">
+            <img src="/logo.png" alt="Aquio logo" className="h-full w-full object-contain" />
+          </div>
+          <span className="text-[16px] font-semibold text-white">
+            Aquio
+          </span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="rounded p-1.5 text-[#e5e7eb] hover:bg-[#1f2937] hover:text-white"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Backdrop – mobile only */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar panel */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col bg-[#111827] border-r border-[#e5e7eb] transition-transform duration-200 ease-in-out",
+          // Desktop: always visible
+          "lg:translate-x-0 lg:z-30",
+          // Mobile: slide in/out
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
