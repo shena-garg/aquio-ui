@@ -151,25 +151,38 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
               key={location._id}
               className="rounded-lg border border-gray-200 bg-white p-4"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <DefaultToggle location={location} onSetDefault={setDefaultCandidate} />
-                  <span className="text-[14px] font-medium text-[#0F1720]">
-                    {location.name}
-                  </span>
-                  {location.isDefault && (
-                    <span className="text-[10px] font-medium text-[#0d9488] bg-[#f0fdfa] rounded-full px-1.5 py-0.5">
-                      Default
-                    </span>
-                  )}
-                </div>
+              {/* Row 1: Name | GST */}
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[14px] font-medium text-[#0F1720]">
+                  {location.name}
+                </span>
+                {location.gstNumber && (
+                  <span className="text-[12px] text-gray-500">{location.gstNumber}</span>
+                )}
+              </div>
+              {/* Row 2: Address | Actions */}
+              <div className="flex items-start justify-between mb-1.5">
+                <p className="text-[13px] text-gray-600">
+                  {formatAddress(location.addressLine1, location.addressLine2)}
+                </p>
                 <ActionsMenu locationId={location._id} />
               </div>
-              <div className="space-y-1 text-[13px] text-gray-600">
-                <p>{formatAddress(location.addressLine1, location.addressLine2)}</p>
-                <p>{[location.city, location.zip].filter(Boolean).join(", ") || "—"}</p>
-                {location.gstNumber && (
-                  <p className="text-[12px] text-gray-400">GST: {location.gstNumber}</p>
+              {/* Row 3: City, State, Zip | Default chip/link */}
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] text-gray-600">
+                  {[location.city, location.state, location.zip].filter(Boolean).join(", ") || "—"}
+                </span>
+                {location.isDefault ? (
+                  <span className="text-[11px] font-medium text-[#0d9488] bg-[#f0fdfa] rounded-full px-2 py-0.5">
+                    Default
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setDefaultCandidate(location)}
+                    className="text-[11px] font-medium text-[#0d9488] hover:underline"
+                  >
+                    Set as default
+                  </button>
                 )}
               </div>
             </div>
