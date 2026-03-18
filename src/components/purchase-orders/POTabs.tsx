@@ -10,7 +10,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { label: "All Orders",  status: undefined,      countKey: "all"        },
+  { label: "All",          status: undefined,      countKey: "all"        },
   { label: "In Progress", status: "in_progress",  countKey: "inProgress" },
   { label: "Completed",   status: "completed",    countKey: "completed"  },
   { label: "Drafts",      status: "draft",        countKey: "draft"      },
@@ -36,7 +36,7 @@ export function POTabs({ activeStatus, counts, onChange }: POTabsProps) {
             key={tab.countKey}
             onClick={() => onChange(tab.status)}
             className={cn(
-              "flex items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors whitespace-nowrap",
+              "flex items-center gap-1.5 border-b-2 px-2.5 sm:px-4 py-3 text-[13px] font-medium transition-colors whitespace-nowrap",
               isActive
                 ? "border-[#0d9488] text-[#0d9488]"
                 : "border-transparent text-gray-500 hover:text-[#0F1720]"
