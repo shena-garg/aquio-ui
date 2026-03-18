@@ -333,7 +333,15 @@ export function POSearchBar({
         )}
         {mobileFilterOpen && (
           <div className="space-y-2">
-            <span className="text-[11px] text-gray-400">Filter by</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-gray-400">Filter by</span>
+              <button
+                onClick={() => setMobileFilterOpen(false)}
+                className="text-[12px] text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Close
+              </button>
+            </div>
             {/* Row 1: Field selector + Value input */}
             <div className="flex items-center gap-2">
               <select
@@ -387,29 +395,21 @@ export function POSearchBar({
             </div>
 
             {/* Row 2: Reset link + Search button */}
-            <div className="flex items-center">
+            <div className="flex items-center justify-end gap-3">
               <button
-                onClick={() => setMobileFilterOpen(false)}
-                className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => { handleReset(); setMobileFilterOpen(false); }}
+                className="text-[13px] text-gray-400 hover:text-red-500 transition-colors"
               >
-                Close
+                Reset
               </button>
-              <div className="ml-auto flex items-center gap-3">
-                <button
-                  onClick={() => { handleReset(); setMobileFilterOpen(false); }}
-                  className="text-[13px] text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  Reset
-                </button>
-                <Button
-                  onClick={() => { handleSearch(); setMobileFilterOpen(false); }}
-                  disabled={isSearchDisabled}
-                  size="sm"
-                  className="h-9 px-6 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
-                >
-                  Search
-                </Button>
-              </div>
+              <Button
+                onClick={() => { handleSearch(); setMobileFilterOpen(false); }}
+                disabled={isSearchDisabled}
+                size="sm"
+                className="h-9 px-6 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
+              >
+                Search
+              </Button>
             </div>
           </div>
         )}
