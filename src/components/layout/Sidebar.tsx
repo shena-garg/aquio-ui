@@ -257,26 +257,23 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Backdrop – mobile only */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar panel */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col bg-[#111827] border-r border-[#e5e7eb] transition-transform duration-200 ease-in-out",
-          // Desktop: always visible
-          "lg:translate-x-0 lg:z-30",
-          // Mobile: slide in/out
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
-      >
+      {/* Desktop sidebar – always visible on lg+ */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-30 w-[240px] flex-col bg-[#111827] border-r border-[#e5e7eb]">
         {sidebarContent}
       </aside>
+
+      {/* Mobile drawer – only when open */}
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col bg-[#111827] border-r border-[#e5e7eb] lg:hidden">
+            {sidebarContent}
+          </aside>
+        </>
+      )}
     </>
   );
 }
