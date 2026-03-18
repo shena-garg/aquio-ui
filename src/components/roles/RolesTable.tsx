@@ -72,7 +72,26 @@ function PermissionChip({ perm }: { perm: RolePermission }) {
   );
 }
 
-// -- Skeleton row --
+// -- Permission chip (no tooltip, for mobile) --
+
+function PermissionChipSimple({ perm }: { perm: RolePermission }) {
+  const label = entityLabels[perm.entity] ?? perm.entity;
+  const isFull = perm.access === "full";
+
+  const chipClass = isFull
+    ? "bg-green-100 text-green-700"
+    : "bg-blue-100 text-blue-700";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${chipClass}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+// -- Skeleton --
 
 function SkeletonRow() {
   return (
@@ -94,6 +113,19 @@ function SkeletonRow() {
         </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4">
+      <div className="h-4 w-32 rounded bg-gray-200 mb-3" />
+      <div className="h-3 w-48 rounded bg-gray-200 mb-3" />
+      <div className="flex gap-1.5">
+        <div className="h-5 w-16 rounded-full bg-gray-200" />
+        <div className="h-5 w-20 rounded-full bg-gray-200" />
+      </div>
+    </div>
   );
 }
 
@@ -121,9 +153,70 @@ function cleanDescription(text: string | undefined): string {
 export function RolesTable({ roles, isLoading }: RolesTableProps) {
   const router = useRouter();
 
+  function RoleActionsMenu({ role }: { role: Role }) {
+    if (role.organizationId === null) return null;
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+            aria-label="More actions"
+          >
+            <MoreHorizontal className="h-[15px] w-[15px]" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuItem
+            onClick={() => router.push(`/roles/${role._id}/edit`)}
+          >
+            Edit Role
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="w-full overflow-x-auto bg-white border border-gray-200 rounded-md">
+      {/* ── Mobile card list ── */}
+      <div className="lg:hidden flex flex-col gap-3 p-4">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : roles.length === 0 ? (
+          <p className="text-center text-[13px] text-gray-400 py-12">No roles found</p>
+        ) : (
+          roles.map((role) => (
+            <div
+              key={role._id}
+              className="rounded-lg border border-gray-200 bg-white p-4"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[14px] font-medium text-[#0F1720]">
+                  {role.name}
+                </span>
+                <RoleActionsMenu role={role} />
+              </div>
+              {role.description && (
+                <p className="text-[13px] text-gray-500 line-clamp-2 mb-2">
+                  {cleanDescription(role.description)}
+                </p>
+              )}
+              {role.permissionsPerEntity && role.permissionsPerEntity.filter((p) => p.access !== "none").length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {role.permissionsPerEntity
+                    .filter((perm) => perm.access !== "none")
+                    .map((perm) => (
+                      <PermissionChipSimple key={perm.entity} perm={perm} />
+                    ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Desktop table ── */}
+      <div className="hidden lg:block w-full overflow-x-auto bg-white border border-gray-200 rounded-md">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-gray-200 bg-gray-50 hover:bg-gray-50">
@@ -152,46 +245,22 @@ export function RolesTable({ roles, isLoading }: RolesTableProps) {
                   key={role._id}
                   className="group border-b border-gray-100 hover:bg-gray-50"
                 >
-                  {/* Three dot menu — only for org roles */}
                   <TableCell className="px-3 w-[50px]">
-                    {role.organizationId !== null ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                            aria-label="More actions"
-                          >
-                            <MoreHorizontal className="h-[15px] w-[15px]" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              router.push(`/roles/${role._id}/edit`)
-                            }
-                          >
-                            Edit Role
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : null}
+                    <RoleActionsMenu role={role} />
                   </TableCell>
 
-                  {/* Name */}
                   <TableCell className="px-3">
                     <span className="text-[13px] font-medium text-[#0F1720]">
                       {role.name}
                     </span>
                   </TableCell>
 
-                  {/* Description */}
                   <TableCell className="px-3">
                     <span className="text-[13px] text-gray-600 line-clamp-2">
                       {cleanDescription(role.description)}
                     </span>
                   </TableCell>
 
-                  {/* Permissions */}
                   <TableCell className="px-3">
                     <div className="flex flex-wrap gap-1.5">
                       {role.permissionsPerEntity

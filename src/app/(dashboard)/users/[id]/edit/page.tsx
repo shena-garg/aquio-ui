@@ -8,12 +8,12 @@ import { UserForm } from "@/components/users/UserForm";
 function EditSkeleton() {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex h-[55px] flex-shrink-0 items-center border-b border-[#e5e7eb] bg-white px-4 sm:px-6">
         <div className="h-5 w-32 rounded bg-gray-200 animate-pulse" />
       </div>
-      <div className="flex-1 bg-[#f9fafb] p-6">
-        <div className="mx-auto grid max-w-[1100px] grid-cols-2 gap-6">
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-6 py-5">
+      <div className="flex-1 bg-[#f9fafb] p-4 sm:p-6">
+        <div className="mx-auto grid max-w-[1100px] grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
             <div className="flex flex-col gap-5">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i}>

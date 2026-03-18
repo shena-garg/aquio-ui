@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Filter, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ export default function UsersPage() {
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
   const [searchField, setSearchField] = useState<SearchFieldKey>("name");
   const [searchValue, setSearchValue] = useState("");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // ── Roles query (cached for 10 minutes) ──────────────────────────────────
 
@@ -147,9 +148,9 @@ export default function UsersPage() {
         })}
       </div>
 
-      {/* Search bar */}
-      <div className="bg-white">
-        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3">
+      {/* Search bar – desktop */}
+      <div className="hidden lg:block bg-white">
+        <div className="flex flex-wrap items-center gap-2 px-6 py-3">
           <select
             value={searchField}
             onChange={(e) => setSearchField(e.target.value as SearchFieldKey)}
@@ -168,7 +169,7 @@ export default function UsersPage() {
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="h-8 w-full sm:w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+            className="h-8 w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
           />
 
           <Button
@@ -189,6 +190,91 @@ export default function UsersPage() {
             Reset
           </Button>
         </div>
+      </div>
+
+      {/* Search – mobile: filter button + active chip */}
+      <div className="lg:hidden bg-white border-b border-gray-200">
+        <div className="flex items-center gap-2 px-4 py-2.5">
+          <button
+            onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+            className={cn(
+              "flex items-center gap-1.5 h-8 px-3 rounded-md border text-[13px] font-medium transition-colors",
+              mobileFilterOpen
+                ? "border-[#0d9488] text-[#0d9488] bg-[#f0fdfa]"
+                : "border-gray-200 text-gray-600"
+            )}
+          >
+            <Filter className="h-3.5 w-3.5" />
+            Filter
+          </button>
+
+          {searchValue.trim() && (
+            <div className="flex items-center gap-1 bg-[#f0fdfa] border border-[#0d9488]/20 rounded-full px-2.5 py-1">
+              <span className="text-[11px] text-[#0d9488] font-medium">
+                {SEARCH_FIELDS.find((f) => f.key === searchField)!.label}: {searchValue}
+              </span>
+              <button
+                onClick={handleReset}
+                className="text-[#0d9488] hover:text-[#0f766e]"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {mobileFilterOpen && (
+          <div className="px-4 pb-3 flex flex-col gap-2">
+            <select
+              value={searchField}
+              onChange={(e) => setSearchField(e.target.value as SearchFieldKey)}
+              className={SELECT_INPUT_CLASS}
+            >
+              {SEARCH_FIELDS.map((f) => (
+                <option key={f.key} value={f.key}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+            <Input
+              type="text"
+              placeholder={`Search by ${SEARCH_FIELDS.find((f) => f.key === searchField)!.label}…`}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                  setMobileFilterOpen(false);
+                }
+              }}
+              className="h-8 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+            />
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  handleSearch();
+                  setMobileFilterOpen(false);
+                }}
+                disabled={!searchValue.trim()}
+                size="sm"
+                className="h-8 flex-1 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
+              >
+                Apply
+              </Button>
+              <Button
+                onClick={() => {
+                  handleReset();
+                  setMobileFilterOpen(false);
+                }}
+                variant="outline"
+                size="sm"
+                className="h-8 flex-1 border-gray-200 text-[13px] text-gray-600"
+              >
+                Reset
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Table */}

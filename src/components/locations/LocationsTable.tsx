@@ -43,9 +43,87 @@ function SkeletonRow() {
   );
 }
 
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4">
+      <div className="h-4 w-32 rounded bg-gray-200 mb-3" />
+      <div className="space-y-2">
+        <div className="h-3 w-48 rounded bg-gray-200" />
+        <div className="h-3 w-36 rounded bg-gray-200" />
+        <div className="h-3 w-28 rounded bg-gray-200" />
+      </div>
+    </div>
+  );
+}
+
 // ── Table header styles ──────────────────────────────────────────────────────
 
 const TH = "px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400";
+
+// ── Default badge ────────────────────────────────────────────────────────────
+
+function DefaultToggle({
+  location,
+  onSetDefault,
+}: {
+  location: Location;
+  onSetDefault: (loc: Location) => void;
+}) {
+  return (
+    <button
+      onClick={() => {
+        if (!location.isDefault) onSetDefault(location);
+      }}
+      className="inline-flex items-center justify-center"
+      aria-label={
+        location.isDefault
+          ? "Current default location"
+          : `Set ${location.name} as default`
+      }
+    >
+      {location.isDefault ? (
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0d9488]">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path
+              d="M1.5 5.5L3.5 7.5L8.5 2.5"
+              stroke="white"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      ) : (
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-gray-300 transition-colors hover:border-[#0d9488]" />
+      )}
+    </button>
+  );
+}
+
+// ── Actions menu ─────────────────────────────────────────────────────────────
+
+function ActionsMenu({ locationId }: { locationId: string }) {
+  const router = useRouter();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+          aria-label="More actions"
+        >
+          <MoreHorizontal className="h-[15px] w-[15px]" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-48">
+        <DropdownMenuItem
+          onClick={() => router.push(`/locations/${locationId}/edit`)}
+        >
+          Edit Location
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 // ── Main component ──────────────────────────────────────────────────────────
 
@@ -61,7 +139,46 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
 
   return (
     <>
-      <div className="w-full overflow-x-auto bg-white border border-gray-200 rounded-md">
+      {/* ── Mobile card list ── */}
+      <div className="lg:hidden flex flex-col gap-3 p-4">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : locations.length === 0 ? (
+          <p className="text-center text-[13px] text-gray-400 py-12">No locations found.</p>
+        ) : (
+          locations.map((location) => (
+            <div
+              key={location._id}
+              className="rounded-lg border border-gray-200 bg-white p-4"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <DefaultToggle location={location} onSetDefault={setDefaultCandidate} />
+                  <span className="text-[14px] font-medium text-[#0F1720]">
+                    {location.name}
+                  </span>
+                  {location.isDefault && (
+                    <span className="text-[10px] font-medium text-[#0d9488] bg-[#f0fdfa] rounded-full px-1.5 py-0.5">
+                      Default
+                    </span>
+                  )}
+                </div>
+                <ActionsMenu locationId={location._id} />
+              </div>
+              <div className="space-y-1 text-[13px] text-gray-600">
+                <p>{formatAddress(location.addressLine1, location.addressLine2)}</p>
+                <p>{[location.city, location.zip].filter(Boolean).join(", ") || "—"}</p>
+                {location.gstNumber && (
+                  <p className="text-[12px] text-gray-400">GST: {location.gstNumber}</p>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Desktop table ── */}
+      <div className="hidden lg:block w-full overflow-x-auto bg-white border border-gray-200 rounded-md">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-gray-200 bg-gray-50 hover:bg-gray-50">
@@ -94,59 +211,12 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
                 >
                   {/* Default radio */}
                   <TableCell className="pl-3 pr-0 w-[40px] text-center">
-                    <button
-                      onClick={() => {
-                        if (!location.isDefault) setDefaultCandidate(location);
-                      }}
-                      className="inline-flex items-center justify-center"
-                      aria-label={
-                        location.isDefault
-                          ? "Current default location"
-                          : `Set ${location.name} as default`
-                      }
-                    >
-                      {location.isDefault ? (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0d9488]">
-                          <svg
-                            width="10"
-                            height="10"
-                            viewBox="0 0 10 10"
-                            fill="none"
-                          >
-                            <path
-                              d="M1.5 5.5L3.5 7.5L8.5 2.5"
-                              stroke="white"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </span>
-                      ) : (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-gray-300 transition-colors hover:border-[#0d9488]" />
-                      )}
-                    </button>
+                    <DefaultToggle location={location} onSetDefault={setDefaultCandidate} />
                   </TableCell>
 
                   {/* Actions */}
                   <TableCell className="pl-2 pr-0 w-[40px]">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                          aria-label="More actions"
-                        >
-                          <MoreHorizontal className="h-[15px] w-[15px]" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-48">
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/locations/${location._id}/edit`)}
-                        >
-                          Edit Location
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <ActionsMenu locationId={location._id} />
                   </TableCell>
 
                   <TableCell className="px-3">
