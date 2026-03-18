@@ -175,6 +175,7 @@ function PartnerCard({
   onCompanyChange,
   onLocationChange,
   disabled,
+  collapsed,
   headerRight,
 }: {
   label: string;
@@ -184,6 +185,7 @@ function PartnerCard({
   onCompanyChange: (id: string) => void;
   onLocationChange: (id: string) => void;
   disabled?: boolean;
+  collapsed?: boolean;
   headerRight?: React.ReactNode;
 }) {
   const company = companies.find((c) => c._id === selectedCompanyId);
@@ -200,85 +202,95 @@ function PartnerCard({
         {headerRight}
       </div>
 
-      {/* Company dropdown */}
-      <select
-        value={selectedCompanyId}
-        onChange={(e) => onCompanyChange(e.target.value)}
-        disabled={disabled}
-        className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <option value="">Select company</option>
-        {companies.map((c) => (
-          <option key={c._id} value={c._id}>
-            {c.name}
-            {c._type === "own" ? " (Your Org)" : ""}
-          </option>
-        ))}
-      </select>
+      {collapsed ? null : (
+      /* 2-column layout: Company side | Location side */
+      <div className="grid grid-cols-2 gap-4">
+        {/* Left column: Company dropdown + Tax/Contact */}
+        <div className="flex flex-col gap-2">
+          <select
+            value={selectedCompanyId}
+            onChange={(e) => onCompanyChange(e.target.value)}
+            disabled={disabled}
+            className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">Select company</option>
+            {companies.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name}
+                {c._type === "own" ? " (Your Org)" : ""}
+              </option>
+            ))}
+          </select>
 
-      {/* Tax + Contact (company-level, fallback to location) */}
-      {company ? (() => {
-        const taxNum = (company as VendorCompany).taxNumber;
-        const contactNum = company.phoneNumber || company.contactNumber || location?.contactNumber;
-        const countryCodeVal = company.countryCode || location?.countryCode;
-        if (!taxNum && !contactNum) return null;
-        return (
-          <p className="text-[11px] text-[#6b7280]">
-            {[
-              taxNum && `Tax: ${taxNum}`,
-              contactNum && `${countryCodeVal ? `+${countryCodeVal}` : ""} ${contactNum}`.trim(),
-            ]
-              .filter(Boolean)
-              .join("  ·  ")}
-          </p>
-        );
-      })() : (
-        <p className="text-[11px] text-[#d1d5db]">Tax: —  ·  Contact: —</p>
-      )}
-
-      {/* Location dropdown */}
-      <select
-        value={selectedLocationId}
-        onChange={(e) => onLocationChange(e.target.value)}
-        disabled={disabled || locations.length === 0}
-        className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <option value="">Select location</option>
-        {locations.map((l) => (
-          <option key={l._id} value={l._id}>
-            {l.name}
-          </option>
-        ))}
-      </select>
-
-      {/* GST + Address (location-level, flat fields) */}
-      {location ? (
-        <div className="space-y-0.5">
-          {location.gstNumber && location.gstNumber !== "-" && (
-            <p className="text-[11px] text-[#6b7280]">
-              GST: {location.gstNumber}
-            </p>
+          {company ? (() => {
+            const taxNum = (company as VendorCompany).taxNumber;
+            const contactNum = company.phoneNumber || company.contactNumber || location?.contactNumber;
+            const countryCodeVal = company.countryCode || location?.countryCode;
+            if (!taxNum && !contactNum) return null;
+            return (
+              <div className="space-y-0.5">
+                {taxNum && <p className="text-[11px] text-[#6b7280]">Tax: {taxNum}</p>}
+                {contactNum && (
+                  <p className="text-[11px] text-[#6b7280]">
+                    {countryCodeVal ? `+${countryCodeVal} ` : ""}{contactNum}
+                  </p>
+                )}
+              </div>
+            );
+          })() : (
+            <div className="space-y-0.5">
+              <p className="text-[11px] text-[#d1d5db]">Tax: —</p>
+              <p className="text-[11px] text-[#d1d5db]">Contact: —</p>
+            </div>
           )}
-          {(() => {
-            const addrStr = [
-              location.addressLine1,
-              location.addressLine2,
-              location.city,
-              location.state && location.zip ? `${location.state} - ${location.zip}` : location.state || location.zip,
-              location.country,
-            ]
-              .filter(Boolean)
-              .join(", ");
-            return addrStr ? (
-              <p className="text-[11px] text-[#6b7280] leading-relaxed">{addrStr}</p>
-            ) : null;
-          })()}
         </div>
-      ) : (
-        <div className="space-y-0.5">
-          <p className="text-[11px] text-[#d1d5db]">GST: —</p>
-          <p className="text-[11px] text-[#d1d5db] leading-relaxed">Address will appear here</p>
+
+        {/* Right column: Location dropdown + GST/Address */}
+        <div className="flex flex-col gap-2">
+          <select
+            value={selectedLocationId}
+            onChange={(e) => onLocationChange(e.target.value)}
+            disabled={disabled || locations.length === 0}
+            className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">Select location</option>
+            {locations.map((l) => (
+              <option key={l._id} value={l._id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+
+          {location ? (
+            <div className="space-y-0.5">
+              {location.gstNumber && location.gstNumber !== "-" && (
+                <p className="text-[11px] text-[#6b7280]">
+                  GST: {location.gstNumber}
+                </p>
+              )}
+              {(() => {
+                const addrStr = [
+                  location.addressLine1,
+                  location.addressLine2,
+                  location.city,
+                  location.state && location.zip ? `${location.state} - ${location.zip}` : location.state || location.zip,
+                  location.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ");
+                return addrStr ? (
+                  <p className="text-[11px] text-[#6b7280] leading-relaxed">{addrStr}</p>
+                ) : null;
+              })()}
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              <p className="text-[11px] text-[#d1d5db]">GST: —</p>
+              <p className="text-[11px] text-[#d1d5db] leading-relaxed">Address will appear here</p>
+            </div>
+          )}
         </div>
+      </div>
       )}
     </div>
   );
@@ -990,8 +1002,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
   return (
     <div className="flex flex-col h-full">
       {/* ── Sticky top bar ──────────────────────────────────────────────── */}
-      <div className="flex h-[55px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-6 sticky top-0 z-10">
-        <span className="text-[18px] font-semibold text-[#111827]">
+      <div className="flex h-[55px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4 sm:px-6 sticky top-0 z-10">
+        <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">
           {isEditMode ? "Edit Purchase Order" : "New Purchase Order"}
         </span>
       </div>
@@ -1020,9 +1032,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
       {/* ── Scrollable content ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-auto">
         <div className="mx-4 pt-3 pb-6">
-          {/* ── Partners card (full width) ────────────────────────────── */}
-          <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-2 mb-3">
-            <div className="grid grid-cols-3 gap-4">
+          {/* ── Partner cards ────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
+            <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-3">
               <PartnerCard
                 label="Supplier"
                 companies={companies}
@@ -1031,6 +1043,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                 onCompanyChange={(id) => handleCompanyChange("supplier", id)}
                 onLocationChange={setSupplierLocationId}
               />
+            </div>
+            <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-3">
               <PartnerCard
                 label="Consignee (Ship To)"
                 companies={companies}
@@ -1039,6 +1053,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                 onCompanyChange={(id) => handleCompanyChange("consignee", id)}
                 onLocationChange={setConsigneeLocationId}
               />
+            </div>
+            <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-3">
               <PartnerCard
                 label="Buyer (Bill To)"
                 companies={companies}
@@ -1047,6 +1063,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                 onCompanyChange={(id) => handleCompanyChange("buyer", id)}
                 onLocationChange={setBuyerLocationId}
                 disabled={sameAsConsignee}
+                collapsed={sameAsConsignee}
                 headerRight={
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input
@@ -1066,7 +1083,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
 
           {/* ── Order Details card (full width) ─────────────────────── */}
           <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-4 mb-3">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {/* PO Number */}
               <div>
                 <label className="block text-[13px] font-medium text-[#111827] mb-1.5">
@@ -1414,9 +1431,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
               </div>
 
               {/* Terms & Attachments side by side */}
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 {/* Terms & Conditions */}
-                <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-5">
+                <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-4 sm:p-5">
                   <label className="block text-[13px] font-medium text-[#111827] mb-2">
                     Terms & Conditions
                   </label>
@@ -1464,7 +1481,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                 </div>
 
                 {/* Attachments */}
-                <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-5">
+                <div className="rounded-[10px] border border-[#e5e7eb] bg-white p-4 sm:p-5">
                   <label className="block text-[13px] font-medium text-[#111827] mb-2">
                     Attachments
                   </label>
