@@ -99,9 +99,9 @@ export function ProductDetailsExtra({
       "h-8 w-full rounded-[6px] border border-[#e5e7eb] bg-white px-3 text-[13px] text-[#111827] outline-none focus:border-[#0d9488] focus:ring-1 focus:ring-[#0d9488]";
 
     return (
-      <div className="mx-8 mt-2">
+      <div className="mx-4 sm:mx-8 mt-2">
         <div className="rounded-[10px] border border-[#0d9488]/30 bg-white px-4 py-3">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Left: Description */}
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] mb-1.5">
@@ -162,7 +162,7 @@ export function ProductDetailsExtra({
 
           {/* Files row */}
           <div className="border-t border-[#e5e7eb] mt-3 pt-2.5">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] flex-shrink-0">
                 Files
               </div>
@@ -212,9 +212,9 @@ export function ProductDetailsExtra({
   if (!hasAnyContent) return null;
 
   return (
-    <div className="mx-8 mt-2">
+    <div className="mx-4 sm:mx-8 mt-2">
       <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-2.5">
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Left: Description */}
           <div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] mb-1">
@@ -291,7 +291,7 @@ export function ProductDetailsExtra({
         {/* Files row */}
         {hasFiles && (
           <div className="border-t border-[#e5e7eb] mt-2 pt-2">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] flex-shrink-0">
                 Files
               </div>
