@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { SlidersHorizontal, Plus, X } from "lucide-react";
+import { Filter, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -71,6 +71,7 @@ export default function ProductsPage() {
   // ── Search bar local state ────────────────────────────────────────────────
   const [selectedField, setSelectedField] = useState<FieldKey>("sku");
   const [inputValue, setInputValue] = useState("");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // ── Column customization state ────────────────────────────────────────────
   const [prefsLoaded, setPrefsLoaded] = useState(false);
@@ -259,28 +260,17 @@ export default function ProductsPage() {
   // ── Actions toolbar ─────────────────────────────────────────────────────
 
   const actions = (
-    <>
+    <RequirePermission permission="product.add">
       <Button
-        variant="outline"
         size="sm"
-        onClick={() => setShowCustomize(true)}
-        className="h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
+        onClick={() => router.push("/products/new")}
+        className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
       >
-        <SlidersHorizontal className="h-3.5 w-3.5" />
-        Customize
+        <Plus className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Add Product</span>
+        <span className="sm:hidden">Add</span>
       </Button>
-
-      <RequirePermission permission="product.add">
-        <Button
-          size="sm"
-          onClick={() => router.push("/products/new")}
-          className="h-8 gap-1.5 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add Product
-        </Button>
-      </RequirePermission>
-    </>
+    </RequirePermission>
   );
 
   return (
@@ -296,7 +286,7 @@ export default function ProductsPage() {
       />
 
       {/* ── Tabs ─────────────────────────────────────────────────────────── */}
-      <div className="flex border-b border-gray-200 bg-white px-6">
+      <div className="flex overflow-x-auto border-b border-gray-200 bg-white px-4 sm:px-6">
         {(["active", "inactive"] as const).map((tab) => {
           const isActive = tab === activeTab;
           return (
@@ -316,10 +306,9 @@ export default function ProductsPage() {
         })}
       </div>
 
-      {/* ── Search bar ───────────────────────────────────────────────────── */}
-      <div className="bg-white">
+      {/* ── Search bar – desktop ─────────────────────────────────────── */}
+      <div className="hidden lg:block bg-white">
         <div className="flex flex-wrap items-center gap-2 px-6 py-3">
-          {/* Field selector */}
           <select
             value={selectedField}
             onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
@@ -331,7 +320,6 @@ export default function ProductsPage() {
             <option value="subCategoryId">Subcategory</option>
           </select>
 
-          {/* Text input for sku / name */}
           {(selectedField === "sku" || selectedField === "name") && (
             <Input
               type="text"
@@ -343,7 +331,6 @@ export default function ProductsPage() {
             />
           )}
 
-          {/* Category dropdown */}
           {selectedField === "categoryId" && (
             <select
               value={inputValue}
@@ -357,7 +344,6 @@ export default function ProductsPage() {
             </select>
           )}
 
-          {/* Subcategory dropdown */}
           {selectedField === "subCategoryId" && (
             <select
               value={inputValue}
@@ -390,7 +376,6 @@ export default function ProductsPage() {
           </Button>
         </div>
 
-        {/* ── Active filter chips ─────────────────────────────────────────── */}
         {hasFilters && (
           <div className="flex flex-wrap items-center gap-2 px-6 pb-3">
             {activeEntries.map(([key, value]) => (
@@ -417,6 +402,129 @@ export default function ProductsPage() {
                 Clear All
               </button>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Search – mobile: filter button + active chips ─────────────── */}
+      <div className="lg:hidden bg-white border-b border-gray-200">
+        <div className="flex items-center gap-2 px-4 py-2.5 flex-wrap">
+          <button
+            onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+            className={cn(
+              "flex items-center gap-1.5 h-8 px-3 rounded-md border text-[13px] font-medium transition-colors",
+              mobileFilterOpen
+                ? "border-[#0d9488] text-[#0d9488] bg-[#f0fdfa]"
+                : "border-gray-200 text-gray-600"
+            )}
+          >
+            <Filter className="h-3.5 w-3.5" />
+            Filter
+          </button>
+
+          {activeEntries.map(([key, value]) => (
+            <div key={key} className="flex items-center gap-1 bg-[#f0fdfa] border border-[#0d9488]/20 rounded-full px-2.5 py-1">
+              <span className="text-[11px] text-[#0d9488] font-medium">
+                {getChipLabel(key, value)}
+              </span>
+              <button
+                onClick={() => handleRemoveFilter(key)}
+                className="text-[#0d9488] hover:text-[#0f766e]"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+
+          {activeEntries.length > 1 && (
+            <button
+              onClick={handleReset}
+              className="text-[11px] text-gray-400 underline hover:text-red-500"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+
+        {mobileFilterOpen && (
+          <div className="px-4 pb-3 flex flex-col gap-2">
+            <select
+              value={selectedField}
+              onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
+              className={SELECT_INPUT_CLASS}
+            >
+              <option value="sku">Product Code</option>
+              <option value="name">Product Name</option>
+              <option value="categoryId">Category</option>
+              <option value="subCategoryId">Subcategory</option>
+            </select>
+
+            {(selectedField === "sku" || selectedField === "name") && (
+              <Input
+                type="text"
+                placeholder={`Search by ${selectedField === "sku" ? "Product Code" : "Product Name"}…`}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+                    setMobileFilterOpen(false);
+                  }
+                }}
+                className="h-8 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+              />
+            )}
+
+            {selectedField === "categoryId" && (
+              <select
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className={SELECT_INPUT_CLASS}
+              >
+                <option value="">Select Category…</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>{cat.name}</option>
+                ))}
+              </select>
+            )}
+
+            {selectedField === "subCategoryId" && (
+              <select
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className={SELECT_INPUT_CLASS}
+              >
+                <option value="">Select Subcategory…</option>
+                {allSubCategories.map((sub) => (
+                  <option key={sub._id} value={sub._id}>{sub.name}</option>
+                ))}
+              </select>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  handleSearch();
+                  setMobileFilterOpen(false);
+                }}
+                disabled={isSearchDisabled}
+                size="sm"
+                className="h-8 flex-1 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
+              >
+                Apply
+              </Button>
+              <Button
+                onClick={() => {
+                  handleReset();
+                  setMobileFilterOpen(false);
+                }}
+                variant="outline"
+                size="sm"
+                className="h-8 flex-1 border-gray-200 text-[13px] text-gray-600"
+              >
+                Reset
+              </Button>
+            </div>
           </div>
         )}
       </div>

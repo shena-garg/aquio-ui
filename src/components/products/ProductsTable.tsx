@@ -193,6 +193,19 @@ function SkeletonRow({ colCount }: { colCount: number }) {
   );
 }
 
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4">
+      <div className="h-4 w-32 rounded bg-gray-200 mb-3" />
+      <div className="space-y-2">
+        <div className="h-3 w-48 rounded bg-gray-200" />
+        <div className="h-3 w-36 rounded bg-gray-200" />
+        <div className="h-3 w-24 rounded bg-gray-200" />
+      </div>
+    </div>
+  );
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface ProductsTableProps {
@@ -260,9 +273,108 @@ export function ProductsTable({
     }
   }
 
+  // Actions menu extracted for reuse
+  function ProductActionsMenu({ product }: { product: Product }) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+            aria-label="More actions"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="h-[15px] w-[15px]" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          {activeTab === "active" ? (
+            <>
+              <RequirePermission permission="product.edit">
+                <DropdownMenuItem
+                  onClick={() => router.push(`/products/${product._id}/edit`)}
+                >
+                  Edit Product
+                </DropdownMenuItem>
+              </RequirePermission>
+              <RequirePermission permission="product.add">
+                <DropdownMenuItem
+                  onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
+                >
+                  Create Duplicate
+                </DropdownMenuItem>
+              </RequirePermission>
+              <RequirePermission permission="product.archive">
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setArchiveProduct(product)}
+                  className="text-[#DC2626] focus:text-[#DC2626]"
+                >
+                  Archive
+                </DropdownMenuItem>
+              </RequirePermission>
+            </>
+          ) : (
+            <RequirePermission permission="product.add">
+              <DropdownMenuItem
+                onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
+              >
+                Create Duplicate
+              </DropdownMenuItem>
+            </RequirePermission>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
   return (
     <>
-      <div className="w-full overflow-x-auto bg-white border border-gray-200 rounded-md">
+      {/* ── Mobile card list ── */}
+      <div className="lg:hidden flex flex-col gap-3 p-4">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : products.length === 0 ? (
+          <p className="text-center text-[13px] text-gray-400 py-12">No products found.</p>
+        ) : (
+          products.map((product) => (
+            <div
+              key={product._id}
+              onClick={() => router.push(`/products/${product._id}`)}
+              className="rounded-lg border border-gray-200 bg-white p-4 cursor-pointer active:bg-gray-50"
+            >
+              {/* Row 1: Product Name | SKU */}
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[14px] font-medium text-[#0F1720] truncate mr-2">
+                  {product.name}
+                </span>
+                <span className="text-[12px] text-gray-500 flex-shrink-0">
+                  {product.sku?.trim() || "—"}
+                </span>
+              </div>
+              {/* Row 2: Category > Subcategory | Actions */}
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[13px] text-gray-600 truncate mr-2">
+                  {[product.categoryName, product.subCategoryName].filter(Boolean).join(" › ") || "—"}
+                </span>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ProductActionsMenu product={product} />
+                </div>
+              </div>
+              {/* Row 3: Unit | GST | Variants count */}
+              <div className="flex items-center gap-3 text-[12px] text-gray-400">
+                {product.unitOfMeasurement && <span>{product.unitOfMeasurement}</span>}
+                <span>GST {product.gst}%</span>
+                {product.variants.length > 0 && (
+                  <span>{product.variants.length} variant{product.variants.length !== 1 ? "s" : ""}</span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Desktop table ── */}
+      <div className="hidden lg:block w-full overflow-x-auto bg-white border border-gray-200 rounded-md">
         <Table className="min-w-[1000px]">
           <TableHeader>
             <TableRow className="border-b border-gray-200 bg-gray-50 hover:bg-gray-50">
@@ -306,53 +418,7 @@ export function ProductsTable({
                     style={{ left: 0 }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                          aria-label="More actions"
-                        >
-                          <MoreHorizontal className="h-[15px] w-[15px]" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-48">
-                        {activeTab === "active" ? (
-                          <>
-                            <RequirePermission permission="product.edit">
-                              <DropdownMenuItem
-                                onClick={() => router.push(`/products/${product._id}/edit`)}
-                              >
-                                Edit Product
-                              </DropdownMenuItem>
-                            </RequirePermission>
-                            <RequirePermission permission="product.add">
-                              <DropdownMenuItem
-                                onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
-                              >
-                                Create Duplicate
-                              </DropdownMenuItem>
-                            </RequirePermission>
-                            <RequirePermission permission="product.archive">
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => setArchiveProduct(product)}
-                                className="text-[#DC2626] focus:text-[#DC2626]"
-                              >
-                                Archive
-                              </DropdownMenuItem>
-                            </RequirePermission>
-                          </>
-                        ) : (
-                          <RequirePermission permission="product.add">
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
-                            >
-                              Create Duplicate
-                            </DropdownMenuItem>
-                          </RequirePermission>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <ProductActionsMenu product={product} />
                   </TableCell>
 
                   {activeCols.map((col, i) => (
