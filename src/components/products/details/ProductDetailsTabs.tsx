@@ -47,7 +47,7 @@ export function ProductDetailsTabs({
   return (
     <div className="flex flex-col flex-1 mt-2">
       {/* Tab bar */}
-      <div className="flex border-b border-[#e5e7eb] bg-white px-6">
+      <div className="flex overflow-x-auto border-b border-[#e5e7eb] bg-white px-4 sm:px-6">
         {tabs.map((tab) => {
           const isActive = tab.key === activeTab;
           return (
@@ -931,7 +931,7 @@ function AnalyticsTab({ product }: { product: Product }) {
   return (
     <div className="flex flex-col flex-1">
       {/* Filter bar */}
-      <div className="flex items-center gap-6 px-8 py-4">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-6 px-4 sm:px-8 py-4">
         {/* Variant dropdown */}
         <div className="flex items-center gap-2">
           <label className="text-[12px] text-[#6b7280]">Variant</label>
@@ -992,21 +992,21 @@ function AnalyticsTab({ product }: { product: Product }) {
               type="text"
               value={formatShortDate(fromDate)}
               disabled
-              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-3 py-1.5 text-sm cursor-not-allowed w-28 text-center"
+              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-2 sm:px-3 py-1.5 text-[12px] sm:text-sm cursor-not-allowed w-24 sm:w-28 text-center"
             />
             <span className="text-[11px] text-[#6b7280] uppercase tracking-[0.6px] font-medium">To</span>
             <input
               type="text"
               value={formatShortDate(toDate)}
               disabled
-              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-3 py-1.5 text-sm cursor-not-allowed w-28 text-center"
+              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-2 sm:px-3 py-1.5 text-[12px] sm:text-sm cursor-not-allowed w-24 sm:w-28 text-center"
             />
           </div>
         )}
       </div>
 
       {/* Sub-tab bar */}
-      <div className="flex gap-8 px-8 pb-0 border-b border-[#e5e7eb]">
+      <div className="flex overflow-x-auto gap-6 sm:gap-8 px-4 sm:px-8 pb-0 border-b border-[#e5e7eb]">
         {ANALYTICS_SUB_TABS.map((tab) => {
           const isActive = tab === activeSubTab;
           return (
@@ -1092,7 +1092,7 @@ function ProcurementContent({
   if (isLoading) {
     return (
       <>
-        <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -1103,7 +1103,7 @@ function ProcurementContent({
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -1121,7 +1121,7 @@ function ProcurementContent({
 
   if (isError) {
     return (
-      <div className="mx-8 mt-4 border border-red-200 rounded-lg bg-red-50 px-4 py-3">
+      <div className="mx-4 sm:mx-8 mt-4 border border-red-200 rounded-lg bg-red-50 px-4 py-3">
         <p className="text-[13px] text-red-600">
           Failed to load procurement analytics. Please try again.
         </p>
@@ -1170,7 +1170,7 @@ function ProcurementContent({
       <SmartAlertsPanel data={data} />
 
       {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -1192,7 +1192,7 @@ function ProcurementContent({
       )}
 
       {/* Charts */}
-      <div className="mx-8 mt-4 grid grid-cols-2 gap-4">
+      <div className="mx-4 sm:mx-8 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Price Trend */}
         <div className="border border-[#e5e7eb] rounded-lg bg-white px-4 pt-3 pb-2">
           <div className="text-[13px] font-semibold text-[#111827] mb-2">
@@ -1438,7 +1438,7 @@ function SmartAlertsPanel({ data }: { data: any }) {
   const levelOrder: AlertLevel[] = ["critical", "warning", "positive", "info"];
 
   return (
-    <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white overflow-hidden">
+    <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white overflow-hidden">
       {/* Header — always visible */}
       <div
         className="flex items-center justify-between px-4 py-3 cursor-pointer"
@@ -1523,7 +1523,7 @@ function VolumeIntelligenceCard({
   } = volumeIntelligence;
 
   return (
-    <div className="mx-8 mt-4">
+    <div className="mx-4 sm:mx-8 mt-4">
       <div className="border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
           <span className="text-[13px] font-semibold text-[#111827]">
@@ -1533,7 +1533,7 @@ function VolumeIntelligenceCard({
 
         <div className="p-4">
           {/* 3 column metrics */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Avg Monthly Order */}
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
@@ -1621,7 +1621,7 @@ function PriceIntelligenceCard({ summary }: { summary: any }) {
         : "—";
 
   return (
-    <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
       {/* Best Price */}
       <div className="border border-[#e5e7eb] rounded-lg bg-white px-4 py-3">
         <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
@@ -1716,7 +1716,7 @@ function SalesContent({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
@@ -1732,7 +1732,7 @@ function SalesContent({
 
   if (isError) {
     return (
-      <div className="mx-8 mt-4 border border-red-200 rounded-lg bg-red-50 px-4 py-3">
+      <div className="mx-4 sm:mx-8 mt-4 border border-red-200 rounded-lg bg-red-50 px-4 py-3">
         <p className="text-[13px] text-red-600">
           Failed to load sales analytics. Please try again.
         </p>
@@ -1781,7 +1781,7 @@ function SalesContent({
       <SalesSmartAlertsPanel data={data} />
 
       {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
@@ -1803,7 +1803,7 @@ function SalesContent({
       )}
 
       {/* Charts */}
-      <div className="mx-8 mt-4 grid grid-cols-2 gap-4">
+      <div className="mx-4 sm:mx-8 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Sell Price Trend */}
         <div className="border border-[#e5e7eb] rounded-lg bg-white px-4 pt-3 pb-2">
           <div className="text-[13px] font-semibold text-[#111827] mb-2">
@@ -1964,7 +1964,7 @@ function SalesPriceIntelligenceCard({ summary }: { summary: any }) {
         : "—";
 
   return (
-    <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
       {/* Best Price (highest sell = good) */}
       <div className="border border-[#e5e7eb] rounded-lg bg-white px-4 py-3">
         <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
@@ -2133,7 +2133,7 @@ function SalesSmartAlertsPanel({ data }: { data: any }) {
   const levelOrder: AlertLevel[] = ["critical", "warning", "positive", "info"];
 
   return (
-    <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white overflow-hidden">
+    <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white overflow-hidden">
       <div
         className="flex items-center justify-between px-4 py-3 cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
@@ -2205,7 +2205,7 @@ function SalesDemandPatternsCard({
   } = volumeIntelligence;
 
   return (
-    <div className="mx-8 mt-4">
+    <div className="mx-4 sm:mx-8 mt-4">
       <div className="border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
           <span className="text-[13px] font-semibold text-[#111827]">
@@ -2214,7 +2214,7 @@ function SalesDemandPatternsCard({
         </div>
 
         <div className="p-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Avg Monthly Sales */}
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
@@ -2373,7 +2373,7 @@ function buyerLastOrder(b: BuyerRow): {
 
 function BuyerIntelligenceTable({ buyers }: { buyers: BuyerRow[] }) {
   return (
-    <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
+    <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
         <span className="text-[13px] font-semibold text-[#111827]">
           Buyer Intelligence
@@ -2453,7 +2453,7 @@ function BuyerIntelligenceTable({ buyers }: { buyers: BuyerRow[] }) {
 
 function RecentSalesOrdersTable({ recentOrders }: { recentOrders: RecentSO[] }) {
   return (
-    <div className="mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
+    <div className="mx-4 sm:mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
         <span className="text-[13px] font-semibold text-[#111827]">
           Recent Sales Orders
@@ -2632,7 +2632,7 @@ function MarginContent({
     return (
       <>
         {/* KPI skeleton */}
-        <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -2644,17 +2644,17 @@ function MarginContent({
           ))}
         </div>
         {/* Waterfall skeleton */}
-        <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4 animate-pulse">
+        <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4 animate-pulse">
           <div className="h-4 w-32 bg-[#e5e7eb] rounded mb-4" />
           <div className="h-[280px] bg-[#f3f4f6] rounded" />
         </div>
         {/* Margin trend skeleton */}
-        <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4 animate-pulse">
+        <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4 animate-pulse">
           <div className="h-4 w-28 bg-[#e5e7eb] rounded mb-4" />
           <div className="h-[200px] bg-[#f3f4f6] rounded" />
         </div>
         {/* Break-even skeleton */}
-        <div className="mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg bg-white p-4 animate-pulse">
+        <div className="mx-4 sm:mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg bg-white p-4 animate-pulse">
           <div className="h-4 w-40 bg-[#e5e7eb] rounded mb-4" />
           <div className="h-[120px] bg-[#f3f4f6] rounded" />
         </div>
@@ -2664,7 +2664,7 @@ function MarginContent({
 
   if (marginError) {
     return (
-      <div className="mx-8 mt-4 border border-red-200 rounded-lg bg-red-50 px-4 py-3">
+      <div className="mx-4 sm:mx-8 mt-4 border border-red-200 rounded-lg bg-red-50 px-4 py-3">
         <p className="text-[13px] text-red-600">
           Failed to load margin analytics. Please try again.
         </p>
@@ -2675,7 +2675,7 @@ function MarginContent({
   // Empty state
   if (!marginData || (marginData.marginHistory ?? []).length === 0) {
     return (
-      <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white flex items-center justify-center h-48">
+      <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white flex items-center justify-center h-48">
         <p className="text-sm text-[#6b7280]">
           No overlapping buy and sell data found for this period.
         </p>
@@ -2730,7 +2730,7 @@ function MarginContent({
   return (
     <>
       {/* Section 1 — KPI Cards */}
-      <div className="grid grid-cols-4 gap-4 mx-8 mt-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mx-4 sm:mx-8 mt-4">
         <div className="border border-[#e5e7eb] rounded-lg bg-white px-4 py-3">
           <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
             Avg Buy Price
@@ -2773,7 +2773,7 @@ function MarginContent({
 
       {/* Section 2 — Margin Waterfall */}
       {waterfall.length > 0 && (
-        <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4">
+        <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4">
           <div className="text-[13px] font-semibold text-[#111827] mb-4">
             Margin Breakdown
           </div>
@@ -2822,7 +2822,7 @@ function MarginContent({
       )}
 
       {/* Section 3 — Margin Trend Chart */}
-      <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4">
+      <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg bg-white p-4">
         <div className="text-[13px] font-semibold text-[#111827] mb-2">
           Margin Trend
         </div>
@@ -2880,11 +2880,11 @@ function MarginContent({
       </div>
 
       {/* Section 4 — Break-even Calculator */}
-      <div className="mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg bg-white p-4">
+      <div className="mx-4 sm:mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg bg-white p-4">
         <div className="text-[13px] font-semibold text-[#111827] mb-4">
           Break-even Calculator
         </div>
-        <div className="grid grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
           {/* Left — inputs */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -3124,7 +3124,7 @@ function supplierLastOrder(s: SupplierRow): {
 
 function SupplierIntelligenceTable({ suppliers }: { suppliers: SupplierRow[] }) {
   return (
-    <div className="mx-8 mt-4 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
+    <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
         <span className="text-[13px] font-semibold text-[#111827]">
           Supplier Intelligence
@@ -3271,7 +3271,7 @@ function formatShortDate(iso: string): string {
 
 function RecentPOsTable({ recentPOs }: { recentPOs: RecentPO[] }) {
   return (
-    <div className="mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
+    <div className="mx-4 sm:mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
         <span className="text-[13px] font-semibold text-[#111827]">
           Recent Purchase Orders
