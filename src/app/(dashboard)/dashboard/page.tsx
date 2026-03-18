@@ -127,7 +127,7 @@ export default function DashboardPage() {
 
       <div className="flex-1 overflow-auto">
         {/* Period selector bar */}
-        <div className="flex items-center gap-6 px-8 py-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-6 px-4 sm:px-8 py-4">
           <div className="flex items-center gap-2">
             <label className="text-[12px] text-[#6b7280]">Period</label>
             <select
@@ -151,7 +151,7 @@ export default function DashboardPage() {
               type="text"
               value={formatDisplayDate(fromDate)}
               disabled
-              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-3 py-1.5 text-sm cursor-not-allowed w-28 text-center"
+              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-2 sm:px-3 py-1.5 text-[12px] sm:text-sm cursor-not-allowed w-24 sm:w-28 text-center"
             />
             <span className="text-[11px] text-[#6b7280] uppercase tracking-[0.6px] font-medium">
               To
@@ -160,14 +160,14 @@ export default function DashboardPage() {
               type="text"
               value={formatDisplayDate(toDate)}
               disabled
-              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-3 py-1.5 text-sm cursor-not-allowed w-28 text-center"
+              className="bg-[#f9fafb] border border-[#e5e7eb] text-[#6b7280] rounded px-2 sm:px-3 py-1.5 text-[12px] sm:text-sm cursor-not-allowed w-24 sm:w-28 text-center"
             />
           </div>
         </div>
 
         {/* Content */}
         {isLoading ? (
-          <div className="grid grid-cols-6 gap-4 mx-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mx-4 sm:mx-8">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
@@ -182,7 +182,7 @@ export default function DashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-6 gap-4 mx-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mx-4 sm:mx-8">
             {/* Card 1 — Total Spend */}
             <KpiCard
               label="Total Spend"
@@ -251,7 +251,7 @@ export default function DashboardPage() {
 
         {/* Sections below KPI cards — only render when data is loaded */}
         {hasData && (
-          <div className="mx-8 mt-4 pb-8 space-y-4">
+          <div className="mx-4 sm:mx-8 mt-4 pb-8 space-y-4">
             {/* Section 1 — Smart Alerts Panel */}
             <SmartAlertsPanel
               alerts={data.alerts ?? []}
@@ -296,13 +296,13 @@ function KpiCard({
   trend?: { text: string; colorClass: string } | null;
 }) {
   return (
-    <div className="border border-[#e5e7eb] rounded-lg bg-white p-4">
+    <div className="border border-[#e5e7eb] rounded-lg bg-white p-3 sm:p-4">
       <div
         className="font-semibold uppercase text-[#6b7280] text-[10px] tracking-[0.8px]"
       >
         {label}
       </div>
-      <div className={cn("text-2xl font-bold mt-1", valueColor)}>{value}</div>
+      <div className={cn("text-xl sm:text-2xl font-bold mt-1", valueColor)}>{value}</div>
       {subValue && (
         <div className="text-xs text-[#6b7280] mt-0.5">{subValue}</div>
       )}
@@ -430,15 +430,15 @@ function SpendRevenueChart({
   if (filtered.length === 0) return null;
 
   return (
-    <div className="border border-[#e5e7eb] rounded-lg bg-white p-4">
+    <div className="border border-[#e5e7eb] rounded-lg bg-white p-3 sm:p-4">
       <div className="text-sm font-semibold text-[#111827]">
         Spend vs Revenue
       </div>
       <div className="text-xs text-[#6b7280] mb-3">
         Monthly comparison for the selected period
       </div>
-      <div className="h-[320px]">
-        <ResponsiveContainer width="100%" height={320}>
+      <div className="h-[240px] sm:h-[320px]">
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart data={filtered}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
             <XAxis
@@ -533,29 +533,58 @@ function RecentActivityFeed({
               key={item.orderId + i}
               href={href}
               className={cn(
-                "flex items-center gap-4 py-3 hover:bg-[#f9fafb] -mx-4 px-4 transition-colors",
+                "block sm:flex sm:items-center sm:gap-4 py-3 hover:bg-[#f9fafb] -mx-4 px-4 transition-colors",
                 i < activities.length - 1 && "border-b border-[#f3f4f6]",
               )}
             >
+              {/* Mobile layout */}
+              <div className="sm:hidden">
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0",
+                      badge.bg,
+                      badge.text,
+                    )}
+                  >
+                    {badge.label}
+                  </span>
+                  <span className="text-sm font-medium text-[#111827] truncate">
+                    {item.orderNumber}
+                  </span>
+                  <span className="text-xs text-[#9ca3af] ml-auto whitespace-nowrap">
+                    {formatDisplayDate(item.issueDate)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pl-7">
+                  <span className="text-[13px] text-[#6b7280] truncate">
+                    {item.counterpartyName}
+                  </span>
+                  <span className="text-[12px] text-[#9ca3af] whitespace-nowrap ml-2">
+                    {item.productCount} {item.productCount === 1 ? "product" : "products"}
+                  </span>
+                </div>
+              </div>
+              {/* Desktop layout */}
               <span
                 className={cn(
-                  "text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0",
+                  "hidden sm:inline-flex text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0",
                   badge.bg,
                   badge.text,
                 )}
               >
                 {badge.label}
               </span>
-              <span className="text-sm font-medium text-[#111827] min-w-0 truncate">
+              <span className="hidden sm:inline text-sm font-medium text-[#111827] min-w-0 truncate">
                 {item.orderNumber}
               </span>
-              <span className="text-sm text-[#6b7280] min-w-0 truncate">
+              <span className="hidden sm:inline text-sm text-[#6b7280] min-w-0 truncate">
                 {item.counterpartyName}
               </span>
-              <span className="text-xs text-[#9ca3af] whitespace-nowrap">
+              <span className="hidden sm:inline text-xs text-[#9ca3af] whitespace-nowrap">
                 {item.productCount} {item.productCount === 1 ? "product" : "products"}
               </span>
-              <span className="text-xs text-[#9ca3af] whitespace-nowrap ml-auto">
+              <span className="hidden sm:inline text-xs text-[#9ca3af] whitespace-nowrap ml-auto">
                 {formatDisplayDate(item.issueDate)}
               </span>
             </Link>
@@ -584,14 +613,15 @@ function TopProductsSection({
   if (bySpend.length === 0 && byRevenue.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
       {/* Left — Top Products by Spend */}
-      <div className="border border-[#e5e7eb] rounded-lg bg-white p-4">
+      <div className="border border-[#e5e7eb] rounded-lg bg-white p-3 sm:p-4">
         <div className="text-sm font-semibold text-[#111827] mb-3">
           Top Products by Spend
         </div>
         {bySpend.length > 0 && (
-          <table className="w-full table-fixed">
+          <div className="overflow-x-auto">
+          <table className="w-full table-fixed min-w-[400px]">
             <colgroup>
               <col className="w-6" />
               <col />
@@ -621,16 +651,18 @@ function TopProductsSection({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
       {/* Right — Top Products by Revenue */}
-      <div className="border border-[#e5e7eb] rounded-lg bg-white p-4">
+      <div className="border border-[#e5e7eb] rounded-lg bg-white p-3 sm:p-4">
         <div className="text-sm font-semibold text-[#111827] mb-3">
           Top Products by Revenue
         </div>
         {byRevenue.length > 0 && (
-          <table className="w-full table-fixed">
+          <div className="overflow-x-auto">
+          <table className="w-full table-fixed min-w-[400px]">
             <colgroup>
               <col className="w-6" />
               <col />
@@ -660,6 +692,7 @@ function TopProductsSection({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
@@ -745,14 +778,15 @@ function TopPartiesSection({
   if (topSuppliers.length === 0 && topBuyers.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
       {/* Left — Top Suppliers */}
-      <div className="border border-[#e5e7eb] rounded-lg bg-white p-4">
+      <div className="border border-[#e5e7eb] rounded-lg bg-white p-3 sm:p-4">
         <div className="text-sm font-semibold text-[#111827] mb-3">
           Top Suppliers
         </div>
         {topSuppliers.length > 0 && (
-          <table className="w-full table-fixed">
+          <div className="overflow-x-auto">
+          <table className="w-full table-fixed min-w-[420px]">
             <colgroup>
               <col />
               <col className="w-24" />
@@ -786,16 +820,18 @@ function TopPartiesSection({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
       {/* Right — Top Buyers */}
-      <div className="border border-[#e5e7eb] rounded-lg bg-white p-4">
+      <div className="border border-[#e5e7eb] rounded-lg bg-white p-3 sm:p-4">
         <div className="text-sm font-semibold text-[#111827] mb-3">
           Top Buyers
         </div>
         {topBuyers.length > 0 && (
-          <table className="w-full table-fixed">
+          <div className="overflow-x-auto">
+          <table className="w-full table-fixed min-w-[420px]">
             <colgroup>
               <col />
               <col className="w-24" />
@@ -833,6 +869,7 @@ function TopPartiesSection({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>
