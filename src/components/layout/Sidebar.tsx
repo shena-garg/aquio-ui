@@ -131,6 +131,7 @@ export function Sidebar() {
           <div className="py-1">
             <Link
               href="/dashboard"
+              onClick={() => setMobileOpen(false)}
               className={cn(
                 "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
                 isActive("/dashboard")
@@ -172,6 +173,7 @@ export function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={() => setMobileOpen(false)}
                       className={cn(
                         "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
                         active
@@ -219,7 +221,7 @@ export function Sidebar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="top" className="w-44 mb-1">
-              <DropdownMenuItem onClick={() => router.push("/profile")}>
+              <DropdownMenuItem onClick={() => { setMobileOpen(false); router.push("/profile"); }}>
                 <User className="h-4 w-4 mr-2" />
                 My Profile
               </DropdownMenuItem>
