@@ -462,9 +462,10 @@ function ProductTypeahead({
 interface PurchaseOrderFormProps {
   editId?: string;
   duplicateFromId?: string;
+  orderType?: "purchase" | "sales";
 }
 
-export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderFormProps) {
+export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purchase" }: PurchaseOrderFormProps) {
   const isEditMode = !!editId;
   const router = useRouter();
 
@@ -981,7 +982,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
         termsAndConditions: terms,
         notes,
         products: productLines,
-        orderType: "purchase",
+        orderType,
         poNumber: isEditMode
           ? originalPoNumber.current
           : settings?.generatePOAutomatically
@@ -993,25 +994,30 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
       if (status) {
         payload.status = status;
       }
+      const isSO = orderType === "sales";
+      const orderLabel = isSO ? "sales order" : "purchase order";
+      const basePath = isSO ? "/sales-orders" : "/purchase-orders";
+
       if (isEditMode && editId) {
         await updatePurchaseOrder(editId, payload);
-        toast.success("Purchase order updated successfully.");
-        router.push(`/purchase-orders/${editId}`);
+        toast.success(`${isSO ? "Sales" : "Purchase"} order updated successfully.`);
+        router.push(`${basePath}/${editId}`);
       } else {
         const result = await createPurchaseOrder(payload);
         toast.success(
           status === "draft"
-            ? "Purchase order saved as draft."
-            : "Purchase order created and issued."
+            ? `${isSO ? "Sales" : "Purchase"} order saved as draft.`
+            : `${isSO ? "Sales" : "Purchase"} order created and issued.`
         );
         const newId = result?._id ?? result?.id;
-        router.push(newId ? `/purchase-orders/${newId}` : "/purchase-orders");
+        router.push(newId ? `${basePath}/${newId}` : basePath);
       }
     } catch {
+      const label = orderType === "sales" ? "sales order" : "purchase order";
       setSubmitError(
         isEditMode
-          ? "Failed to update purchase order. Please try again."
-          : "Failed to create purchase order. Please try again."
+          ? `Failed to update ${label}. Please try again.`
+          : `Failed to create ${label}. Please try again.`
       );
     } finally {
       setSubmitting(false);
@@ -1027,7 +1033,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
       {/* ── Sticky top bar ──────────────────────────────────────────────── */}
       <div className="flex h-[55px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4 sm:px-6 sticky top-0 z-10">
         <span className="text-[16px] sm:text-[18px] font-semibold text-[#111827]">
-          {isEditMode ? "Edit Purchase Order" : "New Purchase Order"}
+          {isEditMode
+            ? `Edit ${orderType === "sales" ? "Sales" : "Purchase"} Order`
+            : `New ${orderType === "sales" ? "Sales" : "Purchase"} Order`}
         </span>
       </div>
 
@@ -1710,7 +1718,10 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push(isEditMode && editId ? `/purchase-orders/${editId}` : "/purchase-orders")}
+              onClick={() => {
+                const base = orderType === "sales" ? "/sales-orders" : "/purchase-orders";
+                router.push(isEditMode && editId ? `${base}/${editId}` : base);
+              }}
               disabled={submitting}
               className="h-8 text-[13px]"
             >

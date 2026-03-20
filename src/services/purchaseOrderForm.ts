@@ -149,7 +149,7 @@ export interface CreatePOPayload {
   termsAndConditions: string[];
   notes: string;
   products: ProductLinePayload[];
-  orderType: "purchase";
+  orderType: "purchase" | "sales";
   status: "issued" | "draft";
   poNumber: string;
   files: any[];
