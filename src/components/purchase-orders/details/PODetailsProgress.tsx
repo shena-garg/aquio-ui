@@ -19,10 +19,29 @@ export function PODetailsProgress({ order }: PODetailsProgressProps) {
       ? Math.min(100, Math.round((totalReceived / totalQuantity) * 100))
       : 0;
 
+  const totalValueDisplay = (
+    <span className="text-[13px] font-semibold text-[#111827]">
+      ₹{" "}
+      {(typeof order.totalAmount === "number"
+        ? order.totalAmount
+        : parseFloat(order.totalAmount.$numberDecimal)
+      ).toLocaleString("en-IN")}
+    </span>
+  );
+
+  const progressBar = (
+    <div className="h-2 rounded-full bg-[#f3f4f6]">
+      <div
+        className="h-2 rounded-full bg-[#0d9488]"
+        style={{ width: `${completionPct}%` }}
+      />
+    </div>
+  );
+
   return (
-    <div className="mx-8 mt-3 mb-3">
-      <div className="rounded-[10px] border border-[#f3f4f6] bg-white px-4 pt-[10px] pb-3 flex flex-col gap-2">
-        {/* KPI Row */}
+    <div className="mx-4 sm:mx-8 mt-3 mb-3">
+      {/* ── Desktop: single row ── */}
+      <div className="hidden sm:block rounded-[10px] border border-[#f3f4f6] bg-white px-4 pt-[10px] pb-3 flex flex-col gap-2">
         <div className="flex gap-4">
           {isUniformUOM ? (
             <>
@@ -65,25 +84,69 @@ export function PODetailsProgress({ order }: PODetailsProgressProps) {
             <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">
               Total Value
             </span>
-            <span className="text-[13px] font-semibold text-[#111827]">
-              ₹{" "}
-              {(typeof order.totalAmount === "number"
-                ? order.totalAmount
-                : parseFloat(order.totalAmount.$numberDecimal)
-              ).toLocaleString("en-IN")}
-            </span>
+            {totalValueDisplay}
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="mt-[2px]">
-          <div className="h-2 rounded-full bg-[#f3f4f6]">
-            <div
-              className="h-2 rounded-full bg-[#0d9488]"
-              style={{ width: `${completionPct}%` }}
-            />
+          {progressBar}
+        </div>
+      </div>
+
+      {/* ── Mobile: Total Ordered + Total Value → Progress → Received + Pending ── */}
+      <div className="sm:hidden rounded-[10px] border border-[#f3f4f6] bg-white px-4 pt-[10px] pb-3 flex flex-col gap-2.5">
+        {/* Top row: Total Ordered (left) | Total Value (right) */}
+        <div className="flex items-start justify-between">
+          {isUniformUOM ? (
+            <div className="flex flex-col gap-[2px]">
+              <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">
+                Total Ordered
+              </span>
+              <span className="text-[13px] font-semibold text-[#111827]">
+                <QuantityCell value={totalQuantity} uom={uom} />
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center">
+              <span className="text-[12px] text-[#6b7280]">
+                Mixed units
+              </span>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-[2px] items-end">
+            <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">
+              Total Value
+            </span>
+            {totalValueDisplay}
           </div>
         </div>
+
+        {/* Progress bar */}
+        {progressBar}
+
+        {/* Bottom row: Received (left) | Pending (right) */}
+        {isUniformUOM && (
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-[2px]">
+              <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">
+                Received
+              </span>
+              <span className="text-[13px] font-semibold text-[#111827]">
+                <QuantityCell value={totalReceived} uom={uom} />
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-[2px] items-end">
+              <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">
+                Pending
+              </span>
+              <span className="text-[13px] font-semibold text-[#111827]">
+                <QuantityCell value={pendingQuantity} uom={uom} />
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

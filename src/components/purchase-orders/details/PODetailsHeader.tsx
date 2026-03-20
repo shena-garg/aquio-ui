@@ -83,8 +83,130 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
     </>
   );
 
+  const hasNotes = order.notes && order.notes.trim() !== "";
+  const hasTerms = order.termsAndConditions && order.termsAndConditions.length > 0;
+  const showCreateReceipt = status === "issued" || status === "confirmed";
+  const hasSecondaryActions = hasNotes || hasTerms || showCreateReceipt;
+
+  const dropdownMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="h-9 w-9 rounded-[6px] p-0">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {status === "cancelled" || status === "completed" ? (
+          <DropdownMenuItem
+            onClick={() =>
+              router.push(
+                `/purchase-orders/create?duplicateFrom=${order.id}`,
+              )
+            }
+          >
+            Create Duplicate
+          </DropdownMenuItem>
+        ) : status === "draft" ? (
+          <>
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/purchase-orders/${order.id}/edit`)
+              }
+            >
+              Edit Order
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(
+                  `/purchase-orders/create?duplicateFrom=${order.id}`,
+                )
+              }
+            >
+              Create Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setCancelOpen(true)}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Cancel Order
+            </DropdownMenuItem>
+          </>
+        ) : status === "issued" ? (
+          <>
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/purchase-orders/${order.id}/edit`)
+              }
+            >
+              Edit Order
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(
+                  `/purchase-orders/create?duplicateFrom=${order.id}`,
+                )
+              }
+            >
+              Create Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setCancelOpen(true)}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Cancel Order
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
+              Mark as Confirmed
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setForceCloseOpen(true)}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Force Close
+            </DropdownMenuItem>
+          </>
+        ) : status === "confirmed" ? (
+          <>
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(`/purchase-orders/${order.id}/edit`)
+              }
+            >
+              Edit Order
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                router.push(
+                  `/purchase-orders/create?duplicateFrom=${order.id}`,
+                )
+              }
+            >
+              Create Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setCancelOpen(true)}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Cancel Order
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setForceCloseOpen(true)}
+              className="text-[#DC2626] focus:text-[#DC2626]"
+            >
+              Force Close
+            </DropdownMenuItem>
+          </>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  /* ── Desktop: everything in one row ── */
   const rightContent = (
-    <div className="flex items-center gap-2">
+    <div className="hidden sm:flex items-center gap-2">
       <Button
         variant="outline"
         className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
@@ -99,7 +221,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         Download PDF
       </Button>
 
-      {order.notes && order.notes.trim() !== "" && (
+      {hasNotes && (
         <Popover>
           <PopoverTrigger asChild>
             <button className="flex flex-col items-center gap-0.5 px-2 py-1 rounded hover:bg-gray-100 text-gray-600">
@@ -113,7 +235,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         </Popover>
       )}
 
-      {order.termsAndConditions && order.termsAndConditions.length > 0 && (
+      {hasTerms && (
         <Popover>
           <PopoverTrigger asChild>
             <button className="flex flex-col items-center gap-0.5 px-2 py-1 rounded hover:bg-gray-100 text-gray-600">
@@ -123,7 +245,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
           </PopoverTrigger>
           <PopoverContent align="center" className="w-80 text-[13px] text-[#374151]">
             <ol className="list-decimal pl-4 space-y-1">
-              {order.termsAndConditions.map((term, i) => (
+              {order.termsAndConditions!.map((term, i) => (
                 <li key={i}>{term}</li>
               ))}
             </ol>
@@ -131,121 +253,9 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         </Popover>
       )}
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="h-9 w-9 rounded-[6px] p-0">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {status === "cancelled" || status === "completed" ? (
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(
-                  `/purchase-orders/create?duplicateFrom=${order.id}`,
-                )
-              }
-            >
-              Create Duplicate
-            </DropdownMenuItem>
-          ) : status === "draft" ? (
-            <>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/purchase-orders/${order.id}/edit`)
-                }
-              >
-                Edit Order
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/purchase-orders/create?duplicateFrom=${order.id}`,
-                  )
-                }
-              >
-                Create Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setCancelOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
-                Cancel Order
-              </DropdownMenuItem>
-            </>
-          ) : status === "issued" ? (
-            <>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/purchase-orders/${order.id}/edit`)
-                }
-              >
-                Edit Order
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/purchase-orders/create?duplicateFrom=${order.id}`,
-                  )
-                }
-              >
-                Create Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setCancelOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
-                Cancel Order
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
-                Mark as Confirmed
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setForceCloseOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
-                Force Close
-              </DropdownMenuItem>
-            </>
-          ) : status === "confirmed" ? (
-            <>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/purchase-orders/${order.id}/edit`)
-                }
-              >
-                Edit Order
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/purchase-orders/create?duplicateFrom=${order.id}`,
-                  )
-                }
-              >
-                Create Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setCancelOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
-                Cancel Order
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setForceCloseOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
-                Force Close
-              </DropdownMenuItem>
-            </>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {dropdownMenu}
 
-      {(status === "issued" || status === "confirmed") && (
+      {showCreateReceipt && (
         <Button
           className="h-9 px-3.5 rounded-[6px] bg-[#0d9488] hover:bg-[#0f766e] text-white text-[13px] font-medium"
           onClick={() => onCreateReceipt?.()}
@@ -257,16 +267,82 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
     </div>
   );
 
+  /* ── Mobile: Row 1 = Download icon + three-dot ── */
+  const rightContentMobile = (
+    <div className="flex sm:hidden items-center gap-1.5">
+      <Button
+        variant="outline"
+        className="h-9 w-9 rounded-[6px] p-0"
+        disabled={!order.purchaseOrderPDF}
+        onClick={() => {
+          if (order.purchaseOrderPDF) {
+            window.open(order.purchaseOrderPDF, "_blank");
+          }
+        }}
+      >
+        <Download className="h-4 w-4" />
+      </Button>
+      {dropdownMenu}
+    </div>
+  );
+
   return (
     <>
       <PageHeader
         title={order.poNumber}
         left={leftContent}
-        right={rightContent}
+        right={<>{rightContent}{rightContentMobile}</>}
       />
 
+      {/* Mobile: Row 2 – Notes, Terms, Create Receipt */}
+      {hasSecondaryActions && (
+        <div className="flex sm:hidden items-center gap-2 px-4 py-2 bg-white border-b border-[#e5e7eb]">
+          {hasNotes && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] border border-[#e5e7eb] hover:bg-gray-50 text-gray-600 text-[12px] font-medium">
+                  <FileText size={14} />
+                  Notes
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72 text-[13px] text-[#374151]">
+                {order.notes}
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {hasTerms && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] border border-[#e5e7eb] hover:bg-gray-50 text-gray-600 text-[12px] font-medium">
+                  <ClipboardList size={14} />
+                  Terms
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-80 text-[13px] text-[#374151]">
+                <ol className="list-decimal pl-4 space-y-1">
+                  {order.termsAndConditions!.map((term, i) => (
+                    <li key={i}>{term}</li>
+                  ))}
+                </ol>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {showCreateReceipt && (
+            <Button
+              className="ml-auto h-8 px-3 rounded-[6px] bg-[#0d9488] hover:bg-[#0f766e] text-white text-[12px] font-medium"
+              onClick={() => onCreateReceipt?.()}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Create Receipt
+            </Button>
+          )}
+        </div>
+      )}
+
       {(order.referenceId || order.supplierReferenceId) && (
-        <div className="flex items-center gap-6 px-6 py-1.5 bg-[#f9fafb] border-b border-[#e5e7eb]">
+        <div className="flex items-center gap-6 px-4 sm:px-6 py-1.5 bg-[#f9fafb] border-b border-[#e5e7eb]">
           {order.referenceId && (
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Ref ID:</span>

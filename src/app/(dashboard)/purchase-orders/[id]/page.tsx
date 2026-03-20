@@ -121,11 +121,68 @@ export default function PurchaseOrderDetailPage() {
   return (
     <div className="flex flex-col h-full overflow-auto">
       <PODetailsHeader order={order} onCreateReceipt={() => setCreateReceiptOpen(true)} />
-      {/* Parties card: MetaStrip + DateStrip */}
-      <div className="mx-8 mt-3">
+      {/* Parties card: MetaStrip + DateStrip – desktop */}
+      <div className="hidden sm:block mx-8 mt-3">
         <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-2">
           <PODetailsMetaStrip order={order} />
           <PODetailsDateStrip order={order} />
+        </div>
+      </div>
+
+      {/* Parties + Dates combined – mobile */}
+      <div className="sm:hidden mx-4 mt-3">
+        <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 py-2.5 space-y-2">
+          {/* Row 1: Supplier | Issue Date */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Supplier</span>
+              <div className="flex items-center gap-1 text-[13px] font-medium text-[#111827]">
+                {order.supplier?.name ?? "\u2014"}
+              </div>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Issue Date</span>
+              <span className="text-[13px] font-medium text-[#111827]">
+                {order.issueDate ? new Date(order.issueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "\u2014"}
+              </span>
+            </div>
+          </div>
+
+          <div className="border-t border-[#f3f4f6]" />
+
+          {/* Row 2: Consignee | Delivery Date */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Consignee</span>
+              <div className="flex items-center gap-1 text-[13px] font-medium text-[#111827]">
+                {order.buyer?.name ?? "\u2014"}
+              </div>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Delivery Date</span>
+              <span className="text-[13px] font-medium text-[#111827]">
+                {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "\u2014"}
+              </span>
+            </div>
+          </div>
+
+          <div className="border-t border-[#f3f4f6]" />
+
+          {/* Row 3: Buyer | Payment Terms */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Buyer</span>
+              <div className="flex items-center gap-1 text-[13px] font-medium text-[#111827]">
+                {order.biller?.name ?? "\u2014"}
+              </div>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Payment Terms</span>
+              <span className="text-[13px] font-medium text-[#111827]">
+                {order.paymentTerms || "\u2014"}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       <PODetailsProgress order={order} />
