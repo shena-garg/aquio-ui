@@ -1236,8 +1236,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
             </div>
           </div>
               {/* Products – mobile cards */}
-              <div className="lg:hidden space-y-3">
-                {productRows.map((row) => {
+              <div className="lg:hidden space-y-2">
+                {productRows.map((row, idx) => {
                   const hasProduct = !!row.product;
                   const gst = row.product?.gst ?? 0;
                   const uom = row.product?.unitOfMeasurement ?? "";
@@ -1249,16 +1249,20 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                   return (
                     <div
                       key={row.id}
-                      className={`rounded-[10px] border bg-white p-3 space-y-2.5 ${
+                      className={`relative rounded-[8px] border bg-white px-3 pt-4 pb-2.5 space-y-2 ${
                         incompleteRowIds.has(row.id)
                           ? "border-red-400 bg-[#fef2f2]"
                           : "border-[#e5e7eb]"
                       }`}
                     >
+                      {/* Badge: Product N */}
+                      <span className="absolute -top-2.5 left-2.5 bg-[#0d9488] text-white text-[10px] font-medium px-2 py-0.5 rounded-[4px]">
+                        Product {idx + 1}
+                      </span>
+
                       {/* Row 1: Product + Delete */}
-                      <div className="flex items-start gap-2">
+                      <div className="flex items-center gap-2">
                         <div className="flex-1">
-                          <label className="block text-[11px] text-[#6b7280] mb-1">Product</label>
                           <ProductTypeahead
                             value={row.product}
                             onSelect={(p) => handleProductSelect(row.id, p)}
@@ -1269,44 +1273,50 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                           type="button"
                           onClick={() => removeRow(row.id)}
                           disabled={productRows.length <= 1}
-                          className="mt-5 p-2 text-[#9ca3af] hover:text-[#dc2626] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="p-1.5 text-[#9ca3af] hover:text-[#dc2626] transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
 
-                      {/* Row 2: Variant */}
-                      <div>
-                        <label className="block text-[11px] text-[#6b7280] mb-1">Variant</label>
-                        <select
-                          value={row.variant?._id ?? ""}
-                          onChange={(e) => {
-                            const v = row.product?.variants.find(
-                              (v) => v._id === e.target.value
-                            );
-                            if (v) updateRow(row.id, { variant: v });
-                          }}
-                          disabled={!hasProduct}
-                          className={`w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed ${
-                            attempted && hasProduct && !row.variant
-                              ? "ring-1 ring-[#dc2626]"
-                              : ""
-                          }`}
-                        >
-                          <option value="">Select variant</option>
-                          {(row.product?.variants ?? []).map((v) => (
-                            <option key={v._id} value={v._id}>
-                              {v.name}
-                            </option>
-                          ))}
-                        </select>
+                      {/* Row 2: Variant (75%) | GST% (25%) */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-3/4 min-w-0">
+                          <select
+                            value={row.variant?._id ?? ""}
+                            onChange={(e) => {
+                              const v = row.product?.variants.find(
+                                (v) => v._id === e.target.value
+                              );
+                              if (v) updateRow(row.id, { variant: v });
+                            }}
+                            disabled={!hasProduct}
+                            className={`w-full h-8 border border-[#e5e7eb] rounded-[6px] px-2.5 text-[12px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                              attempted && hasProduct && !row.variant
+                                ? "ring-1 ring-[#dc2626]"
+                                : ""
+                            }`}
+                          >
+                            <option value="">Select variant</option>
+                            {(row.product?.variants ?? []).map((v) => (
+                              <option key={v._id} value={v._id}>
+                                {v.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="w-1/4 text-right">
+                          <span className="text-[12px] font-medium text-[#374151]">
+                            {hasProduct ? `GST ${gst}%` : ""}
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Row 3: Quantity | Unit Price */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[11px] text-[#6b7280] mb-1">
-                            Quantity{uom ? ` (${uom})` : ""}
+                      {/* Row 3: Qty (37.5%) | Price (37.5%) | Total (25%) */}
+                      <div className="flex items-end gap-2">
+                        <div className="w-3/8 min-w-0" style={{ width: "37.5%" }}>
+                          <label className="block text-[10px] text-[#9ca3af] mb-0.5">
+                            Qty{uom ? ` (${uom})` : ""}
                           </label>
                           <input
                             type="text"
@@ -1320,13 +1330,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                             }}
                             disabled={!hasProduct}
                             placeholder="0"
-                            className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] text-right outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full h-8 border border-[#e5e7eb] rounded-[6px] px-2 text-[12px] text-[#111827] text-right outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                         </div>
-                        <div>
-                          <label className="block text-[11px] text-[#6b7280] mb-1">Unit Price</label>
-                          <div className="flex items-center h-9 border border-[#e5e7eb] rounded-[6px] px-3 focus-within:ring-2 focus-within:ring-[#0d9488] focus-within:border-[#0d9488]">
-                            <span className="text-[13px] text-[#9ca3af] flex-shrink-0">₹</span>
+                        <div className="min-w-0" style={{ width: "37.5%" }}>
+                          <label className="block text-[10px] text-[#9ca3af] mb-0.5">Price</label>
+                          <div className="flex items-center h-8 border border-[#e5e7eb] rounded-[6px] px-2 focus-within:ring-2 focus-within:ring-[#0d9488] focus-within:border-[#0d9488]">
+                            <span className="text-[12px] text-[#9ca3af] flex-shrink-0">₹</span>
                             <input
                               type="text"
                               inputMode="decimal"
@@ -1339,29 +1349,20 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                               }}
                               disabled={!hasProduct}
                               placeholder="0"
-                              className="w-full border-0 outline-none bg-transparent text-[13px] text-[#111827] text-right disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full border-0 outline-none bg-transparent text-[12px] text-[#111827] text-right disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
-                      </div>
-
-                      {/* Row 4: GST% | Line Total */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[11px] text-[#6b7280] mb-1">GST%</label>
-                          <span className="text-[13px] text-[#9ca3af]">
-                            {hasProduct ? `${gst}%` : "—"}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <label className="block text-[11px] text-[#6b7280] mb-1">Line Total</label>
-                          {lineTotal > 0 ? (
-                            <span className="text-[13px] font-medium text-[#111827]">
-                              ₹{parseFloat(lineTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                          ) : (
-                            <span className="text-[13px] text-[#9ca3af]">—</span>
-                          )}
+                        <div className="w-1/4 text-right">
+                          <div className="h-8 flex items-center justify-end mt-[14px]">
+                            {lineTotal > 0 ? (
+                              <span className="text-[12px] font-medium text-[#111827]">
+                                ₹{parseFloat(lineTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            ) : (
+                              <span className="text-[12px] text-[#9ca3af]">—</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
