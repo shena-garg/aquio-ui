@@ -1235,8 +1235,170 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
               </div>
             </div>
           </div>
-              {/* Products table */}
-              <div className="rounded-[10px] bg-white">
+              {/* Products – mobile cards */}
+              <div className="lg:hidden space-y-3">
+                {productRows.map((row) => {
+                  const hasProduct = !!row.product;
+                  const gst = row.product?.gst ?? 0;
+                  const uom = row.product?.unitOfMeasurement ?? "";
+                  const lineTotal =
+                    hasProduct && row.quantity > 0 && row.price > 0
+                      ? calculateLineTotal(row.quantity, row.price, gst)
+                      : 0;
+
+                  return (
+                    <div
+                      key={row.id}
+                      className={`rounded-[10px] border bg-white p-3 space-y-2.5 ${
+                        incompleteRowIds.has(row.id)
+                          ? "border-red-400 bg-[#fef2f2]"
+                          : "border-[#e5e7eb]"
+                      }`}
+                    >
+                      {/* Row 1: Product + Delete */}
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <label className="block text-[11px] text-[#6b7280] mb-1">Product</label>
+                          <ProductTypeahead
+                            value={row.product}
+                            onSelect={(p) => handleProductSelect(row.id, p)}
+                            hasError={attempted && !row.product}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeRow(row.id)}
+                          disabled={productRows.length <= 1}
+                          className="mt-5 p-2 text-[#9ca3af] hover:text-[#dc2626] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      {/* Row 2: Variant */}
+                      <div>
+                        <label className="block text-[11px] text-[#6b7280] mb-1">Variant</label>
+                        <select
+                          value={row.variant?._id ?? ""}
+                          onChange={(e) => {
+                            const v = row.product?.variants.find(
+                              (v) => v._id === e.target.value
+                            );
+                            if (v) updateRow(row.id, { variant: v });
+                          }}
+                          disabled={!hasProduct}
+                          className={`w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                            attempted && hasProduct && !row.variant
+                              ? "ring-1 ring-[#dc2626]"
+                              : ""
+                          }`}
+                        >
+                          <option value="">Select variant</option>
+                          {(row.product?.variants ?? []).map((v) => (
+                            <option key={v._id} value={v._id}>
+                              {v.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Row 3: Quantity | Unit Price */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] text-[#6b7280] mb-1">
+                            Quantity{uom ? ` (${uom})` : ""}
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={row.quantity === 0 ? "" : row.quantity.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 3 })}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+                              updateRow(row.id, {
+                                quantity: raw ? parseFloat(raw) : 0,
+                              });
+                            }}
+                            disabled={!hasProduct}
+                            placeholder="0"
+                            className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] text-right outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-[#6b7280] mb-1">Unit Price</label>
+                          <div className="flex items-center h-9 border border-[#e5e7eb] rounded-[6px] px-3 focus-within:ring-2 focus-within:ring-[#0d9488] focus-within:border-[#0d9488]">
+                            <span className="text-[13px] text-[#9ca3af] flex-shrink-0">₹</span>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={row.price === 0 ? "" : row.price.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+                                updateRow(row.id, {
+                                  price: raw ? parseFloat(raw) : 0,
+                                });
+                              }}
+                              disabled={!hasProduct}
+                              placeholder="0"
+                              className="w-full border-0 outline-none bg-transparent text-[13px] text-[#111827] text-right disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Row 4: GST% | Line Total */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] text-[#6b7280] mb-1">GST%</label>
+                          <span className="text-[13px] text-[#9ca3af]">
+                            {hasProduct ? `${gst}%` : "—"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <label className="block text-[11px] text-[#6b7280] mb-1">Line Total</label>
+                          {lineTotal > 0 ? (
+                            <span className="text-[13px] font-medium text-[#111827]">
+                              ₹{parseFloat(lineTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          ) : (
+                            <span className="text-[13px] text-[#9ca3af]">—</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Add Product button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addRow}
+                  className="h-9 w-full text-[13px] text-[#0d9488] border-[#0d9488] hover:bg-[#f0fdfa]"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  Add Product
+                </Button>
+
+                {/* Total */}
+                {totalAmount > 0 && (
+                  <div className="flex items-center justify-between rounded-[10px] border border-[#e5e7eb] bg-white px-4 py-3">
+                    <span className="text-[14px] font-semibold text-[#111827]">Total</span>
+                    <span className="text-[14px] font-semibold text-[#111827]">
+                      ₹{parseFloat(totalAmount.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
+
+                {(fieldErrors.productsEmpty || fieldErrors.productsIncomplete) && (
+                  <p className="text-[12px] text-[#dc2626] mt-1.5 px-1">
+                    {fieldErrors.productsEmpty || fieldErrors.productsIncomplete}
+                  </p>
+                )}
+              </div>
+
+              {/* Products – desktop table */}
+              <div className="hidden lg:block rounded-[10px] bg-white">
                 <div className="border border-[#e5e7eb] rounded-[8px] overflow-hidden">
                   <table className="w-full min-w-[700px] text-sm">
                     <thead>
