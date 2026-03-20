@@ -65,7 +65,7 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
   return (
     <div className="flex flex-col flex-1">
       {/* Tab bar */}
-      <div className="flex border-b border-[#e5e7eb] bg-white px-8">
+      <div className="flex border-b border-[#e5e7eb] bg-white px-4 sm:px-8">
         {tabs.map((tab) => {
           const isActive = tab.key === activeTab;
           return (
@@ -670,139 +670,229 @@ function ProductsTable({
   const remainingItems = order.remainingItems ?? [];
 
   return (
-    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm mx-8 mt-6 mb-6">
-      <div className="overflow-x-auto">
-      <table className="w-full min-w-[900px]">
-        <thead>
-          <tr className="border-b border-[#e5e7eb]">
-            <th className="text-left py-2 pl-5 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">Product</th>
-            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Ordered Qty</th>
-            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Received Qty</th>
-            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Pending Qty</th>
-            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Unit Price</th>
-            <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Tax %</th>
-            <th className="text-right py-2 pr-5 pl-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Line Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product, idx) => {
-            const remaining = remainingItems.find(
-              (r) =>
-                r.productId === product.product._id &&
-                r.variantId === product.variant._id,
-            );
-            const ordered = product.quantity.value;
-            const remainingQty = remaining?.remainingQuantity ?? 0;
-            const receivedQty = ordered - remainingQty;
-            const receivedPct = ordered > 0 ? (receivedQty / ordered) * 100 : 0;
-            const isNotReceived = receivedQty === 0;
-            const receivedTextColor = isNotReceived
-              ? "text-[#6b7280]"
-              : "text-[#10b981]";
-            const receivedBarColor = isNotReceived
-              ? "bg-[#d1d5db]"
-              : "bg-[#10b981]";
+    <>
+      {/* ── Mobile: product cards ── */}
+      <div className="sm:hidden px-4 pt-4 pb-4 space-y-2">
+        {products.map((product, idx) => {
+          const remaining = remainingItems.find(
+            (r) =>
+              r.productId === product.product._id &&
+              r.variantId === product.variant._id,
+          );
+          const ordered = product.quantity.value;
+          const remainingQty = remaining?.remainingQuantity ?? 0;
+          const receivedQty = ordered - remainingQty;
+          const receivedPct = ordered > 0 ? (receivedQty / ordered) * 100 : 0;
+          const isNotReceived = receivedQty === 0;
+          const receivedBarColor = isNotReceived
+            ? "bg-[#d1d5db]"
+            : "bg-[#10b981]";
 
-            return (
-              <tr
-                key={`${product.product._id}-${product.variant._id}-${idx}`}
-                className="border-b border-[#e5e7eb] last:border-b-0"
-              >
-                {/* Product */}
-                <td className="py-2.5 pl-5 pr-3">
-                  <div className="flex flex-col gap-[3px]">
-                    <span className="text-[13px] font-medium leading-[16.9px] text-[#111827]">
-                      {product.metadata.product.name}
-                    </span>
-                    <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280]">
-                      {product.metadata.variant.name}
-                    </span>
-                  </div>
-                </td>
+          return (
+            <div
+              key={`mobile-${product.product._id}-${product.variant._id}-${idx}`}
+              className="rounded-[8px] border border-[#e5e7eb] bg-white px-3 py-2.5 space-y-2"
+            >
+              {/* Row 1: Product name + Line Total / pricing */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col gap-[2px] min-w-0">
+                  <span className="text-[13px] font-medium text-[#111827] truncate">
+                    {product.metadata.product.name}
+                  </span>
+                  <span className="text-[12px] text-[#6b7280] truncate">
+                    {product.metadata.variant.name}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end gap-[2px] flex-shrink-0">
+                  <span className="text-[13px] font-semibold text-[#111827] whitespace-nowrap">
+                    ₹{parseFloat(product.totalAmount.$numberDecimal).toLocaleString("en-IN")}
+                  </span>
+                  <span className="text-[11px] text-[#6b7280] whitespace-nowrap">
+                    ₹{product.price.value.$numberDecimal} @ GST {product.gst.value}%
+                  </span>
+                </div>
+              </div>
 
-                {/* Ordered Qty */}
-                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
-                  <QuantityCell value={ordered} uom={product.quantity.postfix} />
-                </td>
+              {/* Row 2: Progress bar */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full bg-[#f3f4f6]">
+                  <div
+                    className={cn(receivedBarColor, "h-1.5 rounded-full")}
+                    style={{ width: `${Math.min(receivedPct, 100)}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-medium text-[#6b7280] flex-shrink-0">
+                  {Math.round(receivedPct)}%
+                </span>
+              </div>
 
-                {/* Received Qty */}
-                <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                  <div className={receivedTextColor + " text-[13px] font-normal leading-[16.9px]"}>
-                    <QuantityCell value={receivedQty} uom={product.quantity.postfix} />
-                  </div>
-                  <div className="mt-1 bg-[#e5e7eb] rounded h-1 w-20 ml-auto">
-                    <div
-                      className={cn(receivedBarColor, "rounded h-1")}
-                      style={{
-                        width: `${Math.min(receivedPct, 100)}%`,
-                      }}
-                    />
-                  </div>
-                </td>
+              {/* Row 3: Ordered | Pending */}
+              <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-[2px]">
+                  <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">Ordered</span>
+                  <span className="text-[13px] font-medium text-[#111827]">
+                    <QuantityCell value={ordered} uom={product.quantity.postfix} />
+                  </span>
+                </div>
+                <div className="flex flex-col gap-[2px] items-end">
+                  <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">Pending</span>
+                  <span className={`text-[13px] font-medium ${remainingQty > 0 ? "text-[#dc2626]" : "text-[#111827]"}`}>
+                    <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
+                  </span>
+                </div>
+              </div>
 
-                {/* Pending Qty */}
-                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
-                  <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
-                </td>
+            </div>
+          );
+        })}
 
-                {/* Unit Price */}
-                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
-                  ₹ {product.price.value.$numberDecimal}
-                </td>
-
-                {/* Tax% */}
-                <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
-                  {product.gst.value}%
-                </td>
-
-                {/* Line Total */}
-                <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
-                  ₹ {parseFloat(
-                    product.totalAmount.$numberDecimal,
-                  ).toLocaleString("en-IN")}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-
-        {/* Footer Total Summary */}
-        <tfoot>
-          <tr className="border-t border-[#e5e7eb]">
-            <td className="py-2.5 pl-5 pr-3 text-[13px] font-semibold leading-[16.9px] text-[#111827]">Total Summary</td>
-            <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
-              {order.hasUniformUOM !== false ? (
-                <QuantityCell value={order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)} uom={order.commonUOM ?? ""} />
-              ) : (
-                <span className="text-[#6b7280] font-normal">—</span>
-              )}
-            </td>
-            <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
-              {order.hasUniformUOM !== false ? (
-                <QuantityCell value={totalReceived} uom={order.commonUOM ?? ""} />
-              ) : (
-                <span className="text-[#6b7280] font-normal">—</span>
-              )}
-            </td>
-            <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
-              {order.hasUniformUOM !== false ? (
-                <QuantityCell value={order.pendingQuantity ?? ((order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)) - totalReceived)} uom={order.commonUOM ?? ""} />
-              ) : (
-                <span className="text-[#6b7280] font-normal">—</span>
-              )}
-            </td>
-            <td className="py-2.5 px-3" />
-            <td className="py-2.5 px-3" />
-            <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
-              ₹ {(typeof order.totalAmount === "number"
-                ? order.totalAmount
-                : parseFloat(order.totalAmount.$numberDecimal)
-              ).toLocaleString("en-IN")}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+        {/* Mobile total */}
+        <div className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] bg-white px-3 py-2.5">
+          <span className="text-[13px] font-semibold text-[#111827]">Total</span>
+          <span className="text-[13px] font-semibold text-[#111827]">
+            ₹{(typeof order.totalAmount === "number"
+              ? order.totalAmount
+              : parseFloat(order.totalAmount.$numberDecimal)
+            ).toLocaleString("en-IN")}
+          </span>
+        </div>
       </div>
-    </div>
+
+      {/* ── Desktop: table ── */}
+      <div className="hidden sm:block bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm mx-8 mt-6 mb-6">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px]">
+          <thead>
+            <tr className="border-b border-[#e5e7eb]">
+              <th className="text-left py-2 pl-5 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">Product</th>
+              <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Ordered Qty</th>
+              <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Received Qty</th>
+              <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Pending Qty</th>
+              <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Unit Price</th>
+              <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Tax %</th>
+              <th className="text-right py-2 pr-5 pl-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((product, idx) => {
+              const remaining = remainingItems.find(
+                (r) =>
+                  r.productId === product.product._id &&
+                  r.variantId === product.variant._id,
+              );
+              const ordered = product.quantity.value;
+              const remainingQty = remaining?.remainingQuantity ?? 0;
+              const receivedQty = ordered - remainingQty;
+              const receivedPct = ordered > 0 ? (receivedQty / ordered) * 100 : 0;
+              const isNotReceived = receivedQty === 0;
+              const receivedTextColor = isNotReceived
+                ? "text-[#6b7280]"
+                : "text-[#10b981]";
+              const receivedBarColor = isNotReceived
+                ? "bg-[#d1d5db]"
+                : "bg-[#10b981]";
+
+              return (
+                <tr
+                  key={`${product.product._id}-${product.variant._id}-${idx}`}
+                  className="border-b border-[#e5e7eb] last:border-b-0"
+                >
+                  {/* Product */}
+                  <td className="py-2.5 pl-5 pr-3">
+                    <div className="flex flex-col gap-[3px]">
+                      <span className="text-[13px] font-medium leading-[16.9px] text-[#111827]">
+                        {product.metadata.product.name}
+                      </span>
+                      <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280]">
+                        {product.metadata.variant.name}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Ordered Qty */}
+                  <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
+                    <QuantityCell value={ordered} uom={product.quantity.postfix} />
+                  </td>
+
+                  {/* Received Qty */}
+                  <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                    <div className={receivedTextColor + " text-[13px] font-normal leading-[16.9px]"}>
+                      <QuantityCell value={receivedQty} uom={product.quantity.postfix} />
+                    </div>
+                    <div className="mt-1 bg-[#e5e7eb] rounded h-1 w-20 ml-auto">
+                      <div
+                        className={cn(receivedBarColor, "rounded h-1")}
+                        style={{
+                          width: `${Math.min(receivedPct, 100)}%`,
+                        }}
+                      />
+                    </div>
+                  </td>
+
+                  {/* Pending Qty */}
+                  <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
+                    <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
+                  </td>
+
+                  {/* Unit Price */}
+                  <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
+                    ₹ {product.price.value.$numberDecimal}
+                  </td>
+
+                  {/* Tax% */}
+                  <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
+                    {product.gst.value}%
+                  </td>
+
+                  {/* Line Total */}
+                  <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
+                    ₹ {parseFloat(
+                      product.totalAmount.$numberDecimal,
+                    ).toLocaleString("en-IN")}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+
+          {/* Footer Total Summary */}
+          <tfoot>
+            <tr className="border-t border-[#e5e7eb]">
+              <td className="py-2.5 pl-5 pr-3 text-[13px] font-semibold leading-[16.9px] text-[#111827]">Total Summary</td>
+              <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
+                {order.hasUniformUOM !== false ? (
+                  <QuantityCell value={order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)} uom={order.commonUOM ?? ""} />
+                ) : (
+                  <span className="text-[#6b7280] font-normal">—</span>
+                )}
+              </td>
+              <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
+                {order.hasUniformUOM !== false ? (
+                  <QuantityCell value={totalReceived} uom={order.commonUOM ?? ""} />
+                ) : (
+                  <span className="text-[#6b7280] font-normal">—</span>
+                )}
+              </td>
+              <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
+                {order.hasUniformUOM !== false ? (
+                  <QuantityCell value={order.pendingQuantity ?? ((order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)) - totalReceived)} uom={order.commonUOM ?? ""} />
+                ) : (
+                  <span className="text-[#6b7280] font-normal">—</span>
+                )}
+              </td>
+              <td className="py-2.5 px-3" />
+              <td className="py-2.5 px-3" />
+              <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
+                ₹ {(typeof order.totalAmount === "number"
+                  ? order.totalAmount
+                  : parseFloat(order.totalAmount.$numberDecimal)
+                ).toLocaleString("en-IN")}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        </div>
+      </div>
+    </>
   );
 }
