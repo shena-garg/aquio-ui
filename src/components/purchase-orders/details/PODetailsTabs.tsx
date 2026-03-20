@@ -104,7 +104,7 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
         ) : activeTab === "receipts" ? (
           <ReceiptsTab order={order} />
         ) : activeTab === "activity" ? (
-          <div className="px-8 py-6">
+          <div className="px-4 sm:px-8 py-4 sm:py-6">
             {activityLoading ? (
               <div className="space-y-0">
                 {Array.from({ length: 3 }).map((_, i) => (
