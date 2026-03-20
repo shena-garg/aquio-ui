@@ -156,12 +156,12 @@ function ReceiptsTab({ order }: { order: PurchaseOrder }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 py-6">
-      <div className="mx-8">
+    <div className="flex flex-col gap-4 py-4 sm:py-6">
+      <div className="mx-4 sm:mx-8">
         <ReceiptSummaryCard order={order} receipts={receipts} products={products} />
       </div>
       {receipts.map((receipt, idx) => (
-        <div key={receipt._id} className="mx-8">
+        <div key={receipt._id} className="mx-4 sm:mx-8">
           <IndividualReceiptCard
             receipt={receipt}
             index={idx}
@@ -387,10 +387,10 @@ function ReceiptSummaryCard({
   }
 
   return (
-    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm pt-4 pb-3">
+    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm pt-3 sm:pt-4 pb-3">
       <div className="flex flex-col gap-3">
         {/* Header */}
-        <div className="flex items-center justify-between pb-1 px-5">
+        <div className="flex items-center justify-between pb-1 px-3 sm:px-5">
           <span className="text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">
             Receipt Summary
           </span>
@@ -403,127 +403,218 @@ function ReceiptSummaryCard({
           </button>
         </div>
 
-        {/* Split-table layout: frozen left + scrollable right */}
-        <div className="flex">
-          {/* Frozen left panel */}
-          <div className="flex-shrink-0 border-r border-gray-200" style={{ width: '600px' }}>
-            <table style={{ width: '600px', tableLayout: 'fixed' }}>
-              <colgroup>
-                <col style={{ width: '140px' }} />
-                <col style={{ width: '280px' }} />
-                <col style={{ width: '180px' }} />
-              </colgroup>
-              <thead ref={leftTheadRef}>
+        {/* Table with horizontal scroll on mobile */}
+        <div className="overflow-x-auto">
+          {/* Desktop: Split-table layout */}
+          <div className="hidden sm:flex">
+            {/* Frozen left panel */}
+            <div className="flex-shrink-0 border-r border-gray-200" style={{ width: '600px' }}>
+              <table style={{ width: '600px', tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: '140px' }} />
+                  <col style={{ width: '280px' }} />
+                  <col style={{ width: '180px' }} />
+                </colgroup>
+                <thead ref={leftTheadRef}>
+                  <tr>
+                    <th className="text-left h-[31px] py-2 pr-3 pl-5 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                      Status
+                    </th>
+                    <th className="text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                      Product
+                    </th>
+                    <th className="text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap border-b border-[#e5e7eb]">
+                      Received / Ordered
+                    </th>
+                  </tr>
+                </thead>
+                <tbody ref={leftTbodyRef} className="[&>tr:last-child>td]:border-b-0">
+                  {productList.map(({ productId, variantId }) => {
+                    const { name, variant } = getProductName(productId, products);
+                    const ordered = getOrderedQuantity(productId, variantId, products);
+                    const uom = getProductUOM(productId, variantId, products);
+                    const totalReceived = receipts.reduce((sum, r) => {
+                      const rp = r.products.find(
+                        (p) => p.productId === productId && p.variantId === variantId,
+                      );
+                      return sum + (rp?.deliveredQuantity ?? 0);
+                    }, 0);
+                    const status = getReceiptStatus(totalReceived, ordered);
+
+                    return (
+                      <tr key={`left-${productId}:${variantId}`}>
+                        <td className="h-[52px] py-2.5 pr-3 pl-5 align-top border-b border-[#e5e7eb]">
+                          <StatusBadge status={status} />
+                        </td>
+                        <td className="h-[52px] py-2.5 pr-3 align-top border-b border-[#e5e7eb]">
+                          <div className="flex flex-col gap-[3px]">
+                            <span className="text-[13px] font-medium leading-[16.9px] text-[#111827] truncate">
+                              {name}
+                            </span>
+                            {variant && (
+                              <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280] truncate">
+                                {variant}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black whitespace-nowrap border-b border-[#e5e7eb]">
+                          <span className="inline-flex gap-1">
+                            <QuantityCell value={totalReceived} uom={uom} />
+                            <span>/</span>
+                            <QuantityCell value={ordered} uom={uom} />
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Scrollable right panel */}
+            <div className="flex-1 overflow-x-auto">
+              <table style={{ minWidth: `${receipts.length * 140 + 120}px` }}>
+                <thead ref={rightTheadRef}>
+                  <tr>
+                    {receipts.map((r, idx) => (
+                      <th
+                        key={r._id}
+                        className={cn(
+                          "text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap border-b border-[#e5e7eb]",
+                          idx === 0 && "pl-3",
+                        )}
+                      >
+                        #{idx + 1} · {formatDate(r.deliveryDate)}
+                      </th>
+                    ))}
+                    <th className="text-left h-[31px] py-2 pr-5 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                      Remaining
+                    </th>
+                  </tr>
+                </thead>
+                <tbody ref={rightTbodyRef} className="[&>tr:last-child>td]:border-b-0">
+                  {productList.map(({ productId, variantId }) => {
+                    const ordered = getOrderedQuantity(productId, variantId, products);
+                    const uom = getProductUOM(productId, variantId, products);
+                    const totalReceived = receipts.reduce((sum, r) => {
+                      const rp = r.products.find(
+                        (p) => p.productId === productId && p.variantId === variantId,
+                      );
+                      return sum + (rp?.deliveredQuantity ?? 0);
+                    }, 0);
+                    const remaining = Math.max(0, ordered - totalReceived);
+
+                    return (
+                      <tr key={`right-${productId}:${variantId}`}>
+                        {receipts.map((r, rIdx) => {
+                          const rp = r.products.find(
+                            (p) =>
+                              p.productId === productId &&
+                              p.variantId === variantId,
+                          );
+                          return (
+                            <td
+                              key={r._id}
+                              className={cn(
+                                "h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black whitespace-nowrap border-b border-[#e5e7eb]",
+                                rIdx === 0 && "pl-3",
+                              )}
+                            >
+                              {rp && rp.deliveredQuantity > 0 ? (
+                                <QuantityCell
+                                  value={rp.deliveredQuantity}
+                                  uom={uom}
+                                />
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td
+                          className={cn(
+                            "h-[52px] py-2.5 pr-5 align-top text-[13px] leading-[16.9px] whitespace-nowrap border-b border-[#e5e7eb]",
+                            remaining > 0
+                              ? "font-semibold text-[#dc2626]"
+                              : "font-normal text-black",
+                          )}
+                        >
+                          <QuantityCell value={remaining} uom={uom} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile: single scrollable table */}
+          <div className="sm:hidden">
+            <table className="w-full" style={{ minWidth: `${280 + receipts.length * 100 + 90}px` }}>
+              <thead>
                 <tr>
-                  <th className="text-left h-[31px] py-2 pr-3 pl-5 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
-                    Status
-                  </th>
-                  <th className="text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                  <th className="text-left h-[31px] py-2 pl-3 pr-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap sticky left-0 bg-white z-10">
                     Product
                   </th>
-                  <th className="text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap border-b border-[#e5e7eb]">
+                  <th className="text-left h-[31px] py-2 px-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap">
                     Received / Ordered
+                  </th>
+                  {receipts.map((r, idx) => (
+                    <th
+                      key={r._id}
+                      className="text-left h-[31px] py-2 px-2 text-[11px] font-semibold text-[#6b7280] whitespace-nowrap border-b border-[#e5e7eb]"
+                    >
+                      #{idx + 1}
+                    </th>
+                  ))}
+                  <th className="text-left h-[31px] py-2 px-2 pr-3 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap">
+                    Left
                   </th>
                 </tr>
               </thead>
-              <tbody ref={leftTbodyRef} className="[&>tr:last-child>td]:border-b-0">
+              <tbody className="[&>tr:last-child>td]:border-b-0">
                 {productList.map(({ productId, variantId }) => {
                   const { name, variant } = getProductName(productId, products);
                   const ordered = getOrderedQuantity(productId, variantId, products);
                   const uom = getProductUOM(productId, variantId, products);
-                  const totalReceived = receipts.reduce((sum, r) => {
+                  const totalReceivedQty = receipts.reduce((sum, r) => {
                     const rp = r.products.find(
                       (p) => p.productId === productId && p.variantId === variantId,
                     );
                     return sum + (rp?.deliveredQuantity ?? 0);
                   }, 0);
-                  const status = getReceiptStatus(totalReceived, ordered);
+                  const remaining = Math.max(0, ordered - totalReceivedQty);
 
                   return (
-                    <tr key={`left-${productId}:${variantId}`}>
-                      <td className="h-[52px] py-2.5 pr-3 pl-5 align-top border-b border-[#e5e7eb]">
-                        <StatusBadge status={status} />
-                      </td>
-                      <td className="h-[52px] py-2.5 pr-3 align-top border-b border-[#e5e7eb]">
-                        <div className="flex flex-col gap-[3px]">
-                          <span className="text-[13px] font-medium leading-[16.9px] text-[#111827] truncate">
-                            {name}
-                          </span>
+                    <tr key={`mobile-${productId}:${variantId}`}>
+                      <td className="py-2 pl-3 pr-2 align-top border-b border-[#e5e7eb] sticky left-0 bg-white z-10">
+                        <div className="flex flex-col gap-[1px]">
+                          <span className="text-[12px] font-medium text-[#111827] truncate max-w-[140px]">{name}</span>
                           {variant && (
-                            <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280] truncate">
-                              {variant}
-                            </span>
+                            <span className="text-[11px] text-[#6b7280] truncate max-w-[140px]">{variant}</span>
                           )}
                         </div>
                       </td>
-                      <td className="h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black whitespace-nowrap border-b border-[#e5e7eb]">
-                        <span className="inline-flex gap-1">
-                          <QuantityCell value={totalReceived} uom={uom} />
+                      <td className="py-2 px-2 align-top text-[12px] text-[#111827] whitespace-nowrap border-b border-[#e5e7eb]">
+                        <span className="inline-flex gap-0.5">
+                          <QuantityCell value={totalReceivedQty} uom={uom} />
                           <span>/</span>
                           <QuantityCell value={ordered} uom={uom} />
                         </span>
                       </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Scrollable right panel */}
-          <div className="flex-1 overflow-x-auto">
-            <table style={{ minWidth: `${receipts.length * 140 + 120}px` }}>
-              <thead ref={rightTheadRef}>
-                <tr>
-                  {receipts.map((r, idx) => (
-                    <th
-                      key={r._id}
-                      className={cn(
-                        "text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap border-b border-[#e5e7eb]",
-                        idx === 0 && "pl-3",
-                      )}
-                    >
-                      #{idx + 1} · {formatDate(r.deliveryDate)}
-                    </th>
-                  ))}
-                  <th className="text-left h-[31px] py-2 pr-5 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
-                    Remaining
-                  </th>
-                </tr>
-              </thead>
-              <tbody ref={rightTbodyRef} className="[&>tr:last-child>td]:border-b-0">
-                {productList.map(({ productId, variantId }) => {
-                  const ordered = getOrderedQuantity(productId, variantId, products);
-                  const uom = getProductUOM(productId, variantId, products);
-                  const totalReceived = receipts.reduce((sum, r) => {
-                    const rp = r.products.find(
-                      (p) => p.productId === productId && p.variantId === variantId,
-                    );
-                    return sum + (rp?.deliveredQuantity ?? 0);
-                  }, 0);
-                  const remaining = Math.max(0, ordered - totalReceived);
-
-                  return (
-                    <tr key={`right-${productId}:${variantId}`}>
-                      {receipts.map((r, rIdx) => {
+                      {receipts.map((r) => {
                         const rp = r.products.find(
-                          (p) =>
-                            p.productId === productId &&
-                            p.variantId === variantId,
+                          (p) => p.productId === productId && p.variantId === variantId,
                         );
                         return (
                           <td
                             key={r._id}
-                            className={cn(
-                              "h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black whitespace-nowrap border-b border-[#e5e7eb]",
-                              rIdx === 0 && "pl-3",
-                            )}
+                            className="py-2 px-2 align-top text-[12px] text-[#111827] whitespace-nowrap border-b border-[#e5e7eb]"
                           >
                             {rp && rp.deliveredQuantity > 0 ? (
-                              <QuantityCell
-                                value={rp.deliveredQuantity}
-                                uom={uom}
-                              />
+                              <QuantityCell value={rp.deliveredQuantity} uom={uom} />
                             ) : (
                               "—"
                             )}
@@ -532,10 +623,8 @@ function ReceiptSummaryCard({
                       })}
                       <td
                         className={cn(
-                          "h-[52px] py-2.5 pr-5 align-top text-[13px] leading-[16.9px] whitespace-nowrap border-b border-[#e5e7eb]",
-                          remaining > 0
-                            ? "font-semibold text-[#dc2626]"
-                            : "font-normal text-black",
+                          "py-2 px-2 pr-3 align-top text-[12px] whitespace-nowrap border-b border-[#e5e7eb]",
+                          remaining > 0 ? "font-semibold text-[#dc2626]" : "text-[#111827]",
                         )}
                       >
                         <QuantityCell value={remaining} uom={uom} />
@@ -564,15 +653,13 @@ function IndividualReceiptCard({
   products: NonNullable<PurchaseOrder["products"]>;
 }) {
   return (
-    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm py-3.5 px-5">
+    <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm py-3 sm:py-3.5 px-3 sm:px-5">
       <div className="flex flex-col gap-2.5">
         {/* Header */}
         <div className="flex items-center">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[13px] font-semibold leading-[16.9px] text-[#111827]">
-              Receipt #{index + 1} · {formatDate(receipt.deliveryDate)}
-            </span>
-          </div>
+          <span className="font-mono text-[13px] font-semibold leading-[16.9px] text-[#111827]">
+            Receipt #{index + 1} · {formatDate(receipt.deliveryDate)}
+          </span>
         </div>
 
         {/* Notes & Documents */}
@@ -608,8 +695,32 @@ function IndividualReceiptCard({
           </div>
         )}
 
-        {/* Products table */}
-        <div className="pt-2">
+        {/* Products – mobile: compact list */}
+        <div className="sm:hidden border-t border-[#e5e7eb] pt-2 space-y-1.5">
+          {receipt.products.map((rp) => {
+            const { name, variant } = getProductName(rp.productId, products);
+            const uom = getProductUOM(rp.productId, rp.variantId, products);
+            return (
+              <div
+                key={`${rp.productId}:${rp.variantId}`}
+                className="flex items-center justify-between gap-2"
+              >
+                <div className="flex flex-col gap-[1px] min-w-0">
+                  <span className="text-[13px] font-medium text-[#111827] truncate">{name}</span>
+                  {variant && (
+                    <span className="text-[11px] text-[#6b7280] truncate">{variant}</span>
+                  )}
+                </div>
+                <span className="text-[13px] font-semibold text-[#0d9488] whitespace-nowrap flex-shrink-0">
+                  <QuantityCell value={rp.deliveredQuantity} uom={uom} />
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Products – desktop: table */}
+        <div className="hidden sm:block pt-2">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#e5e7eb]">
