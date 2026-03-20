@@ -844,6 +844,29 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
     updateRow(rowId, { product, variant: null });
   }
 
+  function handleVariantChange(rowId: string, row: ProductRow, variantId: string) {
+    const variant = row.product?.variants.find((v) => v._id === variantId);
+    if (!variant) return;
+
+    const duplicateRow = productRows.find(
+      (r) =>
+        r.id !== rowId &&
+        r.product?._id === row.product?._id &&
+        r.variant?._id === variantId
+    );
+
+    if (duplicateRow) {
+      const dupIndex = productRows.findIndex((r) => r.id === duplicateRow.id);
+      toast.error(
+        `"${row.product?.name} – ${variant.name}" is already added as Product ${dupIndex + 1}. Update quantity there instead.`,
+        { duration: 8000 }
+      );
+      return;
+    }
+
+    updateRow(rowId, { variant });
+  }
+
   function addRow() {
     setProductRows((prev) => [...prev, emptyRow()]);
   }
@@ -1284,12 +1307,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                         <div className="w-3/4 min-w-0">
                           <select
                             value={row.variant?._id ?? ""}
-                            onChange={(e) => {
-                              const v = row.product?.variants.find(
-                                (v) => v._id === e.target.value
-                              );
-                              if (v) updateRow(row.id, { variant: v });
-                            }}
+                            onChange={(e) => handleVariantChange(row.id, row, e.target.value)}
                             disabled={!hasProduct}
                             className={`w-full h-8 border border-[#e5e7eb] rounded-[6px] px-2.5 text-[12px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed ${
                               attempted && hasProduct && !row.variant
@@ -1448,12 +1466,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId }: PurchaseOrderForm
                               <select
                                 value={row.variant?._id ?? ""}
                                 title={row.variant?.name ?? ""}
-                                onChange={(e) => {
-                                  const v = row.product?.variants.find(
-                                    (v) => v._id === e.target.value
-                                  );
-                                  if (v) updateRow(row.id, { variant: v });
-                                }}
+                                onChange={(e) => handleVariantChange(row.id, row, e.target.value)}
                                 disabled={!hasProduct}
                                 className={`w-full border-0 outline-none bg-transparent focus:bg-[#f0fdfa] rounded px-2 py-1 text-[13px] text-[#111827] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
                                   attempted && hasProduct && !row.variant
