@@ -875,7 +875,8 @@ function ProductsTable({
         <table className="w-full min-w-[900px]">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pl-5 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">Product</th>
+              <th className="text-center py-2 pl-5 pr-2 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] w-10">S.No.</th>
+              <th className="text-left py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280]">Product</th>
               <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Ordered Qty</th>
               <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Shipped Qty</th>
               <th className="text-right py-2 px-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] whitespace-nowrap">Pending Qty</th>
@@ -908,8 +909,13 @@ function ProductsTable({
                   key={`${product.product._id}-${product.variant._id}-${idx}`}
                   className="border-b border-[#e5e7eb] last:border-b-0"
                 >
+                  {/* S.No. */}
+                  <td className="py-2.5 pl-5 pr-2 text-center text-[13px] text-[#6b7280] w-10">
+                    {idx + 1}
+                  </td>
+
                   {/* Product */}
-                  <td className="py-2.5 pl-5 pr-3">
+                  <td className="py-2.5 px-3">
                     <div className="flex flex-col gap-[3px]">
                       <span className="text-[13px] font-medium leading-[16.9px] text-[#111827]">
                         {product.metadata.product.name}
@@ -969,7 +975,8 @@ function ProductsTable({
           {/* Footer Total Summary */}
           <tfoot>
             <tr className="border-t border-[#e5e7eb]">
-              <td className="py-2.5 pl-5 pr-3 text-[13px] font-semibold leading-[16.9px] text-[#111827]">Total Summary</td>
+              <td className="py-2.5 pl-5 pr-2" />
+              <td className="py-2.5 px-3 text-[13px] font-semibold leading-[16.9px] text-[#111827]">Total Summary</td>
               <td className="py-2.5 px-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
                 {order.hasUniformUOM !== false ? (
                   <QuantityCell value={order.totalQuantity ?? products.reduce((s, p) => s + p.quantity.value, 0)} uom={order.commonUOM ?? ""} />
