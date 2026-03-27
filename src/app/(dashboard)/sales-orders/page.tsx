@@ -27,7 +27,7 @@ import { RequirePermission } from "@/components/auth/RequirePermission";
 const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: "poNumber",       label: "SO Number",       locked: true  },
   { key: "refId",          label: "Ref. ID",          locked: false },
-  { key: "customer",       label: "Customer",         locked: false },
+  { key: "customer",       label: "Buyer",            locked: false },
   { key: "customerRef",    label: "Customer Ref.",    locked: false },
   { key: "issueDate",      label: "Issue Date",       locked: false },
   { key: "delivery",       label: "Delivery",         locked: false },

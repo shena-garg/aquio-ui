@@ -172,7 +172,7 @@ const COLUMN_DEFS: ColDef[] = [
     key: "customer",
     width: COL_WIDTH.customer,
     renderHead: ({ headCls, style }) => (
-      <TableHead className={`${TH} ${headCls}`} style={style}>Customer</TableHead>
+      <TableHead className={`${TH} ${headCls}`} style={style}>Buyer</TableHead>
     ),
     renderCell: (order, { cellCls, style }) => (
       <TableCell className={`px-3 text-[13px] font-medium text-[#0F1720] ${cellCls}`} style={style}>
