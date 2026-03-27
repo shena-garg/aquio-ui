@@ -176,7 +176,7 @@ const COLUMN_DEFS: ColDef[] = [
     ),
     renderCell: (order, { cellCls, style }) => (
       <TableCell className={`px-3 text-[13px] font-medium text-[#0F1720] ${cellCls}`} style={style}>
-        {order.supplier.name}
+        {order.biller?.name ?? "—"}
       </TableCell>
     ),
   },
@@ -604,10 +604,10 @@ export function SOTable({
                     {formatIndianAmount(amount)}
                   </span>
                 </div>
-                {/* Row 2: Customer | Status */}
+                {/* Row 2: Buyer | Status */}
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[13px] text-gray-600 truncate mr-2">
-                    {order.supplier.name}
+                    {order.biller?.name ?? "—"}
                   </span>
                   <span className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium flex-shrink-0 ${statusCfg.className}`}>
                     {statusCfg.label}
