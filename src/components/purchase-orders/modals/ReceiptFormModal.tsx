@@ -21,6 +21,7 @@ interface ReceiptFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  orderType?: "purchase" | "sales";
 }
 
 interface ProductRow {
@@ -61,7 +62,9 @@ export function ReceiptFormModal({
   isOpen,
   onClose,
   onSuccess,
+  orderType = "purchase",
 }: ReceiptFormModalProps) {
+  const isSales = orderType === "sales";
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -244,25 +247,28 @@ export function ReceiptFormModal({
     try {
       if (mode === "create") {
         await apiClient.post(`/purchase-orders/${orderId}/receipts`, payload);
-        toast.success("Receipt created successfully");
+        toast.success(isSales ? "Shipment created successfully" : "Receipt created successfully");
       } else {
         await apiClient.patch(
           `/purchase-orders/${orderId}/receipts/${receipt!._id}`,
           payload,
         );
-        toast.success("Receipt updated successfully");
+        toast.success(isSales ? "Shipment updated successfully" : "Receipt updated successfully");
       }
-      queryClient.invalidateQueries({
-        queryKey: ["purchase-order", orderId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      if (isSales) {
+        queryClient.invalidateQueries({ queryKey: ["sales-order", orderId] });
+        queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["purchase-order", orderId] });
+        queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+      }
       onSuccess();
       onClose();
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ??
-        `Failed to ${mode === "create" ? "create" : "update"} receipt`;
+        `Failed to ${mode === "create" ? "create" : "update"} ${isSales ? "shipment" : "receipt"}`;
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -290,7 +296,9 @@ export function ReceiptFormModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e7eb] flex-shrink-0">
           <h2 className="text-[16px] font-semibold text-[#111827]">
-            {mode === "create" ? "Create Receipt" : "Edit Receipt"}
+            {mode === "create"
+              ? (isSales ? "Create Shipment" : "Create Receipt")
+              : (isSales ? "Edit Shipment" : "Edit Receipt")}
           </h2>
           <button
             onClick={onClose}
@@ -349,7 +357,7 @@ export function ReceiptFormModal({
                       Remaining
                     </th>
                     <th className="text-right py-2 pl-2 pr-3 text-[11px] font-semibold text-[#6b7280] whitespace-nowrap">
-                      Qty Received
+                      {isSales ? "Qty Shipped" : "Qty Received"}
                     </th>
                   </tr>
                 </thead>
@@ -446,7 +454,7 @@ export function ReceiptFormModal({
             </div>
             <div className="px-4 py-3">
               <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">
-                Total Qty Received
+                {isSales ? "Total Qty Shipped" : "Total Qty Received"}
               </div>
               <div className="text-[15px] font-semibold text-[#111827] mt-0.5">
                 {totalQtyDisplay}
@@ -471,7 +479,7 @@ export function ReceiptFormModal({
               </span>
             </label>
             <textarea
-              placeholder="Add notes about this receipt..."
+              placeholder={isSales ? "Add notes about this shipment..." : "Add notes about this receipt..."}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -551,7 +559,7 @@ export function ReceiptFormModal({
             {isSubmitting && (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
             )}
-            {mode === "create" ? "Create Receipt" : "Save Changes"}
+            {mode === "create" ? (isSales ? "Create Shipment" : "Create Receipt") : "Save Changes"}
           </Button>
         </div>
       </div>

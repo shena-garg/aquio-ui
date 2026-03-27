@@ -7,6 +7,7 @@ interface POSummaryStripProps {
   receiptStatus: string;
   supplierName: string;
   issueDate: string;
+  orderType?: "purchase" | "sales";
 }
 
 const statusBadgeStyles: Record<string, string> = {
@@ -48,7 +49,9 @@ export function POSummaryStrip({
   receiptStatus,
   supplierName,
   issueDate,
+  orderType = "purchase",
 }: POSummaryStripProps) {
+  const isSales = orderType === "sales";
   const statusClass = statusBadgeStyles[status] ?? "bg-gray-100 text-gray-700";
   const receiptClass =
     receiptStatusBadgeStyles[receiptStatus] ?? "bg-gray-100 text-gray-700";
@@ -61,7 +64,7 @@ export function POSummaryStrip({
         <ExternalLink
           size={14}
           className="text-gray-400 hover:text-[#0d9488] cursor-pointer ml-1"
-          onClick={() => window.open(`/purchase-orders/${orderId}`, "_blank")}
+          onClick={() => window.open(`/${isSales ? "sales-orders" : "purchase-orders"}/${orderId}`, "_blank")}
         />
         <span
           className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${statusClass}`}

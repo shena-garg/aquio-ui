@@ -18,6 +18,7 @@ interface ForceClosePOModalProps {
   onClose: () => void;
   onSuccess: () => void;
   order: PurchaseOrder;
+  orderType?: "purchase" | "sales";
 }
 
 type TableRow = POProduct & {
@@ -35,6 +36,7 @@ export function ForceClosePOModal({
   onClose,
   onSuccess,
   order,
+  orderType = "purchase",
 }: ForceClosePOModalProps) {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,6 +159,7 @@ export function ForceClosePOModal({
             receiptStatus={order.receiptStatus}
             supplierName={order.supplier.name}
             issueDate={order.issueDate}
+            orderType={orderType}
           />
         </div>
 

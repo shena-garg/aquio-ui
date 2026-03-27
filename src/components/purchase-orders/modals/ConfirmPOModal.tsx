@@ -22,6 +22,7 @@ interface ConfirmPOModalProps {
   receiptStatus: string;
   supplierName: string;
   issueDate: string;
+  orderType?: "purchase" | "sales";
 }
 
 export function ConfirmPOModal({
@@ -34,7 +35,9 @@ export function ConfirmPOModal({
   receiptStatus,
   supplierName,
   issueDate,
+  orderType = "purchase",
 }: ConfirmPOModalProps) {
+  const isSales = orderType === "sales";
   const [supplierReferenceId, setSupplierReferenceId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,13 +60,13 @@ export function ConfirmPOModal({
           ? { supplierReferenceId: supplierReferenceId.trim() }
           : undefined
       );
-      toast.success("Purchase order confirmed successfully");
+      toast.success(isSales ? "Sales order confirmed successfully" : "Purchase order confirmed successfully");
       onSuccess();
       handleClose();
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Failed to confirm purchase order";
+          ?.message ?? (isSales ? "Failed to confirm sales order" : "Failed to confirm purchase order");
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -88,7 +91,7 @@ export function ConfirmPOModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <DialogTitle className="text-base font-semibold text-gray-900">
-            Confirm PO
+            {isSales ? "Confirm SO" : "Confirm PO"}
           </DialogTitle>
           <button
             onClick={handleClose}
@@ -108,16 +111,17 @@ export function ConfirmPOModal({
             receiptStatus={receiptStatus}
             supplierName={supplierName}
             issueDate={issueDate}
+            orderType={orderType}
           />
 
           {/* Supplier Reference ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Supplier Reference ID
+              {isSales ? "Customer Reference ID" : "Supplier Reference ID"}
             </label>
             <input
               type="text"
-              placeholder="Enter supplier reference"
+              placeholder={isSales ? "Enter customer reference" : "Enter supplier reference"}
               value={supplierReferenceId}
               onChange={(e) => setSupplierReferenceId(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"

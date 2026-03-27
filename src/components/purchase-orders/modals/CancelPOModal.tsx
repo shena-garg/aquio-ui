@@ -24,6 +24,7 @@ interface CancelPOModalProps {
   receiptStatus: string;
   supplierName: string;
   issueDate: string;
+  orderType?: "purchase" | "sales";
 }
 
 export function CancelPOModal({
@@ -36,7 +37,9 @@ export function CancelPOModal({
   receiptStatus,
   supplierName,
   issueDate,
+  orderType = "purchase",
 }: CancelPOModalProps) {
+  const isSales = orderType === "sales";
   const [reason, setReason] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -95,13 +98,13 @@ export function CancelPOModal({
         cancellationReason: reason,
         ...(notes.trim() ? { cancellationNotes: notes.trim() } : {}),
       });
-      toast.success("Purchase order cancelled successfully");
+      toast.success(isSales ? "Sales order cancelled successfully" : "Purchase order cancelled successfully");
       onSuccess();
       handleClose();
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Failed to cancel purchase order";
+          ?.message ?? (isSales ? "Failed to cancel sales order" : "Failed to cancel purchase order");
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -128,7 +131,7 @@ export function CancelPOModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <DialogTitle className="text-base font-semibold text-gray-900">
-            Cancel PO Confirmation
+            {isSales ? "Cancel SO Confirmation" : "Cancel PO Confirmation"}
           </DialogTitle>
           <button
             onClick={handleClose}
@@ -148,12 +151,13 @@ export function CancelPOModal({
             receiptStatus={receiptStatus}
             supplierName={supplierName}
             issueDate={issueDate}
+            orderType={orderType}
           />
 
           {/* Reason combobox */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Select the reason to cancel PO{" "}
+              {isSales ? "Select the reason to cancel SO" : "Select the reason to cancel PO"}{" "}
               <span className="text-red-500">*</span>
             </label>
 

@@ -383,6 +383,7 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
         receiptStatus={order.receiptStatus}
         supplierName={order.supplier?.name ?? ""}
         issueDate={order.issueDate}
+        orderType="sales"
       />
       <ConfirmPOModal
         isOpen={confirmOpen}
@@ -394,12 +395,14 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
         receiptStatus={order.receiptStatus}
         supplierName={order.supplier?.name ?? ""}
         issueDate={order.issueDate}
+        orderType="sales"
       />
       <ForceClosePOModal
         isOpen={forceCloseOpen}
         onClose={() => setForceCloseOpen(false)}
         onSuccess={handleModalSuccess}
         order={order}
+        orderType="sales"
       />
     </>
   );

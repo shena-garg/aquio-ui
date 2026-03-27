@@ -743,6 +743,7 @@ export function SOTable({
           receiptStatus={cancelModal.order.receiptStatus}
           supplierName={cancelModal.order.supplier.name}
           issueDate={cancelModal.order.issueDate}
+          orderType="sales"
         />
       )}
       {confirmModal.order && (
@@ -756,6 +757,7 @@ export function SOTable({
           receiptStatus={confirmModal.order.receiptStatus}
           supplierName={confirmModal.order.supplier.name}
           issueDate={confirmModal.order.issueDate}
+          orderType="sales"
         />
       )}
       {forceCloseModal.order && (
@@ -764,6 +766,7 @@ export function SOTable({
           onClose={() => setForceCloseModal({ open: false })}
           onSuccess={() => { setForceCloseModal({ open: false }); onRefresh(); }}
           order={forceCloseModal.order}
+          orderType="sales"
         />
       )}
       {quickViewSO && (

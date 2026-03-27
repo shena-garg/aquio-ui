@@ -194,6 +194,7 @@ export default function SalesOrderDetailPage() {
         isOpen={createShipmentOpen}
         onClose={() => setCreateShipmentOpen(false)}
         onSuccess={() => setCreateShipmentOpen(false)}
+        orderType="sales"
       />
     </div>
   );
