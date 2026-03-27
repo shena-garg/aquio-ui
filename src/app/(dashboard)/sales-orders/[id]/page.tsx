@@ -132,10 +132,10 @@ export default function SalesOrderDetailPage() {
       {/* Parties + Dates combined - mobile */}
       <div className="sm:hidden mx-4 mt-3">
         <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-3 py-2.5 space-y-2">
-          {/* Row 1: Customer | Issue Date */}
+          {/* Row 1: Supplier | Issue Date */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Customer</span>
+              <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">Supplier</span>
               <div className="flex items-center gap-1 text-[13px] font-medium text-[#111827]">
                 {order.supplier?.name ?? "\u2014"}
               </div>

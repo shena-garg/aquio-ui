@@ -10,7 +10,7 @@ export function SODetailsMetaStrip({ order }: SODetailsMetaStripProps) {
     <div className="grid grid-cols-3 gap-4">
       <div className="flex flex-col gap-1">
         <span className="text-[10px] font-semibold tracking-[0.8px] text-[#6b7280] uppercase">
-          Customer
+          Supplier
         </span>
         <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#111827]">
           {order.supplier?.name ?? "\u2014"}
