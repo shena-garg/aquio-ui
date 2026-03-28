@@ -502,9 +502,8 @@ function ShipmentSummaryCard({
                                     </button>
                                   </PopoverTrigger>
                                   <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
-                                    {closedByNames[remainingItem.closedBy!]
-                                      ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}`
-                                      : "Force Closed"}
+                                    <div>{closedByNames[remainingItem.closedBy!] ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}` : "Force Closed"}</div>
+                                    {remainingItem.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remainingItem.closedAt)}</div>}
                                   </PopoverContent>
                                 </Popover>
                               </div>
@@ -679,9 +678,8 @@ function ShipmentSummaryCard({
                                   </button>
                                 </PopoverTrigger>
                                 <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
-                                  {closedByNames[mobileRemainingItem.closedBy!]
-                                    ? `Force Closed by ${closedByNames[mobileRemainingItem.closedBy!]}`
-                                    : "Force Closed"}
+                                  <div>{closedByNames[mobileRemainingItem.closedBy!] ? `Force Closed by ${closedByNames[mobileRemainingItem.closedBy!]}` : "Force Closed"}</div>
+                                  {mobileRemainingItem.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(mobileRemainingItem.closedAt)}</div>}
                                 </PopoverContent>
                               </Popover>
                             </div>
@@ -871,6 +869,24 @@ function ProductsTable({
 }) {
   const remainingItems = order.remainingItems ?? [];
 
+  const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const userIds = [...new Set(remainingItems.filter((i) => i.closedBy).map((i) => i.closedBy!))];
+    if (userIds.length === 0) return;
+    Promise.all(
+      userIds.map((id) =>
+        usersService.getById(id).then((res) => ({ id, name: res.data.name })).catch(() => null),
+      ),
+    ).then((results) => {
+      const map: Record<string, string> = {};
+      for (const r of results) {
+        if (r) map[r.id] = r.name;
+      }
+      setClosedByNames(map);
+    });
+  }, [remainingItems]);
+
   return (
     <>
       {/* -- Mobile: product cards -- */}
@@ -946,7 +962,20 @@ function ProductsTable({
                       <span className="text-[13px] font-medium line-through text-[#9ca3af]">
                         <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
                       </span>
-                      <span className="text-[11px] font-medium text-[#ea580c]">Force Closed</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-medium text-[#ea580c]">Force Closed</span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="text-[#9ca3af] hover:text-[#6b7280] transition-colors flex-shrink-0">
+                              <Info size={11} />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
+                            <div>{closedByNames[remaining?.closedBy!] ? `Force Closed by ${closedByNames[remaining?.closedBy!]}` : "Force Closed"}</div>
+                            {remaining?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remaining.closedAt)}</div>}
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                   ) : (
                     <span className={`text-[13px] font-medium ${remainingQty > 0 ? "text-[#dc2626]" : "text-[#111827]"}`}>
@@ -1059,7 +1088,20 @@ function ProductsTable({
                         <span className="line-through text-[#9ca3af]">
                           <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
                         </span>
-                        <span className="text-[11px] font-medium text-[#ea580c]">Force Closed</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[11px] font-medium text-[#ea580c]">Force Closed</span>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="text-[#9ca3af] hover:text-[#6b7280] transition-colors flex-shrink-0">
+                                <Info size={11} />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
+                              <div>{closedByNames[remaining?.closedBy!] ? `Force Closed by ${closedByNames[remaining?.closedBy!]}` : "Force Closed"}</div>
+                              {remaining?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remaining.closedAt)}</div>}
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
                     ) : (
                       <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
