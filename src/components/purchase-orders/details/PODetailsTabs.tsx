@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Download } from "lucide-react";
+import { Download, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   purchaseOrdersService,
@@ -16,6 +16,7 @@ import {
   type User as ActivityUser,
 } from "@/services/activity";
 import { ActivityTimeline } from "@/components/activity";
+import { usersService } from "@/services/users";
 
 interface PODetailsTabsProps {
   order: PurchaseOrder;
@@ -212,12 +213,15 @@ type ProductReceiptStatus =
   | "not_started"
   | "partially_received"
   | "fully_received"
-  | "excess_received";
+  | "excess_received"
+  | "force_closed";
 
 function getReceiptStatus(
   totalReceived: number,
   ordered: number,
+  remainingItemStatus?: string,
 ): ProductReceiptStatus {
+  if (remainingItemStatus === "forcefully closed") return "force_closed";
   if (totalReceived === 0) return "not_started";
   if (totalReceived < ordered) return "partially_received";
   if (totalReceived > ordered) return "excess_received";
@@ -286,6 +290,21 @@ function StatusBadge({ status }: { status: ProductReceiptStatus }) {
         </svg>
       ),
     },
+    force_closed: {
+      label: "Force Closed",
+      iconColor: "#ea580c",
+      icon: (
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path
+            d="M2 2l6 6M8 2l-6 6"
+            stroke="#ea580c"
+            strokeWidth="1.167"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+    },
   } as const;
 
   const c = config[status];
@@ -338,6 +357,25 @@ function ReceiptSummaryCard({
   }
 
   const productList = Array.from(productKeys.values());
+
+  const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const items = order.remainingItems ?? [];
+    const userIds = [...new Set(items.filter((i) => i.closedBy).map((i) => i.closedBy!))];
+    if (userIds.length === 0) return;
+    Promise.all(
+      userIds.map((id) =>
+        usersService.getById(id).then((res) => ({ id, name: res.data.name })).catch(() => null),
+      ),
+    ).then((results) => {
+      const map: Record<string, string> = {};
+      for (const r of results) {
+        if (r) map[r.id] = r.name;
+      }
+      setClosedByNames(map);
+    });
+  }, [order.remainingItems]);
 
   const leftTheadRef = useRef<HTMLTableSectionElement>(null);
   const rightTheadRef = useRef<HTMLTableSectionElement>(null);
@@ -443,7 +481,10 @@ function ReceiptSummaryCard({
                       );
                       return sum + (rp?.deliveredQuantity ?? 0);
                     }, 0);
-                    const status = getReceiptStatus(totalReceived, ordered);
+                    const remainingItem = (order.remainingItems ?? []).find(
+                      (r) => r.productId === productId && r.variantId === variantId,
+                    );
+                    const status = getReceiptStatus(totalReceived, ordered, remainingItem?.status);
 
                     return (
                       <tr key={`left-${productId}:${variantId}`}>
@@ -451,7 +492,24 @@ function ReceiptSummaryCard({
                           {idx + 1}
                         </td>
                         <td className="h-[52px] py-2.5 pr-3 pl-2 align-top border-b border-[#e5e7eb]">
-                          <StatusBadge status={status} />
+                          {remainingItem?.status === "forcefully closed" ? (
+                            <div
+                              className="flex items-center gap-1"
+                              title={
+                                closedByNames[remainingItem.closedBy!]
+                                  ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}`
+                                  : "Force Closed"
+                              }
+                            >
+                              <StatusBadge status={status} />
+                              <Info size={12} className="text-[#9ca3af] flex-shrink-0" />
+                              <div className="text-[10px] text-[#9ca3af] mt-0.5">
+                                {formatDate(remainingItem.closedAt!)}
+                              </div>
+                            </div>
+                          ) : (
+                            <StatusBadge status={status} />
+                          )}
                         </td>
                         <td className="h-[52px] py-2.5 pr-3 align-top border-b border-[#e5e7eb]">
                           <div className="flex flex-col gap-[3px]">
@@ -593,6 +651,10 @@ function ReceiptSummaryCard({
                     return sum + (rp?.deliveredQuantity ?? 0);
                   }, 0);
                   const remaining = Math.max(0, ordered - totalReceivedQty);
+                  const mobileRemainingItem = (order.remainingItems ?? []).find(
+                    (r) => r.productId === productId && r.variantId === variantId,
+                  );
+                  const mobileStatus = getReceiptStatus(totalReceivedQty, ordered, mobileRemainingItem?.status);
 
                   return (
                     <tr key={`mobile-${productId}:${variantId}`}>
@@ -601,6 +663,19 @@ function ReceiptSummaryCard({
                           <span className="text-[12px] font-medium text-[#111827] truncate max-w-[140px]">{name}</span>
                           {variant && (
                             <span className="text-[11px] text-[#6b7280] truncate max-w-[140px]">{variant}</span>
+                          )}
+                          {mobileRemainingItem?.status === "forcefully closed" && (
+                            <div
+                              className="flex items-center gap-1 mt-0.5"
+                              title={
+                                closedByNames[mobileRemainingItem.closedBy!]
+                                  ? `Force Closed by ${closedByNames[mobileRemainingItem.closedBy!]}`
+                                  : "Force Closed"
+                              }
+                            >
+                              <StatusBadge status={mobileStatus} />
+                              <Info size={11} className="text-[#9ca3af] flex-shrink-0" />
+                            </div>
                           )}
                         </div>
                       </td>
@@ -802,9 +877,15 @@ function ProductsTable({
           const receivedQty = ordered - remainingQty;
           const receivedPct = ordered > 0 ? (receivedQty / ordered) * 100 : 0;
           const isNotReceived = receivedQty === 0;
-          const receivedBarColor = isNotReceived
-            ? "bg-[#d1d5db]"
-            : "bg-[#10b981]";
+          const remainingItem = remainingItems.find(
+            (r) => r.productId === product.product._id && r.variantId === product.variant._id,
+          );
+          const isForceClosed = remainingItem?.status === "forcefully closed";
+          const receivedBarColor = isForceClosed
+            ? "bg-[#9ca3af]"
+            : isNotReceived
+              ? "bg-[#d1d5db]"
+              : "bg-[#10b981]";
 
           return (
             <div
@@ -854,9 +935,18 @@ function ProductsTable({
                 </div>
                 <div className="flex flex-col gap-[2px] items-end">
                   <span className="text-[10px] font-semibold tracking-[0.6px] text-[#6b7280]">Pending</span>
-                  <span className={`text-[13px] font-medium ${remainingQty > 0 ? "text-[#dc2626]" : "text-[#111827]"}`}>
-                    <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
-                  </span>
+                  {isForceClosed ? (
+                    <div className="flex flex-col items-end">
+                      <span className="text-[13px] font-medium line-through text-[#9ca3af]">
+                        <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
+                      </span>
+                      <span className="text-[11px] font-medium text-[#ea580c]">Force Closed</span>
+                    </div>
+                  ) : (
+                    <span className={`text-[13px] font-medium ${remainingQty > 0 ? "text-[#dc2626]" : "text-[#111827]"}`}>
+                      <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -904,12 +994,18 @@ function ProductsTable({
               const receivedQty = ordered - remainingQty;
               const receivedPct = ordered > 0 ? (receivedQty / ordered) * 100 : 0;
               const isNotReceived = receivedQty === 0;
+              const desktopRemainingItem = remainingItems.find(
+                (r) => r.productId === product.product._id && r.variantId === product.variant._id,
+              );
+              const isForceClosed = desktopRemainingItem?.status === "forcefully closed";
               const receivedTextColor = isNotReceived
                 ? "text-[#6b7280]"
                 : "text-[#10b981]";
-              const receivedBarColor = isNotReceived
-                ? "bg-[#d1d5db]"
-                : "bg-[#10b981]";
+              const receivedBarColor = isForceClosed
+                ? "bg-[#9ca3af]"
+                : isNotReceived
+                  ? "bg-[#d1d5db]"
+                  : "bg-[#10b981]";
 
               return (
                 <tr
@@ -955,7 +1051,16 @@ function ProductsTable({
 
                   {/* Pending Qty */}
                   <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
-                    <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
+                    {isForceClosed ? (
+                      <div className="flex flex-col items-end">
+                        <span className="line-through text-[#9ca3af]">
+                          <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
+                        </span>
+                        <span className="text-[11px] font-medium text-[#ea580c]">Force Closed</span>
+                      </div>
+                    ) : (
+                      <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
+                    )}
                   </td>
 
                   {/* Unit Price */}

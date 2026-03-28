@@ -38,6 +38,10 @@ export interface PORemainingItem {
   productId: string;
   variantId: string;
   remainingQuantity: number;
+  status?: string;
+  closedBy?: string;
+  closedAt?: string;
+  excessQuantity?: number;
 }
 
 export interface POReceiptProduct {
