@@ -22,6 +22,7 @@ import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
 import type { SalesOrder } from "@/services/sales-orders";
+import { RequirePermission } from "@/components/auth/RequirePermission";
 
 const statusBadgeStyles: Record<string, string> = {
   issued: "bg-[#e0f2fe] text-[#0369a1]",
@@ -160,12 +161,14 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
             <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
               Mark as Confirmed
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setForceCloseOpen(true)}
-              className="text-[#DC2626] focus:text-[#DC2626]"
-            >
-              Force Close
-            </DropdownMenuItem>
+            <RequirePermission permission="sales-order.force-close">
+              <DropdownMenuItem
+                onClick={() => setForceCloseOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Force Close
+              </DropdownMenuItem>
+            </RequirePermission>
           </>
         ) : status === "confirmed" ? (
           <>
@@ -192,12 +195,14 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
             >
               Cancel Order
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setForceCloseOpen(true)}
-              className="text-[#DC2626] focus:text-[#DC2626]"
-            >
-              Force Close
-            </DropdownMenuItem>
+            <RequirePermission permission="sales-order.force-close">
+              <DropdownMenuItem
+                onClick={() => setForceCloseOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Force Close
+              </DropdownMenuItem>
+            </RequirePermission>
           </>
         ) : null}
       </DropdownMenuContent>

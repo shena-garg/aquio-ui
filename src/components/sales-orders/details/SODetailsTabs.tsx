@@ -26,6 +26,7 @@ import {
 } from "@/services/activity";
 import { ActivityTimeline } from "@/components/activity";
 import { usersService } from "@/services/users";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SODetailsTabsProps {
   order: SalesOrder;
@@ -361,6 +362,9 @@ function ShipmentSummaryCard({
 
   const productList = Array.from(productKeys.values());
 
+  const { hasPermission } = useAuth();
+  const canForceClose = hasPermission("sales-order.force-close");
+
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
   const [forceCloseModal, setForceCloseModal] = useState<{
     open: boolean;
@@ -540,18 +544,20 @@ function ShipmentSummaryCard({
                                   <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                                     <div>{closedByNames[remainingItem.closedBy!] ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}` : "Force Closed"}</div>
                                     {remainingItem.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remainingItem.closedAt)}</div>}
-                                    <button
-                                      className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
-                                      onClick={() => {
-                                        setForceCloseModal({
-                                          open: true, mode: "undo",
-                                          productId, variantId,
-                                          productName: name, variantName: variant,
-                                        });
-                                      }}
-                                    >
-                                      Undo Force Close
-                                    </button>
+                                    {canForceClose && (
+                                      <button
+                                        className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
+                                        onClick={() => {
+                                          setForceCloseModal({
+                                            open: true, mode: "undo",
+                                            productId, variantId,
+                                            productName: name, variantName: variant,
+                                          });
+                                        }}
+                                      >
+                                        Undo Force Close
+                                      </button>
+                                    )}
                                   </PopoverContent>
                                 </Popover>
                               </div>
@@ -679,19 +685,21 @@ function ShipmentSummaryCard({
                                   <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                                     <div>{closedByNames[rightRemainingItem?.closedBy!] ? `Force Closed by ${closedByNames[rightRemainingItem?.closedBy!]}` : "Force Closed"}</div>
                                     {rightRemainingItem?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(rightRemainingItem.closedAt)}</div>}
-                                    <button
-                                      className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
-                                      onClick={() => {
-                                        const { name, variant } = getProductName(productId, products);
-                                        setForceCloseModal({
-                                          open: true, mode: "undo",
-                                          productId, variantId,
-                                          productName: name, variantName: variant,
-                                        });
-                                      }}
-                                    >
-                                      Undo Force Close
-                                    </button>
+                                    {canForceClose && (
+                                      <button
+                                        className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
+                                        onClick={() => {
+                                          const { name, variant } = getProductName(productId, products);
+                                          setForceCloseModal({
+                                            open: true, mode: "undo",
+                                            productId, variantId,
+                                            productName: name, variantName: variant,
+                                          });
+                                        }}
+                                      >
+                                        Undo Force Close
+                                      </button>
+                                    )}
                                   </PopoverContent>
                                 </Popover>
                               </div>
@@ -699,7 +707,7 @@ function ShipmentSummaryCard({
                           ) : (
                             <div className="flex items-center">
                               <QuantityCell value={remaining} uom={uom} />
-                              {remaining > 0 && (
+                              {canForceClose && remaining > 0 && (
                                 <button
                                   title="Force Close"
                                   onClick={() => {
@@ -787,18 +795,20 @@ function ShipmentSummaryCard({
                                 <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                                   <div>{closedByNames[mobileRemainingItem.closedBy!] ? `Force Closed by ${closedByNames[mobileRemainingItem.closedBy!]}` : "Force Closed"}</div>
                                   {mobileRemainingItem.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(mobileRemainingItem.closedAt)}</div>}
-                                  <button
-                                    className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
-                                    onClick={() => {
-                                      setForceCloseModal({
-                                        open: true, mode: "undo",
-                                        productId, variantId,
-                                        productName: name, variantName: variant,
-                                      });
-                                    }}
-                                  >
-                                    Undo Force Close
-                                  </button>
+                                  {canForceClose && (
+                                    <button
+                                      className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
+                                      onClick={() => {
+                                        setForceCloseModal({
+                                          open: true, mode: "undo",
+                                          productId, variantId,
+                                          productName: name, variantName: variant,
+                                        });
+                                      }}
+                                    >
+                                      Undo Force Close
+                                    </button>
+                                  )}
                                 </PopoverContent>
                               </Popover>
                             </div>
@@ -843,23 +853,25 @@ function ShipmentSummaryCard({
                               <QuantityCell value={remaining} uom={uom} />
                             </span>
                             <span className="text-[10px] font-medium text-[#ea580c]">Force Closed</span>
-                            <button
-                              className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
-                              onClick={() => {
-                                setForceCloseModal({
-                                  open: true, mode: "undo",
-                                  productId, variantId,
-                                  productName: name, variantName: variant,
-                                });
-                              }}
-                            >
-                              Undo Force Close
-                            </button>
+                            {canForceClose && (
+                              <button
+                                className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
+                                onClick={() => {
+                                  setForceCloseModal({
+                                    open: true, mode: "undo",
+                                    productId, variantId,
+                                    productName: name, variantName: variant,
+                                  });
+                                }}
+                              >
+                                Undo Force Close
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <div className="flex items-center">
                             <QuantityCell value={remaining} uom={uom} />
-                            {remaining > 0 && (
+                            {canForceClose && remaining > 0 && (
                               <button
                                 title="Force Close"
                                 onClick={() => {
@@ -1038,6 +1050,9 @@ function ProductsTable({
 }) {
   const remainingItems = order.remainingItems ?? [];
 
+  const { hasPermission } = useAuth();
+  const canForceClose = hasPermission("sales-order.force-close");
+
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
   const [forceCloseModal, setForceCloseModal] = useState<{
     open: boolean;
@@ -1096,7 +1111,7 @@ function ProductsTable({
   return (
     <>
       {/* Force Close Multiple button */}
-      {hasPendingProducts && (
+      {hasPendingProducts && canForceClose && (
         <div className="flex justify-end px-4 sm:px-8 pt-4 pb-0 sm:pt-6 sm:pb-0">
           <button
             onClick={() => setBulkForceCloseOpen(true)}
@@ -1191,18 +1206,20 @@ function ProductsTable({
                           <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                             <div>{closedByNames[remaining?.closedBy!] ? `Force Closed by ${closedByNames[remaining?.closedBy!]}` : "Force Closed"}</div>
                             {remaining?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remaining.closedAt)}</div>}
-                            <button
-                              className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
-                              onClick={() => {
-                                setForceCloseModal({
-                                  open: true, mode: "undo",
-                                  productId: product.product._id, variantId: product.variant._id,
-                                  productName: product.metadata.product.name, variantName: product.metadata.variant.name,
-                                });
-                              }}
-                            >
-                              Undo Force Close
-                            </button>
+                            {canForceClose && (
+                              <button
+                                className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
+                                onClick={() => {
+                                  setForceCloseModal({
+                                    open: true, mode: "undo",
+                                    productId: product.product._id, variantId: product.variant._id,
+                                    productName: product.metadata.product.name, variantName: product.metadata.variant.name,
+                                  });
+                                }}
+                              >
+                                Undo Force Close
+                              </button>
+                            )}
                           </PopoverContent>
                         </Popover>
                       </div>
@@ -1212,7 +1229,7 @@ function ProductsTable({
                       <span className={`text-[13px] font-medium ${remainingQty > 0 ? "text-[#dc2626]" : "text-[#111827]"}`}>
                         <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
                       </span>
-                      {remainingQty > 0 && (
+                      {canForceClose && remainingQty > 0 && (
                         <button
                           title="Force Close"
                           onClick={() => {
@@ -1346,18 +1363,20 @@ function ProductsTable({
                             <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                               <div>{closedByNames[remaining?.closedBy!] ? `Force Closed by ${closedByNames[remaining?.closedBy!]}` : "Force Closed"}</div>
                               {remaining?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remaining.closedAt)}</div>}
-                              <button
-                                className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
-                                onClick={() => {
-                                  setForceCloseModal({
-                                    open: true, mode: "undo",
-                                    productId: product.product._id, variantId: product.variant._id,
-                                    productName: product.metadata.product.name, variantName: product.metadata.variant.name,
-                                  });
-                                }}
-                              >
-                                Undo Force Close
-                              </button>
+                              {canForceClose && (
+                                <button
+                                  className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
+                                  onClick={() => {
+                                    setForceCloseModal({
+                                      open: true, mode: "undo",
+                                      productId: product.product._id, variantId: product.variant._id,
+                                      productName: product.metadata.product.name, variantName: product.metadata.variant.name,
+                                    });
+                                  }}
+                                >
+                                  Undo Force Close
+                                </button>
+                              )}
                             </PopoverContent>
                           </Popover>
                         </div>
@@ -1365,7 +1384,7 @@ function ProductsTable({
                     ) : (
                       <div className="flex items-center justify-end">
                         <QuantityCell value={remainingQty} uom={product.quantity.postfix} />
-                        {remainingQty > 0 && (
+                        {canForceClose && remainingQty > 0 && (
                           <button
                             title="Force Close"
                             onClick={() => {
