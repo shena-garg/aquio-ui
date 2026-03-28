@@ -15,6 +15,7 @@ import type { ColumnConfig } from "@/components/products/ProductsCustomizePanel"
 import { productsService } from "@/services/products";
 import { categoriesService } from "@/services/categories";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import type { Category } from "@/services/categories";
 
 // ── Column config ─────────────────────────────────────────────────────────────
@@ -145,6 +146,7 @@ export default function ProductsPage() {
       productsService
         .list({ page, limit, status: activeTab, ...searchParams })
         .then((r) => r.data),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   useEffect(() => {
@@ -535,17 +537,19 @@ export default function ProductsPage() {
       </div>
 
       {/* ── Table ────────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-auto">
-        <ProductsTable
-          products={data?.products ?? []}
-          isLoading={isLoading}
-          activeTab={activeTab}
-          onRefresh={() => queryClient.invalidateQueries({ queryKey: ["products"] })}
-          visibleColumns={visibleColumns}
-          columnOrder={columnOrder}
-          frozenCount={frozenCount}
-        />
-      </div>
+      <ErrorBoundary>
+        <div className="flex-1 overflow-auto">
+          <ProductsTable
+            products={data?.products ?? []}
+            isLoading={isLoading}
+            activeTab={activeTab}
+            onRefresh={() => queryClient.invalidateQueries({ queryKey: ["products"] })}
+            visibleColumns={visibleColumns}
+            columnOrder={columnOrder}
+            frozenCount={frozenCount}
+          />
+        </div>
+      </ErrorBoundary>
 
       <ProductsCustomizePanel
         open={showCustomize}

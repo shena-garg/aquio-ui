@@ -1,6 +1,6 @@
 "use client";
 
-import { CSSProperties, Fragment, useState } from "react";
+import { CSSProperties, Fragment, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -234,12 +234,15 @@ export function ProductsTable({
   const [isArchiving, setIsArchiving] = useState(false);
 
   // Build the ordered, filtered list of active columns
-  const activeCols = columnOrder
-    .map((key) => COLUMN_DEFS.find((c) => c.key === key))
-    .filter((col): col is ColDef => col != null && visibleColumns.includes(col.key));
+  const activeCols = useMemo(
+    () => columnOrder
+      .map((key) => COLUMN_DEFS.find((c) => c.key === key))
+      .filter((col): col is ColDef => col != null && visibleColumns.includes(col.key)),
+    [columnOrder, visibleColumns],
+  );
 
   // Compute sticky properties for a given active column index
-  function getStickyFor(index: number): Sticky {
+  const getStickyFor = useCallback(function getStickyFor(index: number): Sticky {
     if (index >= frozenCount) return NO_STICKY;
     let left = ACTIONS_COL_WIDTH;
     for (let i = 0; i < index; i++) {
@@ -250,7 +253,7 @@ export function ProductsTable({
       cellCls: "sticky z-10 bg-white group-hover:bg-gray-50",
       style: { left },
     };
-  }
+  }, [activeCols, frozenCount]);
 
   const totalCols = activeCols.length + 1; // +1 for actions column
 

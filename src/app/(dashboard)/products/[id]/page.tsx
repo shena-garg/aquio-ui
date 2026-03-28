@@ -11,6 +11,7 @@ import { ProductDetailsHeader } from "@/components/products/details/ProductDetai
 import { ProductDetailsInfoCard } from "@/components/products/details/ProductDetailsInfoCard";
 import { ProductDetailsExtra } from "@/components/products/details/ProductDetailsExtra";
 import { ProductDetailsTabs } from "@/components/products/details/ProductDetailsTabs";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export interface ProductEditState {
   name: string;
@@ -124,6 +125,7 @@ export default function ProductDetailPage() {
     queryKey: ["product", id],
     queryFn: () => productsService.getById(id),
     enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   useEffect(() => {
@@ -212,29 +214,31 @@ export default function ProductDetailPage() {
 
   return (
     <div className="flex flex-col h-full overflow-auto">
-      <ProductDetailsHeader
-        product={product}
-        isEditing={isEditing}
-        isSaving={isSaving}
-        onEditStart={handleEditStart}
-        onEditCancel={handleEditCancel}
-        onSave={handleSave}
-      />
-      <ProductDetailsInfoCard
-        product={product}
-        isEditing={isEditing}
-        editState={editState}
-        onEditStateChange={setEditState}
-      />
-      <ProductDetailsExtra
-        product={product}
-        isEditing={isEditing}
-        editState={editState}
-        onEditStateChange={setEditState}
-      />
-      <ProductDetailsTabs
-        product={product}
-      />
+      <ErrorBoundary>
+        <ProductDetailsHeader
+          product={product}
+          isEditing={isEditing}
+          isSaving={isSaving}
+          onEditStart={handleEditStart}
+          onEditCancel={handleEditCancel}
+          onSave={handleSave}
+        />
+        <ProductDetailsInfoCard
+          product={product}
+          isEditing={isEditing}
+          editState={editState}
+          onEditStateChange={setEditState}
+        />
+        <ProductDetailsExtra
+          product={product}
+          isEditing={isEditing}
+          editState={editState}
+          onEditStateChange={setEditState}
+        />
+        <ProductDetailsTabs
+          product={product}
+        />
+      </ErrorBoundary>
     </div>
   );
 }
