@@ -213,7 +213,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-auto">
+    <div className="flex flex-col h-full">
       <ErrorBoundary>
         <ProductDetailsHeader
           product={product}

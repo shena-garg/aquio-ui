@@ -121,7 +121,7 @@ export default function SalesOrderDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-auto">
+    <div className="flex flex-col h-full">
       <ErrorBoundary>
       <SODetailsHeader order={order} onCreateShipment={() => setCreateShipmentOpen(true)} />
       {/* Parties card: MetaStrip + DateStrip - desktop */}
