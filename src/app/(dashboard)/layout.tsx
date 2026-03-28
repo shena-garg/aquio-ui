@@ -14,7 +14,11 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-[#f9fafb]">
         <Sidebar />
         <div className="relative z-0 pt-[56px] lg:pt-0 lg:ml-[240px] flex h-screen flex-col overflow-hidden">
-          <RouteGuard>{children}</RouteGuard>
+          <RouteGuard>
+            <div className="flex flex-1 flex-col min-h-0">
+              {children}
+            </div>
+          </RouteGuard>
         </div>
       </div>
     </AuthProvider>
