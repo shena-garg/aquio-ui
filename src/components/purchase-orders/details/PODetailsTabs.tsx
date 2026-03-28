@@ -408,16 +408,20 @@ function ReceiptSummaryCard({
           {/* Desktop: Split-table layout */}
           <div className="hidden sm:flex">
             {/* Frozen left panel */}
-            <div className="flex-shrink-0 border-r border-gray-200" style={{ width: '600px' }}>
-              <table style={{ width: '600px', tableLayout: 'fixed' }}>
+            <div className="flex-shrink-0 border-r border-gray-200" style={{ width: '640px' }}>
+              <table style={{ width: '640px', tableLayout: 'fixed' }}>
                 <colgroup>
+                  <col style={{ width: '40px' }} />
                   <col style={{ width: '140px' }} />
                   <col style={{ width: '280px' }} />
                   <col style={{ width: '180px' }} />
                 </colgroup>
                 <thead ref={leftTheadRef}>
                   <tr>
-                    <th className="text-left h-[31px] py-2 pr-3 pl-5 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                    <th className="text-center h-[31px] py-2 pl-3 pr-1 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
+                      S.No.
+                    </th>
+                    <th className="text-left h-[31px] py-2 pr-3 pl-2 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
                       Status
                     </th>
                     <th className="text-left h-[31px] py-2 pr-3 text-[11px] font-semibold leading-[14.3px] text-[#6b7280] border-b border-[#e5e7eb]">
@@ -429,7 +433,7 @@ function ReceiptSummaryCard({
                   </tr>
                 </thead>
                 <tbody ref={leftTbodyRef} className="[&>tr:last-child>td]:border-b-0">
-                  {productList.map(({ productId, variantId }) => {
+                  {productList.map(({ productId, variantId }, idx) => {
                     const { name, variant } = getProductName(productId, products);
                     const ordered = getOrderedQuantity(productId, variantId, products);
                     const uom = getProductUOM(productId, variantId, products);
@@ -443,7 +447,10 @@ function ReceiptSummaryCard({
 
                     return (
                       <tr key={`left-${productId}:${variantId}`}>
-                        <td className="h-[52px] py-2.5 pr-3 pl-5 align-top border-b border-[#e5e7eb]">
+                        <td className="h-[52px] py-2.5 pl-3 pr-1 text-center text-[13px] text-[#6b7280] align-top border-b border-[#e5e7eb]">
+                          {idx + 1}
+                        </td>
+                        <td className="h-[52px] py-2.5 pr-3 pl-2 align-top border-b border-[#e5e7eb]">
                           <StatusBadge status={status} />
                         </td>
                         <td className="h-[52px] py-2.5 pr-3 align-top border-b border-[#e5e7eb]">
@@ -555,7 +562,10 @@ function ReceiptSummaryCard({
             <table className="w-full" style={{ minWidth: `${280 + receipts.length * 100 + 90}px` }}>
               <thead>
                 <tr>
-                  <th className="text-left h-[31px] py-2 pl-3 pr-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap sticky left-0 bg-white z-10">
+                  <th className="text-center h-[31px] py-2 pl-3 pr-1 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap sticky left-0 bg-white z-10 w-8">
+                    #
+                  </th>
+                  <th className="text-left h-[31px] py-2 px-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap sticky left-8 bg-white z-10">
                     Product
                   </th>
                   <th className="text-left h-[31px] py-2 px-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap">
@@ -575,7 +585,7 @@ function ReceiptSummaryCard({
                 </tr>
               </thead>
               <tbody className="[&>tr:last-child>td]:border-b-0">
-                {productList.map(({ productId, variantId }) => {
+                {productList.map(({ productId, variantId }, idx) => {
                   const { name, variant } = getProductName(productId, products);
                   const ordered = getOrderedQuantity(productId, variantId, products);
                   const uom = getProductUOM(productId, variantId, products);
@@ -589,7 +599,10 @@ function ReceiptSummaryCard({
 
                   return (
                     <tr key={`mobile-${productId}:${variantId}`}>
-                      <td className="py-2 pl-3 pr-2 align-top border-b border-[#e5e7eb] sticky left-0 bg-white z-10">
+                      <td className="py-2 pl-3 pr-1 text-center text-[12px] text-[#6b7280] align-top border-b border-[#e5e7eb] sticky left-0 bg-white z-10 w-8">
+                        {idx + 1}
+                      </td>
+                      <td className="py-2 px-2 align-top border-b border-[#e5e7eb] sticky left-8 bg-white z-10">
                         <div className="flex flex-col gap-[1px]">
                           <span className="text-[12px] font-medium text-[#111827] truncate max-w-[140px]">{name}</span>
                           {variant && (
