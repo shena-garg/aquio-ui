@@ -13,6 +13,7 @@ import { PODetailsDateStrip } from "@/components/purchase-orders/details/PODetai
 import { PODetailsProgress } from "@/components/purchase-orders/details/PODetailsProgress";
 import { PODetailsTabs } from "@/components/purchase-orders/details/PODetailsTabs";
 import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 function FullPageSkeleton() {
   return (
@@ -83,6 +84,7 @@ export default function PurchaseOrderDetailPage() {
     queryKey: ["purchase-order", id],
     queryFn: () => purchaseOrdersService.getById(id).then((r) => r.data),
     enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   useEffect(() => {
@@ -120,6 +122,7 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="flex flex-col h-full overflow-auto">
+      <ErrorBoundary>
       <PODetailsHeader order={order} onCreateReceipt={() => setCreateReceiptOpen(true)} />
       {/* Parties card: MetaStrip + DateStrip – desktop */}
       <div className="hidden sm:block mx-8 mt-3">
@@ -187,6 +190,7 @@ export default function PurchaseOrderDetailPage() {
       </div>
       <PODetailsProgress order={order} />
       <PODetailsTabs order={order} />
+      </ErrorBoundary>
       <ReceiptFormModal
         mode="create"
         orderId={order.id ?? order._id}

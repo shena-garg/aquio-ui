@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import type { ColumnConfig } from "@/components/purchase-orders/POCustomizePanel
 import { purchaseOrdersService } from "@/services/purchase-orders";
 import type { POFilterStatus, POActiveFilters, CsvPattern } from "@/services/purchase-orders";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 // ── Column config ─────────────────────────────────────────────────────────────
 
@@ -117,12 +118,18 @@ export default function PurchaseOrdersPage() {
   }, [prefsLoaded, visibleColumns, columnOrder, frozenCount]);
 
   // ── Data fetching ─────────────────────────────────────────────────────────
+  const queryKey = useMemo(
+    () => ["purchase-orders", page, limit, activeStatus, activeFilters],
+    [page, limit, activeStatus, activeFilters],
+  );
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["purchase-orders", page, limit, activeStatus, activeFilters],
+    queryKey,
     queryFn: () =>
       purchaseOrdersService
         .list({ page, limit, tabStatus: activeStatus, ...activeFilters })
         .then((res) => res.data),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   useEffect(() => {
@@ -303,17 +310,19 @@ export default function PurchaseOrdersPage() {
         onRemoveFilter={handleRemoveFilter}
       />
 
-      <div className="flex-1 overflow-auto">
-        <POTable
-          orders={data?.data ?? []}
-          isLoading={isLoading}
-          visibleColumns={visibleColumns}
-          columnOrder={columnOrder}
-          frozenCount={frozenCount}
-          flash={tableFlash}
-          onRefresh={() => queryClient.invalidateQueries({ queryKey: ["purchase-orders"] })}
-        />
-      </div>
+      <ErrorBoundary>
+        <div className="flex-1 overflow-auto">
+          <POTable
+            orders={data?.data ?? []}
+            isLoading={isLoading}
+            visibleColumns={visibleColumns}
+            columnOrder={columnOrder}
+            frozenCount={frozenCount}
+            flash={tableFlash}
+            onRefresh={() => queryClient.invalidateQueries({ queryKey: ["purchase-orders"] })}
+          />
+        </div>
+      </ErrorBoundary>
 
       <POCustomizePanel
         open={showCustomize}

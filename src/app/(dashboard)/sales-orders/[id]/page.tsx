@@ -13,6 +13,7 @@ import { SODetailsDateStrip } from "@/components/sales-orders/details/SODetailsD
 import { SODetailsProgress } from "@/components/sales-orders/details/SODetailsProgress";
 import { SODetailsTabs } from "@/components/sales-orders/details/SODetailsTabs";
 import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 function FullPageSkeleton() {
   return (
@@ -83,6 +84,7 @@ export default function SalesOrderDetailPage() {
     queryKey: ["sales-order", id],
     queryFn: () => salesOrdersService.getById(id).then((r) => r.data),
     enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   useEffect(() => {
@@ -120,6 +122,7 @@ export default function SalesOrderDetailPage() {
 
   return (
     <div className="flex flex-col h-full overflow-auto">
+      <ErrorBoundary>
       <SODetailsHeader order={order} onCreateShipment={() => setCreateShipmentOpen(true)} />
       {/* Parties card: MetaStrip + DateStrip - desktop */}
       <div className="hidden sm:block mx-8 mt-3">
@@ -187,6 +190,7 @@ export default function SalesOrderDetailPage() {
       </div>
       <SODetailsProgress order={order} />
       <SODetailsTabs order={order} />
+      </ErrorBoundary>
       <ReceiptFormModal
         mode="create"
         orderId={order.id ?? order._id}
