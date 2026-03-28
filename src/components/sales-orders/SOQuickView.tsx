@@ -135,7 +135,7 @@ export function SOQuickView({ po, onClose }: SOQuickViewProps) {
           {/* Partners */}
           <div className="grid grid-cols-3 gap-3 px-6 pb-4">
             <div>
-              <span className="block text-[11px] font-semibold text-[#6b7280] mb-0.5">Customer</span>
+              <span className="block text-[11px] font-semibold text-[#6b7280] mb-0.5">Supplier</span>
               <span className="text-[13px] font-medium text-[#111827]">{po.supplier?.name ?? "—"}</span>
             </div>
             <div>
