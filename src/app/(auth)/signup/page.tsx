@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const signupSchema = z.object({
@@ -29,6 +30,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -161,15 +163,25 @@ export default function SignupPage() {
               <label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password <span className="text-red-500">*</span>
               </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Min. 8 characters"
-                {...register("password")}
-                className={`w-full border ${
-                  errors.password ? "border-[#dc2626]" : "border-gray-300"
-                } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 8 characters"
+                  {...register("password")}
+                  className={`w-full border ${
+                    errors.password ? "border-[#dc2626]" : "border-gray-300"
+                  } rounded-md px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-[12px] text-[#dc2626]">{errors.password.message}</p>
               )}
