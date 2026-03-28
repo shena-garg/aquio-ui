@@ -573,6 +573,10 @@ function ShipmentSummaryCard({
                       return sum + (rp?.deliveredQuantity ?? 0);
                     }, 0);
                     const remaining = Math.max(0, ordered - totalShipped);
+                    const rightRemainingItem = (order.remainingItems ?? []).find(
+                      (r) => r.productId === productId && r.variantId === variantId,
+                    );
+                    const isRightForceClosed = rightRemainingItem?.status === "forcefully closed";
 
                     return (
                       <tr key={`right-${productId}:${variantId}`}>
@@ -604,12 +608,36 @@ function ShipmentSummaryCard({
                         <td
                           className={cn(
                             "h-[52px] py-2.5 pr-5 align-top text-[13px] leading-[16.9px] whitespace-nowrap border-b border-[#e5e7eb]",
-                            remaining > 0
-                              ? "font-semibold text-[#dc2626]"
-                              : "font-normal text-black",
+                            isRightForceClosed
+                              ? "font-normal text-black"
+                              : remaining > 0
+                                ? "font-semibold text-[#dc2626]"
+                                : "font-normal text-black",
                           )}
                         >
-                          <QuantityCell value={remaining} uom={uom} />
+                          {isRightForceClosed ? (
+                            <div className="flex flex-col">
+                              <span className="line-through text-[#9ca3af]">
+                                <QuantityCell value={remaining} uom={uom} />
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[11px] font-medium text-[#ea580c]">Force Closed</span>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="text-[#9ca3af] hover:text-[#6b7280] transition-colors flex-shrink-0">
+                                      <Info size={11} />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
+                                    <div>{closedByNames[rightRemainingItem?.closedBy!] ? `Force Closed by ${closedByNames[rightRemainingItem?.closedBy!]}` : "Force Closed"}</div>
+                                    {rightRemainingItem?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(rightRemainingItem.closedAt)}</div>}
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                            </div>
+                          ) : (
+                            <QuantityCell value={remaining} uom={uom} />
+                          )}
                         </td>
                       </tr>
                     );
@@ -713,10 +741,21 @@ function ShipmentSummaryCard({
                       <td
                         className={cn(
                           "py-2 px-2 pr-3 align-top text-[12px] whitespace-nowrap border-b border-[#e5e7eb]",
-                          remaining > 0 ? "font-semibold text-[#dc2626]" : "text-[#111827]",
+                          mobileRemainingItem?.status === "forcefully closed"
+                            ? "text-[#111827]"
+                            : remaining > 0 ? "font-semibold text-[#dc2626]" : "text-[#111827]",
                         )}
                       >
-                        <QuantityCell value={remaining} uom={uom} />
+                        {mobileRemainingItem?.status === "forcefully closed" ? (
+                          <div className="flex flex-col">
+                            <span className="line-through text-[#9ca3af]">
+                              <QuantityCell value={remaining} uom={uom} />
+                            </span>
+                            <span className="text-[10px] font-medium text-[#ea580c]">Force Closed</span>
+                          </div>
+                        ) : (
+                          <QuantityCell value={remaining} uom={uom} />
+                        )}
                       </td>
                     </tr>
                   );
