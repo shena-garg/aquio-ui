@@ -25,6 +25,7 @@ import {
 import { ActivityTimeline } from "@/components/activity";
 import { usersService } from "@/services/users";
 import { ForceCloseProductModal } from "@/components/purchase-orders/modals/ForceCloseProductModal";
+import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
 
 interface PODetailsTabsProps {
   order: PurchaseOrder;
@@ -1051,7 +1052,12 @@ function ProductsTable({
     variantName: string;
   } | null>(null);
   const [isForceClosing, setIsForceClosing] = useState(false);
+  const [bulkForceCloseOpen, setBulkForceCloseOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  const hasPendingProducts = remainingItems.some(
+    (r) => r.remainingQuantity > 0 && r.status !== "forcefully closed",
+  );
 
   useEffect(() => {
     const userIds = [...new Set(remainingItems.filter((i) => i.closedBy).map((i) => i.closedBy!))];
@@ -1093,8 +1099,20 @@ function ProductsTable({
 
   return (
     <>
+      {/* Force Close Multiple button */}
+      {hasPendingProducts && (
+        <div className="flex justify-end px-4 sm:px-8 pt-4 pb-0 sm:pt-6 sm:pb-0">
+          <button
+            onClick={() => setBulkForceCloseOpen(true)}
+            className="text-[12px] font-medium text-[#ea580c] hover:text-[#c2410c] hover:underline transition-colors"
+          >
+            Force Close Multiple
+          </button>
+        </div>
+      )}
+
       {/* ── Mobile: product cards ── */}
-      <div className="sm:hidden px-4 pt-4 pb-4 space-y-2">
+      <div className="sm:hidden px-4 pt-3 pb-4 space-y-2">
         {products.map((product, idx) => {
           const remaining = remainingItems.find(
             (r) =>
@@ -1444,6 +1462,16 @@ function ProductsTable({
           isSubmitting={isForceClosing}
         />
       )}
+
+      <ForceClosePOModal
+        isOpen={bulkForceCloseOpen}
+        onClose={() => setBulkForceCloseOpen(false)}
+        onSuccess={() => {
+          setBulkForceCloseOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["purchase-order"] });
+        }}
+        order={order}
+      />
     </>
   );
 }
