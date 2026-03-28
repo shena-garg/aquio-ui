@@ -91,23 +91,21 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
       {/* Panel */}
       <div className="fixed top-0 right-0 h-full w-[580px] bg-white shadow-xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
         {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-[#e5e7eb]">
-          <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#e5e7eb]">
+          <div className="flex items-center gap-2.5">
             <span className="text-[16px] font-semibold text-[#111827]">
               {po.poNumber}
             </span>
-            <div className="flex items-center gap-1.5">
-              {statusCfg && (
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.className}`}>
-                  {statusCfg.label}
-                </span>
-              )}
-              {receiptCfg && (
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${receiptCfg.className}`}>
-                  {receiptCfg.label}
-                </span>
-              )}
-            </div>
+            {statusCfg && (
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.className}`}>
+                {statusCfg.label}
+              </span>
+            )}
+            {receiptCfg && (
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${receiptCfg.className}`}>
+                {receiptCfg.label}
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
