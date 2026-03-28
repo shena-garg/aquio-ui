@@ -562,10 +562,7 @@ function ShipmentSummaryCard({
             <table className="w-full" style={{ minWidth: `${280 + receipts.length * 100 + 90}px` }}>
               <thead>
                 <tr>
-                  <th className="text-center h-[31px] py-2 pl-3 pr-1 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap sticky left-0 bg-white z-10 w-8">
-                    #
-                  </th>
-                  <th className="text-left h-[31px] py-2 px-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap sticky left-8 bg-white z-10">
+                  <th className="text-left h-[31px] py-2 pl-3 pr-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap sticky left-0 bg-white z-10">
                     Product
                   </th>
                   <th className="text-left h-[31px] py-2 px-2 text-[11px] font-semibold text-[#6b7280] border-b border-[#e5e7eb] whitespace-nowrap">
@@ -585,7 +582,7 @@ function ShipmentSummaryCard({
                 </tr>
               </thead>
               <tbody className="[&>tr:last-child>td]:border-b-0">
-                {productList.map(({ productId, variantId }, idx) => {
+                {productList.map(({ productId, variantId }) => {
                   const { name, variant } = getProductName(productId, products);
                   const ordered = getOrderedQuantity(productId, variantId, products);
                   const uom = getProductUOM(productId, variantId, products);
@@ -599,10 +596,7 @@ function ShipmentSummaryCard({
 
                   return (
                     <tr key={`mobile-${productId}:${variantId}`}>
-                      <td className="py-2 pl-3 pr-1 text-center text-[12px] text-[#6b7280] align-top border-b border-[#e5e7eb] sticky left-0 bg-white z-10 w-8">
-                        {idx + 1}
-                      </td>
-                      <td className="py-2 px-2 align-top border-b border-[#e5e7eb] sticky left-8 bg-white z-10">
+                      <td className="py-2 pl-3 pr-2 align-top border-b border-[#e5e7eb] sticky left-0 bg-white z-10">
                         <div className="flex flex-col gap-[1px]">
                           <span className="text-[12px] font-medium text-[#111827] truncate max-w-[140px]">{name}</span>
                           {variant && (
