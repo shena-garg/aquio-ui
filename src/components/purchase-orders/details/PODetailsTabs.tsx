@@ -4,6 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { Download, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   purchaseOrdersService,
   type PurchaseOrder,
   type POReceipt,
@@ -493,17 +498,21 @@ function ReceiptSummaryCard({
                         </td>
                         <td className="h-[52px] py-2.5 pr-3 pl-2 align-top border-b border-[#e5e7eb]">
                           {remainingItem?.status === "forcefully closed" ? (
-                            <div
-                              className="flex flex-col gap-0.5"
-                              title={
-                                closedByNames[remainingItem.closedBy!]
-                                  ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}`
-                                  : "Force Closed"
-                              }
-                            >
+                            <div className="flex flex-col gap-0.5">
                               <div className="flex items-center gap-1">
                                 <StatusBadge status={status} />
-                                <Info size={12} className="text-[#9ca3af] flex-shrink-0" />
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="text-[#9ca3af] hover:text-[#6b7280] transition-colors flex-shrink-0">
+                                      <Info size={12} />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
+                                    {closedByNames[remainingItem.closedBy!]
+                                      ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}`
+                                      : "Force Closed"}
+                                  </PopoverContent>
+                                </Popover>
                               </div>
                               <div className="text-[10px] text-[#9ca3af]">
                                 {formatDate(remainingItem.closedAt!)}
@@ -667,16 +676,20 @@ function ReceiptSummaryCard({
                             <span className="text-[11px] text-[#6b7280] truncate max-w-[140px]">{variant}</span>
                           )}
                           {mobileRemainingItem?.status === "forcefully closed" && (
-                            <div
-                              className="flex items-center gap-1 mt-0.5"
-                              title={
-                                closedByNames[mobileRemainingItem.closedBy!]
-                                  ? `Force Closed by ${closedByNames[mobileRemainingItem.closedBy!]}`
-                                  : "Force Closed"
-                              }
-                            >
+                            <div className="flex items-center gap-1 mt-0.5">
                               <StatusBadge status={mobileStatus} />
-                              <Info size={11} className="text-[#9ca3af] flex-shrink-0" />
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button className="text-[#9ca3af] hover:text-[#6b7280] transition-colors flex-shrink-0">
+                                    <Info size={11} />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
+                                  {closedByNames[mobileRemainingItem.closedBy!]
+                                    ? `Force Closed by ${closedByNames[mobileRemainingItem.closedBy!]}`
+                                    : "Force Closed"}
+                                </PopoverContent>
+                              </Popover>
                             </div>
                           )}
                         </div>
