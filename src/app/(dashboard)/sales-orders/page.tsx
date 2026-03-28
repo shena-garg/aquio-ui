@@ -73,6 +73,13 @@ export default function SalesOrdersPage() {
       if (raw) {
         const prefs = JSON.parse(raw);
 
+        // Migration: clear stale prefs that used the old "soNumber" key
+        if (Array.isArray(prefs.columnOrder) && prefs.columnOrder.includes("soNumber")) {
+          localStorage.removeItem(PREFS_STORAGE_KEY);
+          setPrefsLoaded(true);
+          return;
+        }
+
         if (Array.isArray(prefs.columnOrder)) {
           const saved: string[] = prefs.columnOrder;
           const merged = [
