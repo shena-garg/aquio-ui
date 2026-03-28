@@ -166,6 +166,9 @@ export const salesOrdersService = {
   forceCloseMultiple: (id: string, items: ForceCloseItem[]) =>
     apiClient.patch(`/purchase-orders/${id}/forcefully-close-multiple`, { items }),
 
+  undoForceClose: (id: string, productId: string, variantId: string) =>
+    apiClient.patch(`/purchase-orders/${id}/undo-forcefully-close`, { productId, variantId }),
+
   downloadCSV: (id: string) =>
     apiClient.patch<Blob>(`/purchase-orders/${id}/csv`, null, {
       responseType: "blob",

@@ -178,6 +178,9 @@ export const purchaseOrdersService = {
       paramsSerializer: { indexes: null },
     }),
 
+  undoForceClose: (id: string, productId: string, variantId: string) =>
+    apiClient.patch(`/purchase-orders/${id}/undo-forcefully-close`, { productId, variantId }),
+
   list: ({
     page,
     limit,
