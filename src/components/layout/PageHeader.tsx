@@ -33,7 +33,7 @@ export function PageHeader({
   const end = showPagination ? Math.min(page * limit, total) : 0;
 
   return (
-    <div className="flex flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4 sm:px-6 min-h-[55px] gap-3 flex-wrap py-2 sm:py-0 sm:flex-nowrap sm:h-[55px]">
+    <div className="flex flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-4 sm:px-6 min-h-[55px] gap-3 flex-wrap py-2 sm:py-0 sm:flex-nowrap sm:h-[55px] sticky top-[56px] lg:top-0 z-20">
 
       {/* Left side */}
       <div className="flex items-center gap-2.5 min-w-0">
