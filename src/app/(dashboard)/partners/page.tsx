@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { PartnersTable } from "@/components/partners/PartnersTable";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { partnersService } from "@/services/partners";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export default function PartnersPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function PartnersPage() {
     queryKey: ["partners", page, limit],
     queryFn: () =>
       partnersService.list({ page, limit }).then((res) => res.data),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   useEffect(() => {
@@ -58,12 +60,14 @@ export default function PartnersPage() {
         actions={actions}
       />
 
-      <div className="flex-1 overflow-auto">
-        <PartnersTable
-          partners={data?.vendorCompanies ?? []}
-          isLoading={isLoading}
-        />
-      </div>
+      <ErrorBoundary>
+        <div className="flex-1 overflow-auto">
+          <PartnersTable
+            partners={data?.vendorCompanies ?? []}
+            isLoading={isLoading}
+          />
+        </div>
+      </ErrorBoundary>
     </div>
   );
 }

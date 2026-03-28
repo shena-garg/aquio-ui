@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { dashboardService } from "@/services/dashboard";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 /* ── Period options ──────────────────────────────────────────────────────── */
 
@@ -115,6 +116,7 @@ export default function DashboardPage() {
     queryKey: ["dashboard-overview", fromDate, toDate],
     queryFn: () => dashboardService.getOverview({ fromDate, toDate }),
     enabled: !!fromDate && !!toDate,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const kpis = data?.kpis;
@@ -125,6 +127,7 @@ export default function DashboardPage() {
     <>
       <PageHeader title="Dashboard" />
 
+      <ErrorBoundary>
       <div className="flex-1 overflow-auto">
         {/* Period selector bar */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-6 px-4 sm:px-8 py-4">
@@ -276,6 +279,7 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      </ErrorBoundary>
     </>
   );
 }

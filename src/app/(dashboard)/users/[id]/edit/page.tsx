@@ -40,6 +40,7 @@ export default function EditUserPage() {
     queryKey: ["user", id],
     queryFn: () => usersService.getById(id).then((r) => r.data),
     enabled: !!id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   if (isLoading) return <EditSkeleton />;

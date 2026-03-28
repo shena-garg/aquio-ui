@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { UsersTable } from "@/components/users/UsersTable";
 import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 // ── Search field config ──────────────────────────────────────────────────────
 
@@ -64,6 +65,7 @@ export default function UsersPage() {
           ...(searchValue ? { [searchField]: searchValue } : {}),
         } as Parameters<typeof usersService.list>[0])
         .then((res) => res.data),
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   useEffect(() => {
@@ -284,15 +286,17 @@ export default function UsersPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto">
-        <UsersTable
-          users={data?.users ?? []}
-          roles={roles ?? []}
-          isLoading={isLoading}
-          activeTab={activeTab}
-          onRefresh={refetch}
-        />
-      </div>
+      <ErrorBoundary>
+        <div className="flex-1 overflow-auto">
+          <UsersTable
+            users={data?.users ?? []}
+            roles={roles ?? []}
+            isLoading={isLoading}
+            activeTab={activeTab}
+            onRefresh={refetch}
+          />
+        </div>
+      </ErrorBoundary>
     </div>
   );
 }

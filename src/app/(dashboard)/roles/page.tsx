@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { RolesTable } from "@/components/roles/RolesTable";
 import { rolesService } from "@/services/roles";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export default function RolesPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function RolesPage() {
   const { data: roles, isLoading } = useQuery({
     queryKey: ["roles"],
     queryFn: () => rolesService.list().then((r) => r.data),
+    staleTime: 5 * 60 * 1000, // 5 minutes — roles change infrequently
   });
 
   const actions = (
@@ -31,9 +33,11 @@ export default function RolesPage() {
     <div className="flex flex-1 flex-col">
       <PageHeader title="Roles" actions={actions} />
 
-      <div className="flex-1 overflow-auto">
-        <RolesTable roles={roles ?? []} isLoading={isLoading} />
-      </div>
+      <ErrorBoundary>
+        <div className="flex-1 overflow-auto">
+          <RolesTable roles={roles ?? []} isLoading={isLoading} />
+        </div>
+      </ErrorBoundary>
     </div>
   );
 }
