@@ -494,16 +494,18 @@ function ReceiptSummaryCard({
                         <td className="h-[52px] py-2.5 pr-3 pl-2 align-top border-b border-[#e5e7eb]">
                           {remainingItem?.status === "forcefully closed" ? (
                             <div
-                              className="flex items-center gap-1"
+                              className="flex flex-col gap-0.5"
                               title={
                                 closedByNames[remainingItem.closedBy!]
                                   ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}`
                                   : "Force Closed"
                               }
                             >
-                              <StatusBadge status={status} />
-                              <Info size={12} className="text-[#9ca3af] flex-shrink-0" />
-                              <div className="text-[10px] text-[#9ca3af] mt-0.5">
+                              <div className="flex items-center gap-1">
+                                <StatusBadge status={status} />
+                                <Info size={12} className="text-[#9ca3af] flex-shrink-0" />
+                              </div>
+                              <div className="text-[10px] text-[#9ca3af]">
                                 {formatDate(remainingItem.closedAt!)}
                               </div>
                             </div>
