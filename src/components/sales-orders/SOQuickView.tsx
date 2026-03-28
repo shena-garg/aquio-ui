@@ -159,7 +159,6 @@ export function SOQuickView({ po, onClose }: SOQuickViewProps) {
                     <th className="text-right py-2 px-2 text-[11px] font-semibold text-[#6b7280] whitespace-nowrap">Qty</th>
                     <th className="text-right py-2 px-2 text-[11px] font-semibold text-[#6b7280] whitespace-nowrap">Remaining</th>
                     <th className="text-right py-2 px-2 text-[11px] font-semibold text-[#6b7280] whitespace-nowrap">Price</th>
-                    <th className="text-right py-2 px-2 text-[11px] font-semibold text-[#6b7280] whitespace-nowrap">GST%</th>
                     <th className="text-right py-2 pl-2 text-[11px] font-semibold text-[#6b7280] whitespace-nowrap">Total</th>
                   </tr>
                 </thead>
@@ -215,9 +214,7 @@ export function SOQuickView({ po, onClose }: SOQuickViewProps) {
                         </td>
                         <td className="py-3 px-2 text-right text-[13px] text-[#111827] whitespace-nowrap">
                           ₹{price.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3 px-2 text-right text-[13px] text-[#9ca3af] whitespace-nowrap">
-                          {p.gst.value}%
+                          <span className="text-[#9ca3af] ml-0.5">@ {p.gst.value}%</span>
                         </td>
                         <td className="py-3 pl-2 text-right text-[13px] font-medium text-[#111827] whitespace-nowrap">
                           ₹{lineTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -248,9 +245,7 @@ export function SOQuickView({ po, onClose }: SOQuickViewProps) {
                         </span>
                       ) : null}
                     </td>
-                    {/* Price column — empty */}
-                    <td className="py-3 px-2" />
-                    {/* GST% column — "Total" label */}
+                    {/* Price column — "Total" label */}
                     <td className="py-3 px-2 text-right text-[13px] font-semibold text-[#111827]">Total</td>
                     {/* Total column — Total Amount */}
                     <td className="py-3 pl-2 text-right whitespace-nowrap">
