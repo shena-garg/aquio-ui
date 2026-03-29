@@ -36,4 +36,12 @@ export const authService = {
     apiClient.patch("/users/my-own", payload),
   changePassword: (payload: ChangePasswordPayload) =>
     apiClient.patch("/users/change-password", payload),
+  forgotPassword: (email: string) =>
+    apiClient.post<{ message: string }>("/users/forgot-password", { email }),
+  setPassword: (email: string, code: string, newPassword: string) =>
+    apiClient.post<{ message: string }>("/users/set-password", {
+      email,
+      code,
+      newPassword,
+    }),
 };
