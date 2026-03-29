@@ -39,4 +39,14 @@ export const organizationSettingsService = {
       "/organization-settings/my-own",
       payload
     ),
+  addPOCancelReason: (reason: string) =>
+    apiClient.post<OrganizationSettings>(
+      "/organization-settings/my-own/po-cancel-reason",
+      { reason }
+    ),
+  addSOCancelReason: (reason: string) =>
+    apiClient.post<OrganizationSettings>(
+      "/organization-settings/my-own/so-cancel-reason",
+      { reason }
+    ),
 };

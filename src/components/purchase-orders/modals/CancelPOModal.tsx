@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Loader2, X } from "lucide-react";
+import { Search, Loader2, X, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -40,11 +40,13 @@ export function CancelPOModal({
   orderType = "purchase",
 }: CancelPOModalProps) {
   const isSales = orderType === "sales";
+  const queryClient = useQueryClient();
   const [reason, setReason] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddingReason, setIsAddingReason] = useState(false);
 
   const { data: settings, isLoading: loadingReasons } = useQuery({
     queryKey: ["organization-settings"],
@@ -52,10 +54,16 @@ export function CancelPOModal({
     staleTime: 10 * 60 * 1000,
   });
 
-  const reasons = settings?.poCancelReasons ?? [];
+  const reasons = isSales
+    ? settings?.soCancelReasons ?? []
+    : settings?.poCancelReasons ?? [];
   const filteredReasons = reasons.filter((r) =>
     r.toLowerCase().includes(inputValue.toLowerCase())
   );
+
+  const canAddNewReason =
+    inputValue.trim().length > 0 &&
+    !reasons.some((r) => r.toLowerCase() === inputValue.trim().toLowerCase());
 
   function resetForm() {
     setReason("");
@@ -88,6 +96,32 @@ export function CancelPOModal({
       // Restore display to selected reason (or clear if nothing selected)
       setInputValue(reason);
     }, 150);
+  }
+
+  async function handleAddNewReason() {
+    const newReason = inputValue.trim();
+    if (!newReason || isAddingReason) return;
+
+    setIsAddingReason(true);
+    try {
+      if (isSales) {
+        await organizationSettingsService.addSOCancelReason(newReason);
+      } else {
+        await organizationSettingsService.addPOCancelReason(newReason);
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["organization-settings"],
+      });
+      handleSelectReason(newReason);
+      toast.success("Reason added");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to add reason";
+      toast.error(message);
+    } finally {
+      setIsAddingReason(false);
+    }
   }
 
   async function handleSubmit() {
@@ -172,7 +206,7 @@ export function CancelPOModal({
                   />
                   <input
                     type="text"
-                    placeholder="Search reason..."
+                    placeholder="Search or add a reason..."
                     value={inputValue}
                     onChange={handleInputChange}
                     onFocus={() => setDropdownOpen(true)}
@@ -182,24 +216,42 @@ export function CancelPOModal({
                 </div>
 
                 {dropdownOpen && (
-                  <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                    {filteredReasons.length === 0 ? (
+                  <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {filteredReasons.map((r) => (
+                      <button
+                        key={r}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // prevent input blur before selection
+                          handleSelectReason(r);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        {r}
+                      </button>
+                    ))}
+
+                    {canAddNewReason && (
+                      <button
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleAddNewReason();
+                        }}
+                        disabled={isAddingReason}
+                        className="w-full text-left px-3 py-2 text-sm text-teal-700 hover:bg-teal-50 border-t border-gray-100 flex items-center gap-1.5"
+                      >
+                        {isAddingReason ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Plus size={14} />
+                        )}
+                        Add &quot;{inputValue.trim()}&quot;
+                      </button>
+                    )}
+
+                    {filteredReasons.length === 0 && !canAddNewReason && (
                       <div className="px-3 py-2 text-sm text-gray-400">
                         No reasons found
                       </div>
-                    ) : (
-                      filteredReasons.map((r) => (
-                        <button
-                          key={r}
-                          onMouseDown={(e) => {
-                            e.preventDefault(); // prevent input blur before selection
-                            handleSelectReason(r);
-                          }}
-                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        >
-                          {r}
-                        </button>
-                      ))
                     )}
                   </div>
                 )}
