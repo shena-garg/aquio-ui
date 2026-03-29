@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Shield } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -28,6 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { Role, RolePermission } from "@/services/roles";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // -- Entity label mapping --
 
@@ -204,7 +205,13 @@ export function RolesTable({ roles, isLoading }: RolesTableProps) {
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : roles.length === 0 ? (
-          <p className="text-center text-[13px] text-gray-400 py-12">No roles found</p>
+          <EmptyState
+            icon={<Shield className="h-6 w-6 text-[#0d9488]" />}
+            title="No roles yet"
+            description="Create roles to manage permissions for your team members."
+            actionLabel="Add Role"
+            onAction={() => router.push("/roles/create")}
+          />
         ) : (
           roles.map((role) => (
             <div
@@ -253,11 +260,14 @@ export function RolesTable({ roles, isLoading }: RolesTableProps) {
               Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
             ) : roles.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="h-32 text-center text-[13px] text-gray-400"
-                >
-                  No roles found
+                <TableCell colSpan={4} className="p-0">
+                  <EmptyState
+                    icon={<Shield className="h-6 w-6 text-[#0d9488]" />}
+                    title="No roles yet"
+                    description="Create roles to manage permissions for your team members."
+                    actionLabel="Add Role"
+                    onAction={() => router.push("/roles/create")}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

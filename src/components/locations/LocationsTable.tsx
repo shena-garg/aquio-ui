@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import { MapPin, MoreHorizontal } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Location } from "@/services/locations";
 import { SetDefaultLocationModal } from "@/components/locations/SetDefaultLocationModal";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -144,7 +145,13 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : locations.length === 0 ? (
-          <p className="text-center text-[13px] text-gray-400 py-12">No locations found.</p>
+          <EmptyState
+            icon={<MapPin className="h-6 w-6 text-[#0d9488]" />}
+            title="No locations yet"
+            description="Add your first location with address and GST details."
+            actionLabel="Add Location"
+            onAction={() => router.push("/locations/create")}
+          />
         ) : (
           locations.map((location) => (
             <div
@@ -209,11 +216,14 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
               Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
             ) : locations.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-32 text-center text-[13px] text-gray-400"
-                >
-                  No locations found.
+                <TableCell colSpan={6} className="p-0">
+                  <EmptyState
+                    icon={<MapPin className="h-6 w-6 text-[#0d9488]" />}
+                    title="No locations yet"
+                    description="Add your first location with address and GST details."
+                    actionLabel="Add Location"
+                    onAction={() => router.push("/locations/create")}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

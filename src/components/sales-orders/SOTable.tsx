@@ -3,7 +3,7 @@
 import { CSSProperties, Fragment, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, MoreHorizontal } from "lucide-react";
+import { Eye, FileText, MoreHorizontal } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -22,6 +22,7 @@ import {
 import type { SalesOrder, SOOrderStatus } from "@/services/sales-orders";
 import { QuantityCell } from "@/components/ui/QuantityCell";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
@@ -580,7 +581,13 @@ export function SOTable({
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : orders.length === 0 ? (
-          <p className="text-center text-[13px] text-gray-400 py-12">No sales orders found.</p>
+          <EmptyState
+            icon={<FileText className="h-6 w-6 text-[#0d9488]" />}
+            title="No sales orders yet"
+            description="Create your first sales order to start tracking orders with your buyers."
+            actionLabel="New Sales Order"
+            onAction={() => router.push("/sales-orders/create")}
+          />
         ) : (
           orders.map((order) => {
             const statusCfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.draft;
@@ -676,11 +683,14 @@ export function SOTable({
                 ))
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={totalCols}
-                    className="h-32 text-center text-[13px] text-gray-400"
-                  >
-                    No sales orders found.
+                  <TableCell colSpan={totalCols} className="p-0">
+                    <EmptyState
+                      icon={<FileText className="h-6 w-6 text-[#0d9488]" />}
+                      title="No sales orders yet"
+                      description="Create your first sales order to start tracking orders with your buyers."
+                      actionLabel="New Sales Order"
+                      onAction={() => router.push("/sales-orders/create")}
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

@@ -2,7 +2,7 @@
 
 import { CSSProperties, Fragment, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Package } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import {
@@ -33,6 +33,7 @@ import {
 import type { Product } from "@/services/products";
 import { productsService } from "@/services/products";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ── Column widths (px) for sticky offset calculation ──────────────────────────
 
@@ -337,7 +338,13 @@ export function ProductsTable({
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : products.length === 0 ? (
-          <p className="text-center text-[13px] text-gray-400 py-12">No products found.</p>
+          <EmptyState
+            icon={<Package className="h-6 w-6 text-[#0d9488]" />}
+            title="No products yet"
+            description="Add your first product to build your catalog and start creating orders."
+            actionLabel="Add Product"
+            onAction={() => router.push("/products/new")}
+          />
         ) : (
           products.map((product) => (
             <div
@@ -401,11 +408,14 @@ export function ProductsTable({
               ))
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={totalCols}
-                  className="h-32 text-center text-[13px] text-gray-400"
-                >
-                  No products found.
+                <TableCell colSpan={totalCols} className="p-0">
+                  <EmptyState
+                    icon={<Package className="h-6 w-6 text-[#0d9488]" />}
+                    title="No products yet"
+                    description="Add your first product to build your catalog and start creating orders."
+                    actionLabel="Add Product"
+                    onAction={() => router.push("/products/new")}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

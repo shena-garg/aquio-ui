@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, UserPlus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -21,6 +21,7 @@ import {
 import type { User } from "@/services/users";
 import type { Role } from "@/services/roles";
 import { DeactivateUserModal } from "@/components/users/DeactivateUserModal";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -112,7 +113,13 @@ export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: Us
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : users.length === 0 ? (
-          <p className="text-center text-[13px] text-gray-400 py-12">No users found.</p>
+          <EmptyState
+            icon={<UserPlus className="h-6 w-6 text-[#0d9488]" />}
+            title="No users yet"
+            description="Invite team members to collaborate on your orders and inventory."
+            actionLabel="Add User"
+            onAction={() => router.push("/users/create")}
+          />
         ) : (
           users.map((user) => (
             <div
@@ -159,11 +166,14 @@ export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: Us
               Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={showActions ? 5 : 4}
-                  className="h-32 text-center text-[13px] text-gray-400"
-                >
-                  No users found.
+                <TableCell colSpan={showActions ? 5 : 4} className="p-0">
+                  <EmptyState
+                    icon={<UserPlus className="h-6 w-6 text-[#0d9488]" />}
+                    title="No users yet"
+                    description="Invite team members to collaborate on your orders and inventory."
+                    actionLabel="Add User"
+                    onAction={() => router.push("/users/create")}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

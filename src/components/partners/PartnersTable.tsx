@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Building2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -10,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Partner } from "@/services/partners";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 function SkeletonRow() {
   return (
@@ -58,11 +60,14 @@ export function PartnersTable({ partners, isLoading }: PartnersTableProps) {
             Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
           ) : partners.length === 0 ? (
             <TableRow>
-              <TableCell
-                colSpan={4}
-                className="h-32 text-center text-[13px] text-gray-400"
-              >
-                No partners found.
+              <TableCell colSpan={4} className="p-0">
+                <EmptyState
+                  icon={<Building2 className="h-6 w-6 text-[#0d9488]" />}
+                  title="No partners yet"
+                  description="Add your first partner to start creating purchase and sales orders."
+                  actionLabel="Add Partner"
+                  onAction={() => router.push("/partners/new")}
+                />
               </TableCell>
             </TableRow>
           ) : (

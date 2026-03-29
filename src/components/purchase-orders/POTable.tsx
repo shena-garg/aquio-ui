@@ -22,6 +22,8 @@ import {
 import type { PurchaseOrder, POOrderStatus } from "@/services/purchase-orders";
 import { QuantityCell } from "@/components/ui/QuantityCell";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { FileText } from "lucide-react";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
@@ -580,7 +582,13 @@ export function POTable({
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : orders.length === 0 ? (
-          <p className="text-center text-[13px] text-gray-400 py-12">No purchase orders found.</p>
+          <EmptyState
+            icon={<FileText className="h-6 w-6 text-[#0d9488]" />}
+            title="No purchase orders yet"
+            description="Create your first purchase order to start tracking orders with your suppliers."
+            actionLabel="New Purchase Order"
+            onAction={() => router.push("/purchase-orders/create")}
+          />
         ) : (
           orders.map((order) => {
             const statusCfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.draft;
@@ -676,11 +684,14 @@ export function POTable({
                 ))
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={totalCols}
-                    className="h-32 text-center text-[13px] text-gray-400"
-                  >
-                    No purchase orders found.
+                  <TableCell colSpan={totalCols}>
+                    <EmptyState
+                      icon={<FileText className="h-6 w-6 text-[#0d9488]" />}
+                      title="No purchase orders yet"
+                      description="Create your first purchase order to start tracking orders with your suppliers."
+                      actionLabel="New Purchase Order"
+                      onAction={() => router.push("/purchase-orders/create")}
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
