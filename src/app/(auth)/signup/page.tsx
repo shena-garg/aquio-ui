@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { authService } from "@/services/auth";
 
 const signupSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
@@ -43,12 +44,22 @@ export default function SignupPage() {
 
   async function onSubmit(values: SignupFormValues) {
     try {
-      // TODO: Replace with actual signup API call
-      console.log("Signup payload:", values);
-      toast.success("Account created successfully! Please log in.");
-      router.push("/login");
-    } catch {
-      toast.error("Sign up failed. Please try again.");
+      const response = await authService.signup({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        companyName: values.companyName,
+        phoneNumber: values.phone,
+      });
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      toast.success("Account created successfully!");
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Sign up failed. Please try again.";
+      toast.error(message);
     }
   }
 

@@ -10,11 +10,22 @@ export interface User {
   name: string;
   email: string;
   roleId?: string;
+  accountVerified?: boolean;
 }
 
 export interface AuthResponse {
   accessToken: string;
+  refreshToken?: string;
   user: User;
+  organization?: { _id: string; name: string };
+}
+
+export interface SignupPayload {
+  name: string;
+  email: string;
+  password: string;
+  companyName: string;
+  phoneNumber?: string;
 }
 
 export interface UpdateProfilePayload {
@@ -44,4 +55,10 @@ export const authService = {
       code,
       newPassword,
     }),
+  signup: (data: SignupPayload) =>
+    apiClient.post<AuthResponse>("/organizations", data),
+  verifyCode: (code: string) =>
+    apiClient.post<User>("/users/verify-code", { code }),
+  resendVerificationCode: () =>
+    apiClient.post<{ message: string }>("/users/resend-verification-code"),
 };
