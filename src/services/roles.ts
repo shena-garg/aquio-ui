@@ -26,5 +26,5 @@ export const rolesService = {
   getById: (id: string) => apiClient.get<Role>(`/roles/${id}`),
   create: (payload: CreateRolePayload) => apiClient.post("/roles", payload),
   update: (id: string, payload: CreateRolePayload) =>
-    apiClient.put(`/roles/${id}`, payload),
+    apiClient.patch(`/roles/${id}`, payload),
 };
