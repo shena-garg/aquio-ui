@@ -57,8 +57,8 @@ export const authService = {
     }),
   signup: (data: SignupPayload) =>
     apiClient.post<AuthResponse>("/organizations", data),
-  verifyCode: (code: string) =>
-    apiClient.post<User>("/users/verify-code", { code }),
-  resendVerificationCode: () =>
-    apiClient.post<{ message: string }>("/users/resend-verification-code"),
+  verifyCode: (email: string, code: string) =>
+    apiClient.post<User>("/users/verify-code", { email, code }),
+  resendVerificationCode: (email: string) =>
+    apiClient.post<{ message: string }>("/users/resend-verification-code", { email }),
 };

@@ -27,7 +27,7 @@ export function VerificationBanner() {
     if (!code || code.length !== 6 || isVerifying) return;
     setIsVerifying(true);
     try {
-      const response = await authService.verifyCode(code);
+      const response = await authService.verifyCode(user!.email, code);
       const updatedUser = { ...user!, accountVerified: true, ...response.data };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
@@ -48,7 +48,7 @@ export function VerificationBanner() {
     if (isResending) return;
     setIsResending(true);
     try {
-      await authService.resendVerificationCode();
+      await authService.resendVerificationCode(user!.email);
       toast.success("Verification code sent to your email");
     } catch (err: unknown) {
       const message =
