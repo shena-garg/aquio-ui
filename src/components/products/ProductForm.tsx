@@ -759,15 +759,17 @@ export function ProductForm({ editId }: ProductFormProps) {
     if (!hsnCode.trim()) errors.hsnCode = "HSN code is required.";
     if (!gst) errors.gst = "GST is required.";
 
-    // Validate variants - at least one with a name
-    const validVariants = variantColumns.filter((v) => v.name.trim());
-    if (validVariants.length === 0) {
-      errors.variants = "At least one variant with a name is required.";
+    // Build effective variants — auto-create "Default" if none provided
+    let effectiveVariants = variantColumns.filter((v) => v.name.trim());
+    if (effectiveVariants.length === 0) {
+      // Auto-create a Default variant using existing columns (if any) or empty
+      const fallback = variantColumns.length > 0 ? variantColumns[0] : makeEmptyVariantColumn();
+      effectiveVariants = [{ ...fallback, name: "Default" }];
     }
 
-    // Check required attributes have values in all named variants
+    // Check required attributes have values in all variants
     const requiredRows = attributeRows.filter((r) => r.required);
-    const hasIncompleteAttrs = validVariants.some((v) =>
+    const hasIncompleteAttrs = effectiveVariants.some((v) =>
       requiredRows.some((r) => !v.values[r.id]?.trim())
     );
     if (hasIncompleteAttrs) {
@@ -789,8 +791,8 @@ export function ProductForm({ editId }: ProductFormProps) {
         description: description.trim() || undefined,
         termsOfConditions: terms.length > 0 ? terms : undefined,
         files: files.length > 0 ? files.map((f) => ({ id: f.id, name: f.name })) : undefined,
-        variants: validVariants.map((v) => ({
-          name: v.name.trim(),
+        variants: effectiveVariants.map((v) => ({
+          name: v.name.trim() || "Default",
           customAttributes: attributeRows
             .filter((r) => r.label.trim())
             .map((r) => ({
