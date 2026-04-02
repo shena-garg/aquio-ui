@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import apiClient from "@/lib/api-client";
 import {
   categoriesService,
@@ -493,6 +494,9 @@ export function ProductForm({ editId }: ProductFormProps) {
   const [createCategoryModal, setCreateCategoryModal] = useState<
     { mode: "category" } | { mode: "subcategory"; parentId: string; parentName: string } | null
   >(null);
+  const [addGstOpen, setAddGstOpen] = useState(false);
+  const [newGstValue, setNewGstValue] = useState("");
+  const [addingGst, setAddingGst] = useState(false);
   const [sku, setSku] = useState("");
   const [hsnCode, setHsnCode] = useState("");
   const [gst, setGst] = useState<string>("");
@@ -607,6 +611,32 @@ export function ProductForm({ editId }: ProductFormProps) {
     const catData = await categoriesService.list().then((r) => r.data);
     setCategories(catData.categories ?? []);
     setSubCategoryId(created._id);
+  }
+
+  async function handleAddGst() {
+    const val = parseFloat(newGstValue);
+    if (isNaN(val) || val < 0) {
+      toast.error("Enter a valid GST percentage");
+      return;
+    }
+    setAddingGst(true);
+    try {
+      await apiClient.post("/organization-settings/my-own/applicable-gst", { gst: val });
+      // Refresh settings to get updated GST list
+      const settingsData = await organizationSettingsService.getMyOwn().then((r) => r.data);
+      setSettings(settingsData);
+      setGst(String(val));
+      setAddGstOpen(false);
+      setNewGstValue("");
+      toast.success(`GST ${val}% added`);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to add GST rate";
+      toast.error(message);
+    } finally {
+      setAddingGst(false);
+    }
   }
 
   // Terms
@@ -977,6 +1007,8 @@ export function ProductForm({ editId }: ProductFormProps) {
                   onChange={(val) => setGst(val)}
                   placeholder="Search GST rate..."
                   hasError={attempted && !!fieldErrors.gst}
+                  onCreateNew={() => setAddGstOpen(true)}
+                  createNewLabel="Add New GST Rate"
                 />
               </div>
 
@@ -1380,6 +1412,48 @@ export function ProductForm({ editId }: ProductFormProps) {
           }
         }}
       />
+
+      {/* Add GST Rate Modal */}
+      <Dialog open={addGstOpen} onOpenChange={(v) => { if (!v) { setAddGstOpen(false); setNewGstValue(""); } }}>
+        <DialogContent showCloseButton={false} className="max-w-[360px] p-0 gap-0">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <DialogTitle className="text-base font-semibold text-gray-900">
+              Add GST Rate
+            </DialogTitle>
+            <button onClick={() => { setAddGstOpen(false); setNewGstValue(""); }} className="text-gray-400 hover:text-gray-600">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="px-5 py-5">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              GST Percentage <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="e.g. 18"
+                value={newGstValue}
+                onChange={(e) => setNewGstValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddGst()}
+                autoFocus
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
+              />
+              <span className="text-sm text-gray-500">%</span>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">
+            <Button variant="outline" onClick={() => { setAddGstOpen(false); setNewGstValue(""); }} disabled={addingGst} className="border-gray-200 text-gray-600">
+              Cancel
+            </Button>
+            <Button onClick={handleAddGst} disabled={addingGst || !newGstValue.trim()} className="bg-[#0d9488] hover:bg-[#0f766e] text-white">
+              {addingGst && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              Add
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
