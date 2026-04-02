@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { locationsService } from "@/services/locations";
 
@@ -33,6 +33,34 @@ interface FormErrors {
   country?: string;
 }
 
+// ── Pin code lookup ──────────────────────────────────────────────────────────
+
+async function lookupPinCode(
+  pin: string
+): Promise<{ city: string; state: string; country: string } | null> {
+  if (!/^\d{6}$/.test(pin)) return null; // Indian pin codes are 6 digits
+  try {
+    const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+    const data = await res.json();
+    if (
+      data?.[0]?.Status === "Success" &&
+      data[0].PostOffice?.length > 0
+    ) {
+      const po = data[0].PostOffice[0];
+      return {
+        city: po.District ?? po.Division ?? "",
+        state: po.State ?? "",
+        country: po.Country ?? "India",
+      };
+    }
+  } catch {
+    // Silently fail — user can fill manually
+  }
+  return null;
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
 export function LocationForm({ mode, locationId, initialValues }: LocationFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -49,6 +77,31 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
   const [isDefault, setIsDefault] = useState(initialValues?.isDefault ?? false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pinLooking, setPinLooking] = useState(false);
+
+  // ── Pin code auto-fill ─────────────────────────────────────────────────────
+
+  const handleZipChange = useCallback(
+    async (value: string) => {
+      setZip(value);
+
+      // Auto-lookup when 6 digits entered (Indian pin code)
+      if (/^\d{6}$/.test(value)) {
+        setPinLooking(true);
+        const result = await lookupPinCode(value);
+        setPinLooking(false);
+
+        if (result) {
+          setCity((prev) => prev || result.city);
+          setState((prev) => prev || result.state);
+          setCountry((prev) => prev || result.country);
+        }
+      }
+    },
+    []
+  );
+
+  // ── Validation ─────────────────────────────────────────────────────────────
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -60,6 +113,8 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
     if (!country.trim()) errs.country = "Country is required";
     return errs;
   }
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
 
   async function handleSubmit() {
     const errs = validate();
@@ -100,8 +155,12 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
     }
   }
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
   const inputClass = (error?: string) =>
     `w-full border ${error ? "border-[#dc2626]" : "border-gray-300"} rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`;
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-1 flex-col">
@@ -188,6 +247,51 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
                 />
               </div>
 
+              {/* Pin Code & Country — side by side */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Pin / Zip Code <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="e.g. 110001"
+                      value={zip}
+                      onChange={(e) => handleZipChange(e.target.value)}
+                      className={inputClass(errors.zip)}
+                    />
+                    {pinLooking && (
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-[#0d9488]" />
+                      </div>
+                    )}
+                  </div>
+                  {errors.zip && (
+                    <p className="text-[12px] text-[#dc2626] mt-1">{errors.zip}</p>
+                  )}
+                  <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
+                    <MapPin size={10} />
+                    Enter 6-digit pin code to auto-fill city &amp; state
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Country <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className={inputClass(errors.country)}
+                  />
+                  {errors.country && (
+                    <p className="text-[12px] text-[#dc2626] mt-1">{errors.country}</p>
+                  )}
+                </div>
+              </div>
+
               {/* City & State — side by side */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -218,40 +322,6 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
                   />
                   {errors.state && (
                     <p className="text-[12px] text-[#dc2626] mt-1">{errors.state}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Zip & Country — side by side */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Zip Code <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter zip code"
-                    value={zip}
-                    onChange={(e) => setZip(e.target.value)}
-                    className={inputClass(errors.zip)}
-                  />
-                  {errors.zip && (
-                    <p className="text-[12px] text-[#dc2626] mt-1">{errors.zip}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Country <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className={inputClass(errors.country)}
-                  />
-                  {errors.country && (
-                    <p className="text-[12px] text-[#dc2626] mt-1">{errors.country}</p>
                   )}
                 </div>
               </div>
