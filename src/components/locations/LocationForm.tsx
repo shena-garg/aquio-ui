@@ -35,6 +35,42 @@ interface FormErrors {
 
 // ── Pin code lookup ──────────────────────────────────────────────────────────
 
+// ── GST validation & state extraction ─────────────────────────────────────
+
+const GST_STATE_CODES: Record<string, string> = {
+  "01": "Jammu & Kashmir", "02": "Himachal Pradesh", "03": "Punjab",
+  "04": "Chandigarh", "05": "Uttarakhand", "06": "Haryana",
+  "07": "Delhi", "08": "Rajasthan", "09": "Uttar Pradesh",
+  "10": "Bihar", "11": "Sikkim", "12": "Arunachal Pradesh",
+  "13": "Nagaland", "14": "Manipur", "15": "Mizoram",
+  "16": "Tripura", "17": "Meghalaya", "18": "Assam",
+  "19": "West Bengal", "20": "Jharkhand", "21": "Odisha",
+  "22": "Chattisgarh", "23": "Madhya Pradesh", "24": "Gujarat",
+  "26": "Dadra & Nagar Haveli and Daman & Diu", "27": "Maharashtra",
+  "28": "Andhra Pradesh", "29": "Karnataka", "30": "Goa",
+  "31": "Lakshadweep", "32": "Kerala", "33": "Tamil Nadu",
+  "34": "Puducherry", "35": "Andaman & Nicobar Islands",
+  "36": "Telangana", "37": "Andhra Pradesh (New)", "38": "Ladakh",
+  "97": "Other Territory",
+};
+
+const GST_REGEX = /^\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z\d][A-Z\d]$/;
+
+function validateGst(gst: string): { valid: boolean; state?: string; error?: string } {
+  const cleaned = gst.trim().toUpperCase();
+  if (!cleaned) return { valid: true }; // optional field
+  if (cleaned.length !== 15) return { valid: false, error: "GST must be 15 characters" };
+  if (!GST_REGEX.test(cleaned)) return { valid: false, error: "Invalid GST format" };
+
+  const stateCode = cleaned.substring(0, 2);
+  const stateName = GST_STATE_CODES[stateCode];
+  if (!stateName) return { valid: false, error: `Invalid state code: ${stateCode}` };
+
+  return { valid: true, state: stateName };
+}
+
+// ── Pin code lookup ──────────────────────────────────────────────────────────
+
 async function lookupPinCode(
   pin: string
 ): Promise<{ city: string; state: string; country: string } | null> {
@@ -76,6 +112,7 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
   const [gstNumber, setGstNumber] = useState(initialValues?.gstNumber ?? "");
   const [isDefault, setIsDefault] = useState(initialValues?.isDefault ?? false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [gstError, setGstError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pinLooking, setPinLooking] = useState(false);
 
@@ -101,6 +138,35 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
     []
   );
 
+  // ── GST auto-fill ───────────────────────────────────────────────────────────
+
+  function handleGstChange(value: string) {
+    const upper = value.toUpperCase();
+    setGstNumber(upper);
+
+    if (!upper.trim()) {
+      setGstError("");
+      return;
+    }
+
+    if (upper.length === 15) {
+      const result = validateGst(upper);
+      if (!result.valid) {
+        setGstError(result.error ?? "Invalid GST");
+      } else {
+        setGstError("");
+        if (result.state) {
+          setState((prev) => prev || result.state!);
+          setCountry((prev) => prev || "India");
+        }
+      }
+    } else if (upper.length > 15) {
+      setGstError("GST must be 15 characters");
+    } else {
+      setGstError(""); // still typing
+    }
+  }
+
   // ── Validation ─────────────────────────────────────────────────────────────
 
   function validate(): FormErrors {
@@ -119,7 +185,15 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
   async function handleSubmit() {
     const errs = validate();
     setErrors(errs);
-    if (Object.keys(errs).length > 0 || isSubmitting) return;
+    // Also check GST validity
+    if (gstNumber.trim()) {
+      const gstResult = validateGst(gstNumber);
+      if (!gstResult.valid) {
+        setGstError(gstResult.error ?? "Invalid GST");
+        return;
+      }
+    }
+    if (Object.keys(errs).length > 0 || gstError || isSubmitting) return;
 
     const payload = {
       name: name.trim(),
@@ -209,11 +283,23 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter GST number"
+                  placeholder="e.g. 27AAAAA0000A1Z5"
+                  maxLength={15}
                   value={gstNumber}
-                  onChange={(e) => setGstNumber(e.target.value)}
-                  className={inputClass()}
+                  onChange={(e) => handleGstChange(e.target.value)}
+                  className={inputClass(gstError || undefined)}
                 />
+                {gstError ? (
+                  <p className="text-[12px] text-[#dc2626] mt-1">{gstError}</p>
+                ) : gstNumber.length === 15 && !gstError ? (
+                  <p className="text-[11px] text-[#059669] mt-1">
+                    ✓ Valid GST — {GST_STATE_CODES[gstNumber.substring(0, 2)] ?? ""}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    15-character GST number — auto-fills state from state code
+                  </p>
+                )}
               </div>
 
               {/* Address Line 1 */}
