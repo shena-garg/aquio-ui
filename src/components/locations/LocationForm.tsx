@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ interface FormErrors {
 
 export function LocationForm({ mode, locationId, initialValues }: LocationFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isEdit = mode === "edit";
 
   const [name, setName] = useState(initialValues?.name ?? "");
@@ -85,6 +87,7 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
         await locationsService.create(payload);
         toast.success("Location created successfully");
       }
+      await queryClient.invalidateQueries({ queryKey: ["locations"] });
       router.push("/locations");
     } catch (err: unknown) {
       const message =

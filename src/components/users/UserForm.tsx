@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface FormErrors {
 
 export function UserForm({ mode, userId, initialValues }: UserFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState(initialValues?.name ?? "");
   const [phoneNumber, setPhoneNumber] = useState(initialValues?.phoneNumber ?? "");
@@ -88,6 +89,7 @@ export function UserForm({ mode, userId, initialValues }: UserFormProps) {
         await usersService.create(payload);
         toast.success("User created successfully");
       }
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
       router.push("/users");
     } catch (err: unknown) {
       const message =

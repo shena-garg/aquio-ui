@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Lock,
@@ -447,6 +448,7 @@ interface ProductFormProps {
 export function ProductForm({ editId }: ProductFormProps) {
   const isEditMode = !!editId;
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // ── Bootstrap data ──────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
@@ -739,6 +741,7 @@ export function ProductForm({ editId }: ProductFormProps) {
 
       const { data: created } = await productsService.create(payload);
       toast.success("Product created successfully.");
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
       router.push(`/products/${created._id}`);
     } catch (err: unknown) {
       const message =

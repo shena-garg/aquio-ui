@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -342,6 +343,7 @@ function EntitySection({
 
 export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isEdit = mode === "edit";
 
   const [name, setName] = useState(initialValues?.name ?? "");
@@ -410,6 +412,7 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
         await rolesService.create(payload);
         toast.success("Role created successfully");
       }
+      await queryClient.invalidateQueries({ queryKey: ["roles"] });
       router.push("/roles");
     } catch (err: unknown) {
       const message =
