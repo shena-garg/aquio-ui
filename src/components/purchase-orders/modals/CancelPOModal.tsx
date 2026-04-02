@@ -47,6 +47,8 @@ export function CancelPOModal({
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddingReason, setIsAddingReason] = useState(false);
+  const [showNewReasonInput, setShowNewReasonInput] = useState(false);
+  const [newReasonValue, setNewReasonValue] = useState("");
 
   const { data: settings, isLoading: loadingReasons } = useQuery({
     queryKey: ["organization-settings"],
@@ -70,6 +72,8 @@ export function CancelPOModal({
     setInputValue("");
     setDropdownOpen(false);
     setNotes("");
+    setShowNewReasonInput(false);
+    setNewReasonValue("");
   }
 
   function handleClose() {
@@ -98,8 +102,8 @@ export function CancelPOModal({
     }, 150);
   }
 
-  async function handleAddNewReason() {
-    const newReason = inputValue.trim();
+  async function handleAddNewReason(value?: string) {
+    const newReason = (value ?? newReasonValue).trim();
     if (!newReason || isAddingReason) return;
 
     setIsAddingReason(true);
@@ -113,6 +117,8 @@ export function CancelPOModal({
         queryKey: ["organization-settings"],
       });
       handleSelectReason(newReason);
+      setShowNewReasonInput(false);
+      setNewReasonValue("");
       toast.success("Reason added");
     } catch (err: unknown) {
       const message =
@@ -232,23 +238,23 @@ export function CancelPOModal({
 
                     {filteredReasons.length === 0 && !inputValue.trim() && (
                       <div className="px-3 py-2 text-sm text-gray-400">
-                        No reasons yet — type to add one
+                        No reasons yet
                       </div>
                     )}
 
-                    {/* Always show Add New at bottom — with typed value if available */}
+                    {/* Add New Reason button — always at bottom */}
                     <button
                       onMouseDown={(e) => {
                         e.preventDefault();
                         if (inputValue.trim() && canAddNewReason) {
-                          handleAddNewReason();
-                        } else if (!inputValue.trim()) {
-                          // Focus the input so user can type
-                          setDropdownOpen(true);
+                          handleAddNewReason(inputValue.trim());
+                        } else {
+                          setDropdownOpen(false);
+                          setShowNewReasonInput(true);
                         }
                       }}
-                      disabled={isAddingReason || (!!inputValue.trim() && !canAddNewReason)}
-                      className="w-full text-left px-3 py-2 text-sm text-teal-700 hover:bg-teal-50 border-t border-gray-100 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                      disabled={isAddingReason}
+                      className="w-full text-left px-3 py-2 text-sm text-teal-700 hover:bg-teal-50 border-t border-gray-100 flex items-center gap-1.5"
                     >
                       {isAddingReason ? (
                         <Loader2 size={14} className="animate-spin" />
@@ -261,6 +267,37 @@ export function CancelPOModal({
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Inline new reason input */}
+            {showNewReasonInput && (
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Type new reason..."
+                  value={newReasonValue}
+                  onChange={(e) => setNewReasonValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddNewReason()}
+                  autoFocus
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
+                />
+                <Button
+                  size="sm"
+                  disabled={!newReasonValue.trim() || isAddingReason}
+                  onClick={() => handleAddNewReason()}
+                  className="bg-[#0d9488] hover:bg-[#0f766e] text-white h-9 px-3"
+                >
+                  {isAddingReason ? <Loader2 size={14} className="animate-spin" /> : "Add"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setShowNewReasonInput(false); setNewReasonValue(""); }}
+                  className="h-9 px-3"
+                >
+                  Cancel
+                </Button>
               </div>
             )}
           </div>
