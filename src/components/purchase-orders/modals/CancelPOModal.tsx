@@ -89,6 +89,12 @@ export function CancelPOModal({
     setNewReasonValue("");
   }
 
+  function handleInputFocus() {
+    // Clear search text so full list is visible, but keep reason selected
+    setInputValue("");
+    setDropdownOpen(true);
+  }
+
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInputValue(e.target.value);
     setReason("");
@@ -96,7 +102,6 @@ export function CancelPOModal({
   }
 
   function handleInputBlur() {
-    // Give mousedown on dropdown items time to fire before closing
     setTimeout(() => {
       setDropdownOpen(false);
       // Restore display to selected reason (or clear if nothing selected)
@@ -217,7 +222,7 @@ export function CancelPOModal({
                     placeholder="Search or type a new reason..."
                     value={inputValue}
                     onChange={handleInputChange}
-                    onFocus={() => setDropdownOpen(true)}
+                    onFocus={handleInputFocus}
                     onBlur={handleInputBlur}
                     className="w-full pl-8 pr-3 py-2 text-sm rounded-md bg-transparent outline-none"
                   />
@@ -253,6 +258,8 @@ export function CancelPOModal({
                         } else {
                           setDropdownOpen(false);
                           setShowNewReasonInput(true);
+                          setReason("");
+                          setInputValue("");
                         }
                       }}
                       disabled={isAddingReason}
