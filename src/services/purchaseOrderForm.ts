@@ -69,10 +69,15 @@ export interface Organization {
 
 export interface POFormSettings {
   paymentTerms: string[];
+  soPaymentTerms: string[];
   generatePOAutomatically: boolean;
   poPrefix: string;
   poSeparator: string;
   nextPONumber: number;
+  generateSOAutomatically: boolean;
+  soPrefix: string;
+  soSeparator: string;
+  nextSONumber: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,10 +182,15 @@ export async function getPOFormSettings(): Promise<POFormSettings> {
   );
   return {
     paymentTerms: data.paymentTerms,
+    soPaymentTerms: data.soPaymentTerms,
     generatePOAutomatically: data.generatePOAutomatically,
     poPrefix: data.poPrefix,
     poSeparator: data.poSeparator,
     nextPONumber: data.nextPONumber,
+    generateSOAutomatically: data.generateSOAutomatically,
+    soPrefix: data.soPrefix,
+    soSeparator: data.soSeparator,
+    nextSONumber: data.nextSONumber,
   };
 }
 

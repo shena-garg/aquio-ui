@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api-client";
+import { organizationSettingsService } from "@/services/organization-settings";
 import {
   getVendorCompaniesWithLocations,
   getMyOrganization,
@@ -754,6 +755,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const [issueDate, setIssueDate] = useState(todayString());
   const [deliveryDate, setDeliveryDate] = useState(defaultDeliveryDate());
   const [paymentTerms, setPaymentTerms] = useState("");
+  const [showAddPaymentTerm, setShowAddPaymentTerm] = useState(false);
+  const [newPaymentTerm, setNewPaymentTerm] = useState("");
+  const [addingPaymentTerm, setAddingPaymentTerm] = useState(false);
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState<string[]>([]);
   const [termInput, setTermInput] = useState("");
@@ -892,6 +896,39 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     .map((r) => r.product!.unitOfMeasurement);
   const allSameUom = productUoms.length > 0 && productUoms.every((u) => u === productUoms[0]);
   const commonUom = allSameUom ? productUoms[0] : null;
+
+  // ── Add payment term handler ────────────────────────────────────────────
+
+  const paymentTermsList = orderType === "sales"
+    ? (settings?.soPaymentTerms ?? [])
+    : (settings?.paymentTerms ?? []);
+
+  async function handleAddPaymentTerm() {
+    const term = newPaymentTerm.trim();
+    if (!term || addingPaymentTerm) return;
+    setAddingPaymentTerm(true);
+    try {
+      if (orderType === "sales") {
+        await organizationSettingsService.addSOPaymentTerm(term);
+      } else {
+        await organizationSettingsService.addPaymentTerm(term);
+      }
+      // Refresh settings
+      const updated = await getPOFormSettings();
+      setSettings(updated);
+      setPaymentTerms(term);
+      setShowAddPaymentTerm(false);
+      setNewPaymentTerm("");
+      toast.success("Payment term added");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to add payment term";
+      toast.error(message);
+    } finally {
+      setAddingPaymentTerm(false);
+    }
+  }
 
   // ── Submit ──────────────────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
@@ -1181,18 +1218,55 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                 </label>
                 <select
                   value={paymentTerms}
-                  onChange={(e) => setPaymentTerms(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === "__add_new__") {
+                      setShowAddPaymentTerm(true);
+                    } else {
+                      setPaymentTerms(e.target.value);
+                      setShowAddPaymentTerm(false);
+                    }
+                  }}
                   className={`w-full h-9 border rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white ${
                     fieldErrors.paymentTerms ? "border-[#dc2626]" : "border-[#e5e7eb]"
                   }`}
                 >
                   <option value="">Select payment terms</option>
-                  {(settings?.paymentTerms ?? []).map((pt) => (
+                  {paymentTermsList.map((pt) => (
                     <option key={pt} value={pt}>
                       {pt}
                     </option>
                   ))}
+                  <option value="__add_new__">+ Add New Payment Term</option>
                 </select>
+                {showAddPaymentTerm && (
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. Net 45"
+                      value={newPaymentTerm}
+                      onChange={(e) => setNewPaymentTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAddPaymentTerm()}
+                      autoFocus
+                      className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
+                    />
+                    <Button
+                      size="sm"
+                      disabled={!newPaymentTerm.trim() || addingPaymentTerm}
+                      onClick={handleAddPaymentTerm}
+                      className="bg-[#0d9488] hover:bg-[#0f766e] text-white h-8 px-3 text-[12px]"
+                    >
+                      {addingPaymentTerm ? <Loader2 size={14} className="animate-spin" /> : "Add"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { setShowAddPaymentTerm(false); setNewPaymentTerm(""); }}
+                      className="h-8 px-3 text-[12px]"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
                 {fieldErrors.paymentTerms && (
                   <p className="text-[12px] text-[#dc2626] mt-1">{fieldErrors.paymentTerms}</p>
                 )}

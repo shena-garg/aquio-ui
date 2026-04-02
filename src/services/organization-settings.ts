@@ -49,4 +49,14 @@ export const organizationSettingsService = {
       "/organization-settings/my-own/so-cancel-reason",
       { reason }
     ),
+  addPaymentTerm: (term: string) =>
+    apiClient.post<OrganizationSettings>(
+      "/organization-settings/my-own/payment-terms",
+      { term }
+    ),
+  addSOPaymentTerm: (term: string) =>
+    apiClient.post<OrganizationSettings>(
+      "/organization-settings/my-own/so-payment-terms",
+      { term }
+    ),
 };
