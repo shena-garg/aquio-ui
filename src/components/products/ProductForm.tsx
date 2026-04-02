@@ -22,6 +22,7 @@ import {
   type SubCategory,
   type CustomAttribute,
 } from "@/services/categories";
+import { QuickCreateCategoryModal } from "@/components/categories/QuickCreateCategoryModal";
 import {
   organizationSettingsService,
   type OrganizationSettings,
@@ -60,6 +61,8 @@ function SearchableSelect({
   disabled,
   hasError,
   renderOption,
+  onCreateNew,
+  createNewLabel,
 }: {
   value: string;
   options: { value: string; label: string }[];
@@ -68,6 +71,8 @@ function SearchableSelect({
   disabled?: boolean;
   hasError?: boolean;
   renderOption?: (opt: { value: string; label: string }) => React.ReactNode;
+  onCreateNew?: () => void;
+  createNewLabel?: string;
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -193,6 +198,16 @@ function SearchableSelect({
                 No results found
               </div>
             )}
+          {onCreateNew && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setOpen(false); onCreateNew(); }}
+              className="w-full text-left px-3 py-2 text-[13px] font-medium text-[#0d9488] hover:bg-[#f0fdfa] border-t border-[#e5e7eb] flex items-center gap-1.5"
+            >
+              <Plus size={13} /> {createNewLabel ?? "Create New"}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -475,6 +490,9 @@ export function ProductForm({ editId }: ProductFormProps) {
   const [unitOfMeasurement, setUnitOfMeasurement] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [subCategoryId, setSubCategoryId] = useState("");
+  const [createCategoryModal, setCreateCategoryModal] = useState<
+    { mode: "category" } | { mode: "subcategory"; parentId: string; parentName: string } | null
+  >(null);
   const [sku, setSku] = useState("");
   const [hsnCode, setHsnCode] = useState("");
   const [gst, setGst] = useState<string>("");
@@ -575,6 +593,20 @@ export function ProductForm({ editId }: ProductFormProps) {
 
   function handleSubCategoryChange(id: string) {
     setSubCategoryId(id);
+  }
+
+  async function handleCategoryCreated(created: { _id: string; name: string }) {
+    // Refresh categories list and auto-select the new one
+    const catData = await categoriesService.list().then((r) => r.data);
+    setCategories(catData.categories ?? []);
+    handleCategoryChange(created._id);
+  }
+
+  async function handleSubCategoryCreated(created: { _id: string; name: string }) {
+    // Refresh categories list and auto-select the new subcategory
+    const catData = await categoriesService.list().then((r) => r.data);
+    setCategories(catData.categories ?? []);
+    setSubCategoryId(created._id);
   }
 
   // Terms
@@ -842,6 +874,8 @@ export function ProductForm({ editId }: ProductFormProps) {
                   onChange={(val) => handleCategoryChange(val)}
                   placeholder="Search category..."
                   hasError={attempted && !!fieldErrors.categoryId}
+                  onCreateNew={() => setCreateCategoryModal({ mode: "category" })}
+                  createNewLabel="Create New Category"
                 />
               </div>
 
@@ -857,6 +891,12 @@ export function ProductForm({ editId }: ProductFormProps) {
                   placeholder={categoryId ? "Search subcategory..." : "Select a category first"}
                   disabled={!categoryId}
                   hasError={attempted && !!fieldErrors.subCategoryId}
+                  onCreateNew={categoryId ? () => setCreateCategoryModal({
+                    mode: "subcategory",
+                    parentId: categoryId,
+                    parentName: selectedCategory?.name ?? "",
+                  }) : undefined}
+                  createNewLabel="Create New Subcategory"
                 />
               </div>
 
@@ -1324,6 +1364,22 @@ export function ProductForm({ editId }: ProductFormProps) {
           onSave={handleSKUSettingsSave}
         />
       )}
+
+      {/* Quick Create Category / Subcategory Modal */}
+      <QuickCreateCategoryModal
+        open={!!createCategoryModal}
+        onClose={() => setCreateCategoryModal(null)}
+        mode={createCategoryModal?.mode ?? "category"}
+        parentCategoryId={createCategoryModal?.mode === "subcategory" ? createCategoryModal.parentId : undefined}
+        parentCategoryName={createCategoryModal?.mode === "subcategory" ? createCategoryModal.parentName : undefined}
+        onCreated={(created) => {
+          if (createCategoryModal?.mode === "subcategory") {
+            handleSubCategoryCreated(created);
+          } else {
+            handleCategoryCreated(created);
+          }
+        }}
+      />
     </div>
   );
 }
