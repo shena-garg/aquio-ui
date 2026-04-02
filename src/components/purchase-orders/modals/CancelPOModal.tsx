@@ -85,6 +85,8 @@ export function CancelPOModal({
     setReason(r);
     setInputValue(r);
     setDropdownOpen(false);
+    setShowNewReasonInput(false);
+    setNewReasonValue("");
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
