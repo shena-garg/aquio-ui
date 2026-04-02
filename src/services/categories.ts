@@ -28,12 +28,12 @@ export interface CategoriesResponse {
 export interface CreateSubCategoryPayload {
   name: string;
   parentId: string;
-  customAttributes: CustomAttribute[];
+  customAttributes?: CustomAttribute[];
 }
 
 export interface UpdateSubCategoryPayload {
   name: string;
-  customAttributes: CustomAttribute[];
+  customAttributes?: CustomAttribute[];
 }
 
 export const categoriesService = {

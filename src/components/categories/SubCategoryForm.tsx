@@ -50,7 +50,7 @@ export function SubCategoryForm({
         id: crypto.randomUUID(),
       }));
     }
-    return [makeEmptyRow()];
+    return [];
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attempted, setAttempted] = useState(false);
@@ -74,7 +74,12 @@ export function SubCategoryForm({
 
   // ── Validation ──────────────────────────────────────────────────────────────
 
+  function rowIsEmpty(row: AttributeRow) {
+    return !row.label.trim() && !row.unit.trim() && !row.values?.trim();
+  }
+
   function rowHasError(row: AttributeRow) {
+    if (rowIsEmpty(row)) return false; // skip completely empty rows
     if (!row.label.trim()) return true;
     if (row.valueType === "dropdown" && !row.values?.trim()) return true;
     return false;
@@ -103,7 +108,8 @@ export function SubCategoryForm({
     setIsSubmitting(true);
 
     try {
-      const customAttributes: CustomAttribute[] = attributes.map((row) => {
+      const filledAttributes = attributes.filter((row) => !rowIsEmpty(row));
+      const customAttributes: CustomAttribute[] = filledAttributes.map((row) => {
         const attr: CustomAttribute = {
           label: row.label.trim(),
           unit: row.unit.trim(),
@@ -119,14 +125,14 @@ export function SubCategoryForm({
       if (isEdit && subCategoryId) {
         await categoriesService.updateSubCategory(subCategoryId, {
           name: trimmedName,
-          customAttributes,
+          ...(customAttributes.length > 0 && { customAttributes }),
         });
         toast.success("Subcategory updated successfully");
       } else {
         await categoriesService.createSubCategory({
           name: trimmedName,
           parentId: parentCategoryId,
-          customAttributes,
+          ...(customAttributes.length > 0 && { customAttributes }),
         });
         toast.success("Subcategory created successfully");
       }
