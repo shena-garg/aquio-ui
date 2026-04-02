@@ -206,7 +206,7 @@ export function CancelPOModal({
                   />
                   <input
                     type="text"
-                    placeholder="Search or add a reason..."
+                    placeholder="Search or type a new reason..."
                     value={inputValue}
                     onChange={handleInputChange}
                     onFocus={() => setDropdownOpen(true)}
@@ -230,29 +230,35 @@ export function CancelPOModal({
                       </button>
                     ))}
 
-                    {canAddNewReason && (
-                      <button
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          handleAddNewReason();
-                        }}
-                        disabled={isAddingReason}
-                        className="w-full text-left px-3 py-2 text-sm text-teal-700 hover:bg-teal-50 border-t border-gray-100 flex items-center gap-1.5"
-                      >
-                        {isAddingReason ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Plus size={14} />
-                        )}
-                        Add &quot;{inputValue.trim()}&quot;
-                      </button>
-                    )}
-
-                    {filteredReasons.length === 0 && !canAddNewReason && (
+                    {filteredReasons.length === 0 && !inputValue.trim() && (
                       <div className="px-3 py-2 text-sm text-gray-400">
-                        No reasons found
+                        No reasons yet — type to add one
                       </div>
                     )}
+
+                    {/* Always show Add New at bottom — with typed value if available */}
+                    <button
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        if (inputValue.trim() && canAddNewReason) {
+                          handleAddNewReason();
+                        } else if (!inputValue.trim()) {
+                          // Focus the input so user can type
+                          setDropdownOpen(true);
+                        }
+                      }}
+                      disabled={isAddingReason || (!!inputValue.trim() && !canAddNewReason)}
+                      className="w-full text-left px-3 py-2 text-sm text-teal-700 hover:bg-teal-50 border-t border-gray-100 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {isAddingReason ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Plus size={14} />
+                      )}
+                      {inputValue.trim() && canAddNewReason
+                        ? <>Add &quot;{inputValue.trim()}&quot;</>
+                        : "Add New Reason"}
+                    </button>
                   </div>
                 )}
               </div>
