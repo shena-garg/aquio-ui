@@ -178,7 +178,9 @@ const COLUMN_DEFS: ColDef[] = [
     ),
     renderCell: (order, { cellCls, style }) => (
       <TableCell className={`px-3 text-[13px] font-medium text-[#0F1720] ${cellCls}`} style={style}>
-        {order.supplier.name}
+        <span className="block truncate" title={order.supplier.name}>
+          {order.supplier.name}
+        </span>
       </TableCell>
     ),
   },
