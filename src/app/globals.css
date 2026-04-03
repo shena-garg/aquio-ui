@@ -130,27 +130,31 @@
 }
 
 /* ── Dark mode overrides for hardcoded colors ─────────────────────────────── */
+/* Sidebar keeps its own dark theme — these overrides target content area only */
 
 /* White cards/panels → dark surface */
-.dark .bg-white { background-color: #1e1e2e !important; }
+.dark .bg-white:not(aside .bg-white) { background-color: #1e1e2e !important; }
 .dark .bg-\[\#f9fafb\] { background-color: #14141e !important; }
 .dark .bg-\[\#fafafa\] { background-color: #1a1a2a !important; }
 .dark .bg-\[\#f3f4f6\] { background-color: #1a1a2a !important; }
 .dark .bg-gray-50 { background-color: #1a1a2a !important; }
 .dark .bg-gray-100 { background-color: #1e1e2e !important; }
 
-/* Text colors → light on dark */
-.dark .text-\[\#111827\] { color: #e5e7eb !important; }
-.dark .text-\[\#0F1720\] { color: #e5e7eb !important; }
-.dark .text-gray-900 { color: #e5e7eb !important; }
-.dark .text-gray-800 { color: #d1d5db !important; }
-.dark .text-gray-700 { color: #d1d5db !important; }
-.dark .text-gray-600 { color: #9ca3af !important; }
-.dark .text-gray-500 { color: #9ca3af !important; }
+/* Sidebar — slightly deepen for dark mode contrast against dark content */
+.dark aside { background-color: #0c0f16 !important; border-color: #1f2937 !important; }
 
-/* Borders → subtle dark borders */
-.dark .border-\[\#e5e7eb\] { border-color: #2d2d3d !important; }
-.dark .border-gray-200 { border-color: #2d2d3d !important; }
+/* Text colors → light on dark (exclude sidebar which has its own text colors) */
+.dark :not(aside):not(aside *) > .text-\[\#111827\],
+.dark :not(aside) > .text-\[\#0F1720\] { color: #e5e7eb !important; }
+.dark .text-gray-900:not(aside .text-gray-900) { color: #e5e7eb !important; }
+.dark .text-gray-800:not(aside .text-gray-800) { color: #d1d5db !important; }
+.dark .text-gray-700:not(aside .text-gray-700) { color: #d1d5db !important; }
+.dark .text-gray-600:not(aside .text-gray-600) { color: #9ca3af !important; }
+.dark .text-gray-500:not(aside .text-gray-500) { color: #9ca3af !important; }
+
+/* Borders → subtle dark borders (content area) */
+.dark .border-\[\#e5e7eb\]:not(aside .border-\[\#e5e7eb\]) { border-color: #2d2d3d !important; }
+.dark .border-gray-200:not(aside .border-gray-200) { border-color: #2d2d3d !important; }
 .dark .border-gray-300 { border-color: #3d3d4d !important; }
 
 /* Inputs → dark surface */
@@ -164,9 +168,6 @@
 .dark input::placeholder, .dark textarea::placeholder {
   color: #6b7280 !important;
 }
-
-/* Sidebar — already dark (#0F1720), darken further */
-.dark .bg-\[\#0F1720\] { background-color: #0a0a14 !important; }
 
 /* Dropdowns/Popovers */
 .dark [data-radix-popper-content-wrapper] > div {
