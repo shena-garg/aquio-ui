@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronUp, Rocket, X as XIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart,
@@ -129,6 +130,9 @@ export default function DashboardPage() {
 
       <ErrorBoundary>
       <div className="flex-1 overflow-auto">
+        {/* Setup banner for new users */}
+        <SetupBanner />
+
         {/* Period selector bar */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-6 px-4 sm:px-8 py-4">
           <div className="flex items-center gap-2">
@@ -875,6 +879,56 @@ function TopPartiesSection({
           </table>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Setup Banner for new users ─────────────────────────────────────────── */
+
+function SetupBanner() {
+  const router = useRouter();
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    const completed = localStorage.getItem("onboarding_completed");
+    const hidden = localStorage.getItem("setup_banner_dismissed");
+    setDismissed(!!completed || !!hidden);
+  }, []);
+
+  if (dismissed) return null;
+
+  return (
+    <div className="mx-4 sm:mx-8 mt-4 rounded-lg border border-[#0d9488]/20 bg-[#f0fdfa] px-4 py-3 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-[#0d9488]/10 flex items-center justify-center flex-shrink-0">
+          <Rocket className="h-4 w-4 text-[#0d9488]" />
+        </div>
+        <div>
+          <p className="text-[13px] font-medium text-[#111827]">
+            Finish setting up your account
+          </p>
+          <p className="text-[12px] text-[#6b7280]">
+            Complete a few steps to get the most out of Aquio
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button
+          onClick={() => router.push("/onboarding")}
+          className="h-8 px-3 rounded-md bg-[#0d9488] hover:bg-[#0f766e] text-white text-[12px] font-medium"
+        >
+          Continue Setup
+        </button>
+        <button
+          onClick={() => {
+            localStorage.setItem("setup_banner_dismissed", "true");
+            setDismissed(true);
+          }}
+          className="p-1 text-[#6b7280] hover:text-[#111827]"
+        >
+          <XIcon size={16} />
+        </button>
       </div>
     </div>
   );

@@ -54,7 +54,7 @@ export default function SignupPage() {
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("user", JSON.stringify(response.data.user));
       toast.success("Account created successfully!");
-      router.push("/dashboard");
+      router.push("/onboarding");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
