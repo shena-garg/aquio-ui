@@ -21,6 +21,8 @@ import {
   User,
   Menu,
   X,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/hooks/useTheme";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -83,6 +86,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, hasPermission, isLoading, logout } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Close drawer on route change
@@ -224,6 +228,10 @@ export function Sidebar() {
               <DropdownMenuItem onClick={() => { setMobileOpen(false); router.push("/profile"); }}>
                 <User className="h-4 w-4 mr-2" />
                 My Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleTheme}>
+                {theme === "dark" ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+                {theme === "dark" ? "Light Mode" : "Dark Mode"}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout}>
                 <LogOut className="h-4 w-4 mr-2" />

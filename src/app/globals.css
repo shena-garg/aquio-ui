@@ -128,3 +128,60 @@
     font-family: var(--font-ibm-plex-sans), sans-serif;
   }
 }
+
+/* ── Dark mode overrides for hardcoded colors ─────────────────────────────── */
+
+/* White cards/panels → dark surface */
+.dark .bg-white { background-color: #1e1e2e !important; }
+.dark .bg-\[\#f9fafb\] { background-color: #14141e !important; }
+.dark .bg-\[\#fafafa\] { background-color: #1a1a2a !important; }
+.dark .bg-\[\#f3f4f6\] { background-color: #1a1a2a !important; }
+.dark .bg-gray-50 { background-color: #1a1a2a !important; }
+.dark .bg-gray-100 { background-color: #1e1e2e !important; }
+
+/* Text colors → light on dark */
+.dark .text-\[\#111827\] { color: #e5e7eb !important; }
+.dark .text-\[\#0F1720\] { color: #e5e7eb !important; }
+.dark .text-gray-900 { color: #e5e7eb !important; }
+.dark .text-gray-800 { color: #d1d5db !important; }
+.dark .text-gray-700 { color: #d1d5db !important; }
+.dark .text-gray-600 { color: #9ca3af !important; }
+.dark .text-gray-500 { color: #9ca3af !important; }
+
+/* Borders → subtle dark borders */
+.dark .border-\[\#e5e7eb\] { border-color: #2d2d3d !important; }
+.dark .border-gray-200 { border-color: #2d2d3d !important; }
+.dark .border-gray-300 { border-color: #3d3d4d !important; }
+
+/* Inputs → dark surface */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select {
+  background-color: #252535 !important;
+  color: #e5e7eb !important;
+  border-color: #3d3d4d !important;
+}
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Sidebar — already dark (#0F1720), darken further */
+.dark .bg-\[\#0F1720\] { background-color: #0a0a14 !important; }
+
+/* Dropdowns/Popovers */
+.dark [data-radix-popper-content-wrapper] > div {
+  background-color: #1e1e2e !important;
+  border-color: #2d2d3d !important;
+}
+
+/* Table hover */
+.dark .hover\:bg-\[\#fafafa\]:hover { background-color: #252535 !important; }
+.dark .hover\:bg-gray-50:hover { background-color: #252535 !important; }
+
+/* Teal brand — slightly brighter in dark */
+.dark .text-\[\#0d9488\] { color: #14b8a6 !important; }
+.dark .bg-\[\#f0fdfa\] { background-color: rgba(13, 148, 136, 0.08) !important; }
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar { background-color: #14141e; }
+.dark ::-webkit-scrollbar-thumb { background-color: #3d3d4d; border-radius: 4px; }
