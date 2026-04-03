@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -27,6 +27,18 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 export default function SetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-[#f9fafb]">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    }>
+      <SetPasswordForm />
+    </Suspense>
+  );
+}
+
+function SetPasswordForm() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") ?? "";
