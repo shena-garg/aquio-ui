@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { IBM_Plex_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -30,9 +31,11 @@ export default function RootLayout({
       </head>
       <body className={`${ibmPlexSans.variable} ${geistMono.variable} font-sans antialiased`}>
         <QueryClientProvider client={queryClient}>
-          {children}
-          <Toaster position="top-right" />
-          <ReactQueryDevtools initialIsOpen={false} />
+          <TooltipProvider delayDuration={300}>
+            {children}
+            <Toaster position="top-right" />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </TooltipProvider>
         </QueryClientProvider>
       </body>
     </html>
