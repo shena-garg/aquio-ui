@@ -136,6 +136,17 @@ Copy `.env.example` to `.env.local` and set the API URL.
 - `useAuth().hasPermission("entity.action")` for inline permission checks
 - Permission format: `{entity}.{action}` (e.g., `purchase-order.force-close`)
 
+## Backend Cutover Status (as of 2026-04-04)
+
+- **aquio-backend is fully built and deployed on Render** — all Phase 1 modules complete
+- **Cutover is in progress** — aquio-ui is being pointed to the new Render backend
+- `NEXT_PUBLIC_API_BASE_URL` in production Vercel/Render env should point to the new backend Render URL
+- In `.env.local` for development: use Render URL or `http://localhost:3001` if running locally
+- The email verification banner (`/verify-email`) is implemented in the frontend
+- The forgot password page (`/forgot-password` and `/reset-password`) is implemented in the frontend
+
+---
+
 ## Important Rules
 
 1. **PO and SO share the same backend API** (`/purchase-orders`) — differentiated by `orderType: "purchase" | "sales"`

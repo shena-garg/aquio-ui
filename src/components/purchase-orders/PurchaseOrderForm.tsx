@@ -469,6 +469,142 @@ function ProductTypeahead({
 }
 
 // ---------------------------------------------------------------------------
+// Payment terms typeahead
+// ---------------------------------------------------------------------------
+
+function PaymentTermsTypeahead({
+  value,
+  options,
+  onChange,
+  onCreateNew,
+  hasError,
+}: {
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+  onCreateNew: () => void;
+  hasError?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const filtered = query.trim()
+    ? options.filter((o) => o.toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  function updateDropdownPosition() {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: "fixed",
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+    });
+  }
+
+  function handleSelect(term: string) {
+    onChange(term);
+    setQuery("");
+    setOpen(false);
+  }
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Reposition on scroll/resize while open
+  useEffect(() => {
+    if (!open) return;
+    function reposition() { updateDropdownPosition(); }
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
+  const dropdownContent = open && (
+    <div
+      style={dropdownStyle}
+      className="z-[9999] bg-white border border-[#e5e7eb] rounded-md shadow-lg max-h-56 overflow-y-auto"
+    >
+      {filtered.length > 0
+        ? filtered.map((term) => (
+            <button
+              key={term}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => handleSelect(term)}
+              className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f3f4f6] ${
+                term === value ? "bg-[#f0fdfa] text-[#0d9488] font-medium" : "text-[#111827]"
+              }`}
+            >
+              {term}
+            </button>
+          ))
+        : query.trim() && (
+            <div className="px-3 py-2 text-[13px] text-[#9ca3af]">No matching terms</div>
+          )}
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => { setOpen(false); setQuery(""); onCreateNew(); }}
+        className="w-full text-left px-3 py-2 text-[13px] text-[#0d9488] font-medium hover:bg-[#f0fdfa] border-t border-[#e5e7eb] flex items-center gap-1.5"
+      >
+        <span className="text-[16px] leading-none">+</span>
+        Create Payment Term
+      </button>
+    </div>
+  );
+
+  return (
+    <div ref={wrapperRef}>
+      <button
+        type="button"
+        ref={triggerRef}
+        onClick={() => { updateDropdownPosition(); setOpen((prev) => !prev); }}
+        className={`w-full h-9 border rounded-[6px] px-3 text-[13px] text-left outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white flex items-center justify-between ${
+          hasError ? "border-[#dc2626]" : "border-[#e5e7eb]"
+        }`}
+      >
+        {open ? (
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search or select..."
+            className="flex-1 bg-transparent outline-none text-[13px] text-[#111827]"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className={value ? "text-[#111827]" : "text-[#9ca3af]"}>
+            {value || "Select payment terms"}
+          </span>
+        )}
+        <svg className="h-4 w-4 text-[#6b7280] flex-shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {dropdownContent}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 
@@ -1246,28 +1382,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                 <label className="block text-[13px] font-medium text-[#111827] mb-1.5">
                   Payment Terms <span className="text-[#dc2626]">*</span>
                 </label>
-                <select
+                <PaymentTermsTypeahead
                   value={paymentTerms}
-                  onChange={(e) => {
-                    if (e.target.value === "__add_new__") {
-                      setShowAddPaymentTerm(true);
-                    } else {
-                      setPaymentTerms(e.target.value);
-                      setShowAddPaymentTerm(false);
-                    }
-                  }}
-                  className={`w-full h-9 border rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white ${
-                    fieldErrors.paymentTerms ? "border-[#dc2626]" : "border-[#e5e7eb]"
-                  }`}
-                >
-                  <option value="">Select payment terms</option>
-                  {paymentTermsList.map((pt) => (
-                    <option key={pt} value={pt}>
-                      {pt}
-                    </option>
-                  ))}
-                  <option value="__add_new__" style={{ color: "#0d9488", fontWeight: 600 }}>+ Create Payment Term</option>
-                </select>
+                  options={paymentTermsList}
+                  onChange={(v) => { setPaymentTerms(v); setShowAddPaymentTerm(false); }}
+                  onCreateNew={() => setShowAddPaymentTerm(true)}
+                  hasError={!!fieldErrors.paymentTerms}
+                />
                 {showAddPaymentTerm && (
                   <div className="mt-2 flex gap-2">
                     <input
