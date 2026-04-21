@@ -75,7 +75,7 @@ export interface PurchaseOrder {
   supplier: Supplier;
   buyer?: { name: string };
   biller?: { name: string };
-  purchaseOrderPDF?: string;
+  purchaseOrderPDF?: { id: string; name: string };
   totalAmount: { $numberDecimal: string } | number;
   totalQuantity?: number;
   pendingQuantity?: number;
@@ -177,6 +177,9 @@ export const purchaseOrdersService = {
       responseType: "blob",
       paramsSerializer: { indexes: null },
     }),
+
+  generatePdf: (id: string) =>
+    apiClient.patch<PurchaseOrder>(`/purchase-orders/${id}/pdf`, null),
 
   undoForceClose: (id: string, productId: string, variantId: string) =>
     apiClient.patch(`/purchase-orders/${id}/undo-forcefully-close`, { productId, variantId }),

@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ClipboardList, Download, FileText, MoreHorizontal, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { AlertTriangle, ClipboardList, Download, FileText, Loader2, MoreHorizontal, Plus } from "lucide-react";
+import { purchaseOrdersService } from "@/services/purchase-orders";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -58,6 +60,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   const [cancelOpen, setCancelOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [forceCloseOpen, setForceCloseOpen] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const { status } = order;
 
@@ -67,6 +70,28 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
     setForceCloseOpen(false);
     queryClient.invalidateQueries({ queryKey: ["purchase-order", order.id ?? order._id] });
     queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+  }
+
+  const pdfAllowedStatuses = ["issued", "confirmed", "completed"];
+  const canGeneratePdf = pdfAllowedStatuses.includes(order.status);
+
+  async function handleGeneratePdf() {
+    setIsGeneratingPdf(true);
+    try {
+      await purchaseOrdersService.generatePdf(order.id ?? order._id);
+      toast.success("PDF generated successfully");
+      queryClient.invalidateQueries({ queryKey: ["purchase-order", order.id ?? order._id] });
+    } catch {
+      toast.error("Failed to generate PDF");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  }
+
+  function handleDownloadPdf() {
+    if (order.purchaseOrderPDF) {
+      window.open(`${process.env.NEXT_PUBLIC_API_BASE_URL}/files/download/${order.purchaseOrderPDF.id}`, "_blank");
+    }
   }
 
   const leftContent = (
@@ -212,19 +237,30 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   /* ── Desktop: everything in one row ── */
   const rightContent = (
     <div className="hidden sm:flex items-center gap-2">
-      <Button
-        variant="outline"
-        className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
-        disabled={!order.purchaseOrderPDF}
-        onClick={() => {
-          if (order.purchaseOrderPDF) {
-            window.open(order.purchaseOrderPDF, "_blank");
-          }
-        }}
-      >
-        <Download className="h-4 w-4 mr-1.5" />
-        Download PDF
-      </Button>
+      {order.purchaseOrderPDF ? (
+        <Button
+          variant="outline"
+          className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
+          onClick={handleDownloadPdf}
+        >
+          <Download className="h-4 w-4 mr-1.5" />
+          Download PDF
+        </Button>
+      ) : canGeneratePdf ? (
+        <Button
+          variant="outline"
+          className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
+          onClick={handleGeneratePdf}
+          disabled={isGeneratingPdf}
+        >
+          {isGeneratingPdf ? (
+            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-1.5" />
+          )}
+          {isGeneratingPdf ? "Generating…" : "Generate PDF"}
+        </Button>
+      ) : null}
 
       {hasNotes && (
         <Popover>
@@ -275,18 +311,28 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   /* ── Mobile: Row 1 = Download icon + three-dot ── */
   const rightContentMobile = (
     <div className="flex sm:hidden items-center gap-1.5">
-      <Button
-        variant="outline"
-        className="h-9 w-9 rounded-[6px] p-0"
-        disabled={!order.purchaseOrderPDF}
-        onClick={() => {
-          if (order.purchaseOrderPDF) {
-            window.open(order.purchaseOrderPDF, "_blank");
-          }
-        }}
-      >
-        <Download className="h-4 w-4" />
-      </Button>
+      {order.purchaseOrderPDF ? (
+        <Button
+          variant="outline"
+          className="h-9 w-9 rounded-[6px] p-0"
+          onClick={handleDownloadPdf}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+      ) : canGeneratePdf ? (
+        <Button
+          variant="outline"
+          className="h-9 w-9 rounded-[6px] p-0"
+          onClick={handleGeneratePdf}
+          disabled={isGeneratingPdf}
+        >
+          {isGeneratingPdf ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+        </Button>
+      ) : null}
       {dropdownMenu}
     </div>
   );

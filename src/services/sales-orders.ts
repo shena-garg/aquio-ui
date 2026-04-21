@@ -75,7 +75,7 @@ export interface SalesOrder {
   supplier: Supplier;
   buyer?: { name: string };
   biller?: { name: string };
-  purchaseOrderPDF?: string;
+  purchaseOrderPDF?: { id: string; name: string };
   totalAmount: { $numberDecimal: string } | number;
   totalQuantity?: number;
   pendingQuantity?: number;
@@ -165,6 +165,9 @@ export const salesOrdersService = {
 
   forceCloseMultiple: (id: string, items: ForceCloseItem[]) =>
     apiClient.patch(`/purchase-orders/${id}/forcefully-close-multiple`, { items }),
+
+  generatePdf: (id: string) =>
+    apiClient.patch<SalesOrder>(`/purchase-orders/${id}/pdf`, null),
 
   undoForceClose: (id: string, productId: string, variantId: string) =>
     apiClient.patch(`/purchase-orders/${id}/undo-forcefully-close`, { productId, variantId }),
