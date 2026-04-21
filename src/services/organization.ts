@@ -8,8 +8,22 @@ export interface Organization {
   countryCode: string;
 }
 
+export interface OnboardingStatus {
+  isComplete: boolean;
+  completedAt: string | null;
+  steps: {
+    location: boolean;
+    settings: boolean;
+    category: boolean;
+    partner: boolean;
+    product: boolean;
+  };
+}
+
 export const organizationService = {
   get: () => apiClient.get<Organization>("/organizations/my-own"),
-  update: (payload: Organization) =>
+  update: (payload: Partial<Organization>) =>
     apiClient.patch("/organizations/my-own", payload),
+  getOnboardingStatus: () =>
+    apiClient.get<OnboardingStatus>("/organizations/onboarding-status"),
 };

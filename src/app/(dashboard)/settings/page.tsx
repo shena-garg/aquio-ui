@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, X, Plus } from "lucide-react";
+import { Loader2, X, Plus, ShoppingCart, TrendingUp, Package } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,23 +12,39 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { HelpTooltip } from "@/components/ui/HelpTooltip";
 import { cn } from "@/lib/utils";
 import {
   organizationSettingsService,
   OrganizationSettings,
 } from "@/services/organization-settings";
 
-// ── Tabs ─────────────────────────────────────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { label: "Purchase Order", value: "po" },
-  { label: "Sales Order", value: "so" },
-  { label: "Product", value: "product" },
-] as const;
+  {
+    label: "Purchase Order",
+    value: "po" as const,
+    icon: <ShoppingCart className="h-4 w-4" />,
+    short: "PO",
+  },
+  {
+    label: "Sales Order",
+    value: "so" as const,
+    icon: <TrendingUp className="h-4 w-4" />,
+    short: "SO",
+  },
+  {
+    label: "Product",
+    value: "product" as const,
+    icon: <Package className="h-4 w-4" />,
+    short: "Product",
+  },
+];
 
 type TabValue = (typeof TABS)[number]["value"];
 
-// ── Tag list input ───────────────────────────────────────────────────────────
+// ── Shared input helpers ──────────────────────────────────────────────────────
 
 function TagListInput({
   label,
@@ -52,17 +68,6 @@ function TagListInput({
     setInputValue("");
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAdd();
-    }
-  }
-
-  function handleRemove(index: number) {
-    onChange(items.filter((_, i) => i !== index));
-  }
-
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -76,7 +81,12 @@ function TagListInput({
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAdd();
+            }
+          }}
           placeholder={placeholder ?? "Type and press Enter to add"}
           className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
         />
@@ -100,7 +110,7 @@ function TagListInput({
               {item}
               <button
                 type="button"
-                onClick={() => handleRemove(i)}
+                onClick={() => onChange(items.filter((_, idx) => idx !== i))}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="h-3 w-3" />
@@ -113,23 +123,26 @@ function TagListInput({
   );
 }
 
-// ── Toggle switch ────────────────────────────────────────────────────────────
-
 function Toggle({
   label,
   description,
+  tooltip,
   checked,
   onChange,
 }: {
   label: string;
   description?: string;
+  tooltip?: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <p className="text-sm font-medium text-gray-700">{label}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium text-gray-700">{label}</p>
+          {tooltip && <HelpTooltip content={tooltip} />}
+        </div>
         {description && (
           <p className="text-[12px] text-gray-400 mt-0.5">{description}</p>
         )}
@@ -151,8 +164,6 @@ function Toggle({
   );
 }
 
-// ── Auto-number config ───────────────────────────────────────────────────────
-
 function AutoNumberConfig({
   prefix,
   separator,
@@ -170,15 +181,14 @@ function AutoNumberConfig({
   onNextNumberChange: (v: number) => void;
   previewLabel?: string;
 }) {
-  const preview = `${prefix}${separator}${nextNumber}`;
-
   return (
     <div className="ml-0 mt-3 rounded-lg bg-[#f9fafb] p-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
-          <label className="block text-[12px] font-medium text-gray-500 mb-1">
-            Prefix
-          </label>
+          <div className="flex items-center gap-1 mb-1">
+            <label className="text-[12px] font-medium text-gray-500">Prefix</label>
+            <HelpTooltip content='Short code added before the number. e.g. "PO" → PO-001' side="top" />
+          </div>
           <input
             type="text"
             value={prefix}
@@ -187,9 +197,10 @@ function AutoNumberConfig({
           />
         </div>
         <div>
-          <label className="block text-[12px] font-medium text-gray-500 mb-1">
-            Separator
-          </label>
+          <div className="flex items-center gap-1 mb-1">
+            <label className="text-[12px] font-medium text-gray-500">Separator</label>
+            <HelpTooltip content='Character placed between the prefix and number. e.g. "-" → PO-001, "/" → PO/001' side="top" />
+          </div>
           <input
             type="text"
             value={separator}
@@ -198,9 +209,10 @@ function AutoNumberConfig({
           />
         </div>
         <div>
-          <label className="block text-[12px] font-medium text-gray-500 mb-1">
-            Next Number
-          </label>
+          <div className="flex items-center gap-1 mb-1">
+            <label className="text-[12px] font-medium text-gray-500">Next Number</label>
+            <HelpTooltip content="The number that will be used on the next order. Auto-increments after each creation." side="top" />
+          </div>
           <input
             type="number"
             value={nextNumber}
@@ -214,14 +226,12 @@ function AutoNumberConfig({
           {previewLabel ?? "Preview"}:
         </span>
         <span className="text-[13px] font-medium text-[#111827]">
-          {preview}
+          {prefix}{separator}{nextNumber}
         </span>
       </div>
     </div>
   );
 }
-
-// ── GST input ────────────────────────────────────────────────────────────────
 
 function GstListInput({
   items,
@@ -233,23 +243,10 @@ function GstListInput({
   const [inputValue, setInputValue] = useState("");
 
   function handleAdd() {
-    const val = inputValue.trim();
-    const num = parseFloat(val);
-    if (isNaN(num) || num < 0) return;
-    if (items.includes(num)) return;
+    const num = parseFloat(inputValue.trim());
+    if (isNaN(num) || num < 0 || items.includes(num)) return;
     onChange([...items, num]);
     setInputValue("");
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAdd();
-    }
-  }
-
-  function handleRemove(index: number) {
-    onChange(items.filter((_, i) => i !== index));
   }
 
   return (
@@ -268,7 +265,12 @@ function GstListInput({
             const v = e.target.value;
             if (v === "" || /^\d*\.?\d*$/.test(v)) setInputValue(v);
           }}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAdd();
+            }
+          }}
           placeholder="e.g. 18"
           className="w-40 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
         />
@@ -292,7 +294,7 @@ function GstListInput({
               {item}%
               <button
                 type="button"
-                onClick={() => handleRemove(i)}
+                onClick={() => onChange(items.filter((_, idx) => idx !== i))}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="h-3 w-3" />
@@ -305,7 +307,8 @@ function GstListInput({
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────────
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -319,7 +322,7 @@ export default function SettingsPage() {
     queryFn: () => organizationSettingsService.getMyOwn().then((r) => r.data),
   });
 
-  // ── Local state for all fields ──
+  // ── Local state ──
 
   // PO
   const [poCancelReasons, setPoCancelReasons] = useState<string[]>([]);
@@ -341,47 +344,54 @@ export default function SettingsPage() {
 
   // Product
   const [applicableGst, setApplicableGst] = useState<number[]>([]);
-  const [generateSKUAutomatically, setGenerateSKUAutomatically] =
-    useState(false);
+  const [generateSKUAutomatically, setGenerateSKUAutomatically] = useState(false);
   const [skuPrefix, setSkuPrefix] = useState("");
   const [skuSeparator, setSkuSeparator] = useState("");
   const [nextSKUNumber, setNextSKUNumber] = useState(1);
 
   // ── Dirty check ──
 
-  const isDirty = !!settings && (
-    JSON.stringify(poCancelReasons) !== JSON.stringify(settings.poCancelReasons ?? []) ||
-    JSON.stringify(paymentTerms) !== JSON.stringify(settings.paymentTerms ?? []) ||
-    isPOReferenceIDInternal !== (settings.isPOReferenceIDInternal ?? false) ||
-    generatePOAutomatically !== (settings.generatePOAutomatically ?? false) ||
-    poPrefix !== (settings.poPrefix ?? "") ||
-    poSeparator !== (settings.poSeparator ?? "") ||
-    nextPONumber !== (settings.nextPONumber ?? 1) ||
-    JSON.stringify(soCancelReasons) !== JSON.stringify(settings.soCancelReasons ?? []) ||
-    JSON.stringify(soPaymentTerms) !== JSON.stringify(settings.soPaymentTerms ?? []) ||
-    isSOReferenceIDInternal !== (settings.isSOReferenceIDInternal ?? false) ||
-    generateSOAutomatically !== (settings.generateSOAutomatically ?? false) ||
-    soPrefix !== (settings.soPrefix ?? "") ||
-    soSeparator !== (settings.soSeparator ?? "") ||
-    nextSONumber !== (settings.nextSONumber ?? 1) ||
-    JSON.stringify(applicableGst) !== JSON.stringify(settings.applicableGst ?? []) ||
-    generateSKUAutomatically !== (settings.generateSKUAutomatically ?? false) ||
-    skuPrefix !== (settings.skuPrefix ?? "") ||
-    skuSeparator !== (settings.skuSeparator ?? "") ||
-    nextSKUNumber !== (settings.nextSKUNumber ?? 1)
-  );
+  const isDirty =
+    !!settings &&
+    (JSON.stringify(poCancelReasons) !==
+      JSON.stringify(settings.poCancelReasons ?? []) ||
+      JSON.stringify(paymentTerms) !==
+        JSON.stringify(settings.paymentTerms ?? []) ||
+      isPOReferenceIDInternal !== (settings.isPOReferenceIDInternal ?? false) ||
+      generatePOAutomatically !==
+        (settings.generatePOAutomatically ?? false) ||
+      poPrefix !== (settings.poPrefix ?? "") ||
+      poSeparator !== (settings.poSeparator ?? "") ||
+      nextPONumber !== (settings.nextPONumber ?? 1) ||
+      JSON.stringify(soCancelReasons) !==
+        JSON.stringify(settings.soCancelReasons ?? []) ||
+      JSON.stringify(soPaymentTerms) !==
+        JSON.stringify(settings.soPaymentTerms ?? []) ||
+      isSOReferenceIDInternal !== (settings.isSOReferenceIDInternal ?? false) ||
+      generateSOAutomatically !==
+        (settings.generateSOAutomatically ?? false) ||
+      soPrefix !== (settings.soPrefix ?? "") ||
+      soSeparator !== (settings.soSeparator ?? "") ||
+      nextSONumber !== (settings.nextSONumber ?? 1) ||
+      JSON.stringify(applicableGst) !==
+        JSON.stringify(settings.applicableGst ?? []) ||
+      generateSKUAutomatically !==
+        (settings.generateSKUAutomatically ?? false) ||
+      skuPrefix !== (settings.skuPrefix ?? "") ||
+      skuSeparator !== (settings.skuSeparator ?? "") ||
+      nextSKUNumber !== (settings.nextSKUNumber ?? 1));
 
   // Warn on browser close / refresh
   useEffect(() => {
     if (!isDirty) return;
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
     };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  // Warn on in-app navigation (intercept link clicks)
+  // Intercept in-app navigation when dirty
   useEffect(() => {
     if (!isDirty) return;
     const handleClick = (e: MouseEvent) => {
@@ -415,7 +425,6 @@ export default function SettingsPage() {
     setPoPrefix(settings.poPrefix ?? "");
     setPoSeparator(settings.poSeparator ?? "");
     setNextPONumber(settings.nextPONumber ?? 1);
-
     setSoCancelReasons(settings.soCancelReasons ?? []);
     setSoPaymentTerms(settings.soPaymentTerms ?? []);
     setIsSOReferenceIDInternal(settings.isSOReferenceIDInternal ?? false);
@@ -423,7 +432,6 @@ export default function SettingsPage() {
     setSoPrefix(settings.soPrefix ?? "");
     setSoSeparator(settings.soSeparator ?? "");
     setNextSONumber(settings.nextSONumber ?? 1);
-
     setApplicableGst(settings.applicableGst ?? []);
     setGenerateSKUAutomatically(settings.generateSKUAutomatically ?? false);
     setSkuPrefix(settings.skuPrefix ?? "");
@@ -480,212 +488,267 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <PageHeader
-        title="Settings"
-        actions={
-          <div className="flex items-center gap-3">
-            {isDirty && (
-              <span className="text-[12px] text-amber-600 font-medium">
-                Unsaved changes
-              </span>
-            )}
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving || !isDirty}
-              className="h-8 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
-            >
-              {isSaving && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-              Save Changes
-            </Button>
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <PageHeader title="Settings" />
+
+      {/* Two-column layout */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Sidebar — desktop only */}
+        <aside className="hidden lg:flex flex-col w-[200px] flex-shrink-0 border-r border-gray-200 bg-white p-3 gap-0.5">
+          <p className="px-3 pt-1 pb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            Configure
+          </p>
+          {TABS.map((tab) => {
+            const isActive = tab.value === activeTab;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium text-left transition-colors",
+                  isActive
+                    ? "bg-[#f0fdfa] text-[#0d9488]"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-[#111827]"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex-shrink-0",
+                    isActive ? "text-[#0d9488]" : "text-gray-400"
+                  )}
+                >
+                  {tab.icon}
+                </span>
+                {tab.label}
+              </button>
+            );
+          })}
+        </aside>
+
+        {/* Content area */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+
+          {/* Tab strip — mobile only */}
+          <div className="lg:hidden flex overflow-x-auto border-b border-gray-200 bg-white px-4">
+            {TABS.map((tab) => {
+              const isActive = tab.value === activeTab;
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={cn(
+                    "flex items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors whitespace-nowrap",
+                    isActive
+                      ? "border-[#0d9488] text-[#0d9488]"
+                      : "border-transparent text-gray-500 hover:text-[#0F1720]"
+                  )}
+                >
+                  {tab.short}
+                </button>
+              );
+            })}
           </div>
-        }
-      />
 
-      {/* Tabs */}
-      <div className="flex overflow-x-auto border-b border-gray-200 bg-white px-4 sm:px-6">
-        {TABS.map((tab) => {
-          const isActive = tab.value === activeTab;
-          return (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={cn(
-                "flex items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors whitespace-nowrap",
-                isActive
-                  ? "border-[#0d9488] text-[#0d9488]"
-                  : "border-transparent text-gray-500 hover:text-[#0F1720]"
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-auto bg-[#f9fafb]">
+            <div className="mx-auto max-w-[680px] p-4 pb-8 sm:p-6 sm:pb-8">
+
+              {/* ── Purchase Order ── */}
+              {activeTab === "po" && (
+                <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-5 sm:px-6 divide-y divide-[#f3f4f6]">
+                  <div className="py-5 flex flex-col gap-4">
+                    <Toggle
+                      label="Auto-generate PO Number"
+                      description="Automatically assign a sequential PO number when creating a new purchase order"
+                      checked={generatePOAutomatically}
+                      onChange={setGeneratePOAutomatically}
+                    />
+                    {generatePOAutomatically && (
+                      <AutoNumberConfig
+                        prefix={poPrefix}
+                        separator={poSeparator}
+                        nextNumber={nextPONumber}
+                        onPrefixChange={setPoPrefix}
+                        onSeparatorChange={setPoSeparator}
+                        onNextNumberChange={setNextPONumber}
+                        previewLabel="Next PO will be"
+                      />
+                    )}
+                    <Toggle
+                      label="PO Reference ID is Internal"
+                      description="Hide the supplier reference ID field from external-facing documents"
+                      tooltip="When on, the supplier's own reference number is treated as internal and won't appear on documents or emails shared with the supplier."
+                      checked={isPOReferenceIDInternal}
+                      onChange={setIsPOReferenceIDInternal}
+                    />
+                  </div>
+                  <div className="py-5 flex flex-col gap-6">
+                    <TagListInput
+                      label="Payment Terms"
+                      description="Available payment term options when creating a purchase order"
+                      items={paymentTerms}
+                      onChange={setPaymentTerms}
+                      placeholder="e.g. Net 30"
+                    />
+                    <TagListInput
+                      label="Cancel Reasons"
+                      description="Predefined reasons shown when cancelling a purchase order"
+                      items={poCancelReasons}
+                      onChange={setPoCancelReasons}
+                      placeholder="e.g. Contract Cancelled"
+                    />
+                  </div>
+                </div>
               )}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
 
-      {/* Tab content */}
-      <div className="flex-1 overflow-auto bg-[#f9fafb]">
-        <div className="mx-auto max-w-[700px] p-4 pb-8 sm:p-6 sm:pb-6">
-          {/* ── Purchase Order ── */}
-          {activeTab === "po" && (
-            <div className="flex flex-col gap-6">
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
-                  Numbering
-                </h3>
-                <div className="flex flex-col gap-4">
-                  <Toggle
-                    label="Auto-generate PO Number"
-                    description="Automatically assign a sequential PO number when creating a new purchase order"
-                    checked={generatePOAutomatically}
-                    onChange={setGeneratePOAutomatically}
-                  />
-                  {generatePOAutomatically && (
-                    <AutoNumberConfig
-                      prefix={poPrefix}
-                      separator={poSeparator}
-                      nextNumber={nextPONumber}
-                      onPrefixChange={setPoPrefix}
-                      onSeparatorChange={setPoSeparator}
-                      onNextNumberChange={setNextPONumber}
-                      previewLabel="Next PO will be"
+              {/* ── Sales Order ── */}
+              {activeTab === "so" && (
+                <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-5 sm:px-6 divide-y divide-[#f3f4f6]">
+                  <div className="py-5 flex flex-col gap-4">
+                    <Toggle
+                      label="Auto-generate SO Number"
+                      description="Automatically assign a sequential SO number when creating a new sales order"
+                      checked={generateSOAutomatically}
+                      onChange={setGenerateSOAutomatically}
                     />
-                  )}
-                  <Toggle
-                    label="PO Reference ID is Internal"
-                    description="Hide the supplier reference ID field from external-facing documents"
-                    checked={isPOReferenceIDInternal}
-                    onChange={setIsPOReferenceIDInternal}
-                  />
+                    {generateSOAutomatically && (
+                      <AutoNumberConfig
+                        prefix={soPrefix}
+                        separator={soSeparator}
+                        nextNumber={nextSONumber}
+                        onPrefixChange={setSoPrefix}
+                        onSeparatorChange={setSoSeparator}
+                        onNextNumberChange={setNextSONumber}
+                        previewLabel="Next SO will be"
+                      />
+                    )}
+                    <Toggle
+                      label="SO Reference ID is Internal"
+                      description="Hide the reference ID field from external-facing documents"
+                      tooltip="When on, the customer's own reference number is treated as internal and won't appear on documents or emails shared with the customer."
+                      checked={isSOReferenceIDInternal}
+                      onChange={setIsSOReferenceIDInternal}
+                    />
+                  </div>
+                  <div className="py-5 flex flex-col gap-6">
+                    <TagListInput
+                      label="Payment Terms"
+                      description="Available payment term options when creating a sales order"
+                      items={soPaymentTerms}
+                      onChange={setSoPaymentTerms}
+                      placeholder="e.g. 90 Days"
+                    />
+                    <TagListInput
+                      label="Cancel Reasons"
+                      description="Predefined reasons shown when cancelling a sales order"
+                      items={soCancelReasons}
+                      onChange={setSoCancelReasons}
+                      placeholder="e.g. Contract expired"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
-                  Lists
-                </h3>
-                <div className="flex flex-col gap-6">
-                  <TagListInput
-                    label="Payment Terms"
-                    description="Available payment term options when creating a purchase order"
-                    items={paymentTerms}
-                    onChange={setPaymentTerms}
-                    placeholder="e.g. Net 30"
-                  />
-                  <TagListInput
-                    label="Cancel Reasons"
-                    description="Predefined reasons shown when cancelling a purchase order"
-                    items={poCancelReasons}
-                    onChange={setPoCancelReasons}
-                    placeholder="e.g. Contract Cancelled"
-                  />
+              {/* ── Product ── */}
+              {activeTab === "product" && (
+                <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-5 sm:px-6 divide-y divide-[#f3f4f6]">
+                  <div className="py-5 flex flex-col gap-4">
+                    <Toggle
+                      label="Auto-generate Product Code (SKU)"
+                      description="Automatically assign a sequential product code when creating a new product"
+                      checked={generateSKUAutomatically}
+                      onChange={setGenerateSKUAutomatically}
+                    />
+                    {generateSKUAutomatically && (
+                      <AutoNumberConfig
+                        prefix={skuPrefix}
+                        separator={skuSeparator}
+                        nextNumber={nextSKUNumber}
+                        onPrefixChange={setSkuPrefix}
+                        onSeparatorChange={setSkuSeparator}
+                        onNextNumberChange={setNextSKUNumber}
+                        previewLabel="Next code will be"
+                      />
+                    )}
+                  </div>
+                  <div className="py-5">
+                    <GstListInput
+                      items={applicableGst}
+                      onChange={setApplicableGst}
+                    />
+                  </div>
                 </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* Sticky save bar */}
+          <div
+            className={cn(
+              "border-t border-gray-200 bg-white transition-all duration-200",
+              isDirty ? "block" : "hidden"
+            )}
+          >
+            <div className="flex items-center justify-between px-5 sm:px-6 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                <span className="text-[13px] text-gray-600">
+                  You have unsaved changes
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (settings) {
+                      setPoCancelReasons(settings.poCancelReasons ?? []);
+                      setPaymentTerms(settings.paymentTerms ?? []);
+                      setIsPOReferenceIDInternal(settings.isPOReferenceIDInternal ?? false);
+                      setGeneratePOAutomatically(settings.generatePOAutomatically ?? false);
+                      setPoPrefix(settings.poPrefix ?? "");
+                      setPoSeparator(settings.poSeparator ?? "");
+                      setNextPONumber(settings.nextPONumber ?? 1);
+                      setSoCancelReasons(settings.soCancelReasons ?? []);
+                      setSoPaymentTerms(settings.soPaymentTerms ?? []);
+                      setIsSOReferenceIDInternal(settings.isSOReferenceIDInternal ?? false);
+                      setGenerateSOAutomatically(settings.generateSOAutomatically ?? false);
+                      setSoPrefix(settings.soPrefix ?? "");
+                      setSoSeparator(settings.soSeparator ?? "");
+                      setNextSONumber(settings.nextSONumber ?? 1);
+                      setApplicableGst(settings.applicableGst ?? []);
+                      setGenerateSKUAutomatically(settings.generateSKUAutomatically ?? false);
+                      setSkuPrefix(settings.skuPrefix ?? "");
+                      setSkuSeparator(settings.skuSeparator ?? "");
+                      setNextSKUNumber(settings.nextSKUNumber ?? 1);
+                    }
+                  }}
+                  className="h-8 text-[13px] border-gray-200 text-gray-600"
+                  disabled={isSaving}
+                >
+                  Discard
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="h-8 text-[13px] bg-[#0d9488] hover:bg-[#0f766e] text-white"
+                >
+                  {isSaving && (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  )}
+                  Save Changes
+                </Button>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* ── Sales Order ── */}
-          {activeTab === "so" && (
-            <div className="flex flex-col gap-6">
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
-                  Numbering
-                </h3>
-                <div className="flex flex-col gap-4">
-                  <Toggle
-                    label="Auto-generate SO Number"
-                    description="Automatically assign a sequential SO number when creating a new sales order"
-                    checked={generateSOAutomatically}
-                    onChange={setGenerateSOAutomatically}
-                  />
-                  {generateSOAutomatically && (
-                    <AutoNumberConfig
-                      prefix={soPrefix}
-                      separator={soSeparator}
-                      nextNumber={nextSONumber}
-                      onPrefixChange={setSoPrefix}
-                      onSeparatorChange={setSoSeparator}
-                      onNextNumberChange={setNextSONumber}
-                      previewLabel="Next SO will be"
-                    />
-                  )}
-                  <Toggle
-                    label="SO Reference ID is Internal"
-                    description="Hide the reference ID field from external-facing documents"
-                    checked={isSOReferenceIDInternal}
-                    onChange={setIsSOReferenceIDInternal}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
-                  Lists
-                </h3>
-                <div className="flex flex-col gap-6">
-                  <TagListInput
-                    label="Payment Terms"
-                    description="Available payment term options when creating a sales order"
-                    items={soPaymentTerms}
-                    onChange={setSoPaymentTerms}
-                    placeholder="e.g. 90 Days"
-                  />
-                  <TagListInput
-                    label="Cancel Reasons"
-                    description="Predefined reasons shown when cancelling a sales order"
-                    items={soCancelReasons}
-                    onChange={setSoCancelReasons}
-                    placeholder="e.g. Contract expired"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Product ── */}
-          {activeTab === "product" && (
-            <div className="flex flex-col gap-6">
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
-                  Product Code
-                </h3>
-                <div className="flex flex-col gap-4">
-                  <Toggle
-                    label="Auto-generate Product Code (SKU)"
-                    description="Automatically assign a sequential product code when creating a new product"
-                    checked={generateSKUAutomatically}
-                    onChange={setGenerateSKUAutomatically}
-                  />
-                  {generateSKUAutomatically && (
-                    <AutoNumberConfig
-                      prefix={skuPrefix}
-                      separator={skuSeparator}
-                      nextNumber={nextSKUNumber}
-                      onPrefixChange={setSkuPrefix}
-                      onSeparatorChange={setSkuSeparator}
-                      onNextNumberChange={setNextSKUNumber}
-                      previewLabel="Next code will be"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
-                <h3 className="text-[15px] font-semibold text-[#111827] mb-5">
-                  Tax
-                </h3>
-                <GstListInput
-                  items={applicableGst}
-                  onChange={setApplicableGst}
-                />
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Unsaved changes modal */}
+      {/* Unsaved changes nav warning */}
       <Dialog
         open={!!pendingNavUrl}
         onOpenChange={(open) => {
@@ -712,15 +775,12 @@ export default function SettingsPage() {
           <div className="px-5 py-4">
             <p className="text-sm text-gray-700">
               You have unsaved changes that will be lost if you leave this page.
-              Would you like to save your changes before leaving?
+              Would you like to stay and save first?
             </p>
           </div>
 
           <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">
-            <Button
-              variant="outline"
-              onClick={handleDiscardAndLeave}
-            >
+            <Button variant="outline" onClick={handleDiscardAndLeave}>
               Discard & Leave
             </Button>
             <Button

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, Rocket, X as XIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ChevronUp, MapPin, Settings, LayoutGrid, Store, Package, Check, ChevronRight, Loader2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart,
   Bar,
@@ -18,7 +18,15 @@ import {
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { dashboardService } from "@/services/dashboard";
+import { organizationService, OnboardingStatus } from "@/services/organization";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Button } from "@/components/ui/button";
+import { HelpTooltip } from "@/components/ui/HelpTooltip";
+import { QuickCreateCategoryModal } from "@/components/categories/QuickCreateCategoryModal";
+import { QuickCreateLocationModal } from "@/components/locations/QuickCreateLocationModal";
+import { QuickCreateProductModal } from "@/components/products/QuickCreateProductModal";
+import { QuickConfigureSettingsModal } from "@/components/settings/QuickConfigureSettingsModal";
+import { QuickCreatePartnerModal } from "@/components/partners/QuickCreatePartnerModal";
 
 /* ── Period options ──────────────────────────────────────────────────────── */
 
@@ -107,22 +115,105 @@ const selectCls =
 export default function DashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("last_12_months");
   const [alertsExpanded, setAlertsExpanded] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const prevIsComplete = useRef<boolean | undefined>(undefined);
 
   const { fromDate, toDate } = useMemo(
     () => computeDateRange(selectedPeriod),
     [selectedPeriod],
   );
 
+  const { data: onboarding, isLoading: onboardingLoading } = useQuery({
+    queryKey: ["onboarding-status"],
+    queryFn: () => organizationService.getOnboardingStatus().then((r) => r.data),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+
+  // Show celebration only when transitioning from incomplete → complete in this session
+  useEffect(() => {
+    if (!onboarding) return;
+    if (prevIsComplete.current === false && onboarding.isComplete) {
+      setShowCelebration(true);
+    }
+    prevIsComplete.current = onboarding.isComplete;
+  }, [onboarding]);
+
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-overview", fromDate, toDate],
     queryFn: () => dashboardService.getOverview({ fromDate, toDate }),
-    enabled: !!fromDate && !!toDate,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!onboarding?.isComplete,
+    staleTime: 2 * 60 * 1000,
   });
 
   const kpis = data?.kpis;
   const trends = kpis?.trends;
   const hasData = data && kpis;
+
+  if (onboardingLoading) {
+    return (
+      <>
+        <PageHeader title="Dashboard" />
+        <div className="flex flex-1 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#0d9488]" />
+        </div>
+      </>
+    );
+  }
+
+  if (onboarding && !onboarding.isComplete) {
+    return (
+      <>
+        <PageHeader title="Dashboard" />
+        <OnboardingChecklist onboarding={onboarding} />
+      </>
+    );
+  }
+
+  if (showCelebration) {
+    return (
+      <>
+        <PageHeader title="Dashboard" />
+        <div className="flex flex-1 flex-col items-center justify-center bg-[#f9fafb] px-4 text-center">
+          {/* Checkmark */}
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#0d9488]/10">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0d9488]">
+              <Check className="h-7 w-7 text-white stroke-[2.5]" />
+            </div>
+          </div>
+
+          <h1 className="text-[22px] font-bold text-[#111827] mb-2">
+            You&apos;re all set!
+          </h1>
+          <p className="text-[14px] text-gray-500 max-w-[340px] mb-8">
+            Your workspace is configured. Ready to create your first order?
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href="/purchase-orders/create"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] px-5 py-2.5 text-[14px] font-medium text-white transition-colors"
+            >
+              New Purchase Order
+            </Link>
+            <Link
+              href="/sales-orders/create"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 px-5 py-2.5 text-[14px] font-medium text-[#111827] transition-colors"
+            >
+              New Sales Order
+            </Link>
+          </div>
+
+          <button
+            onClick={() => setShowCelebration(false)}
+            className="mt-6 text-[13px] text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Go to dashboard →
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -130,8 +221,6 @@ export default function DashboardPage() {
 
       <ErrorBoundary>
       <div className="flex-1 overflow-auto">
-        {/* Setup banner for new users */}
-        <SetupBanner />
 
         {/* Period selector bar */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-6 px-4 sm:px-8 py-4">
@@ -884,52 +973,202 @@ function TopPartiesSection({
   );
 }
 
-/* ── Setup Banner for new users ─────────────────────────────────────────── */
+/* ── Onboarding Checklist ────────────────────────────────────────────────── */
 
-function SetupBanner() {
+const ICON_CLS = "h-5 w-5 text-[#0d9488]";
+
+const ONBOARDING_STEPS = [
+  {
+    id: "location" as const,
+    title: "Add Your First Location",
+    description: "Where does your business operate?",
+    tooltip: "Locations represent your warehouses, offices, or stores. They're used as delivery and dispatch addresses on orders.",
+    icon: <MapPin className={ICON_CLS} />,
+    href: "/locations/create",
+    cta: "Add Location",
+  },
+  {
+    id: "settings" as const,
+    title: "Configure Order Settings",
+    description: "Set payment terms, PO numbering, and GST rates",
+    tooltip: "Define the payment terms, cancellation reasons, auto-numbering format, and applicable GST rates used across all your orders.",
+    icon: <Settings className={ICON_CLS} />,
+    href: "/settings",
+    cta: "Configure Settings",
+  },
+  {
+    id: "category" as const,
+    title: "Create a Product Category",
+    description: "Organize your products into categories",
+    tooltip: "Categories are required before you can add products. They help group your catalog and filter orders by product type.",
+    icon: <LayoutGrid className={ICON_CLS} />,
+    href: "/categories",
+    cta: "Add Category",
+  },
+  {
+    id: "partner" as const,
+    title: "Add Your First Partner",
+    description: "Who do you buy from or sell to?",
+    tooltip: "Partners are the vendors you purchase from or customers you sell to. A partner must exist before you can create a purchase or sales order.",
+    icon: <Store className={ICON_CLS} />,
+    href: "/partners/new",
+    cta: "Add Partner",
+  },
+  {
+    id: "product" as const,
+    title: "Create Your First Product",
+    description: "Add a product with variants to your catalog",
+    tooltip: "Products represent the items you buy and sell. Each product can have multiple variants (size, colour, etc.) with individual pricing and SKUs.",
+    icon: <Package className={ICON_CLS} />,
+    href: "/products/new",
+    cta: "Add Product",
+  },
+];
+
+function OnboardingChecklist({ onboarding }: { onboarding: OnboardingStatus }) {
   const router = useRouter();
-  const [dismissed, setDismissed] = useState(true);
+  const queryClient = useQueryClient();
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [partnerModalOpen, setPartnerModalOpen] = useState(false);
 
-  useEffect(() => {
-    const completed = localStorage.getItem("onboarding_completed");
-    const hidden = localStorage.getItem("setup_banner_dismissed");
-    setDismissed(!!completed || !!hidden);
-  }, []);
-
-  if (dismissed) return null;
+  const completedCount = Object.values(onboarding.steps).filter(Boolean).length;
+  const totalSteps = ONBOARDING_STEPS.length;
+  const progressPct = Math.round((completedCount / totalSteps) * 100);
 
   return (
-    <div className="mx-4 sm:mx-8 mt-4 rounded-lg border border-[#0d9488]/20 bg-[#f0fdfa] px-4 py-3 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-[#0d9488]/10 flex items-center justify-center flex-shrink-0">
-          <Rocket className="h-4 w-4 text-[#0d9488]" />
-        </div>
-        <div>
-          <p className="text-[13px] font-medium text-[#111827]">
-            Finish setting up your account
-          </p>
-          <p className="text-[12px] text-[#6b7280]">
-            Complete a few steps to get the most out of Aquio
+    <div className="flex-1 overflow-auto bg-[#f9fafb]">
+      <div className="mx-auto max-w-[640px] p-4 sm:p-6">
+        {/* Heading */}
+        <div className="mb-5">
+          <h2 className="text-[18px] font-semibold text-[#111827]">
+            Welcome! Let&apos;s set up your account
+          </h2>
+          <p className="text-[13px] text-[#6b7280] mt-1">
+            Complete these steps to start creating purchase and sales orders.
           </p>
         </div>
+
+        {/* Progress */}
+        <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[14px] font-semibold text-[#111827]">Setup Progress</span>
+            <span className="text-[13px] font-medium text-[#6b7280]">
+              {completedCount} of {totalSteps} complete
+            </span>
+          </div>
+          <div className="w-full h-2 bg-[#f3f4f6] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#0d9488] rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="rounded-[10px] border border-[#e5e7eb] bg-white overflow-hidden">
+          {ONBOARDING_STEPS.map((step, i) => {
+            const isDone = onboarding.steps[step.id];
+            const isLast = i === ONBOARDING_STEPS.length - 1;
+
+            return (
+              <div
+                key={step.id}
+                className={`flex items-center gap-4 px-4 sm:px-6 py-4 ${
+                  !isLast ? "border-b border-[#f3f4f6]" : ""
+                } ${isDone ? "opacity-60" : ""}`}
+              >
+                <div
+                  className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                    isDone ? "bg-[#059669]/10" : "bg-[#f0fdfa]"
+                  }`}
+                >
+                  {isDone ? <Check className="h-5 w-5 text-[#059669]" /> : step.icon}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className={`text-[14px] font-medium ${isDone ? "text-[#6b7280] line-through" : "text-[#111827]"}`}>
+                      {step.title}
+                    </p>
+                    {!isDone && (
+                      <HelpTooltip content={step.tooltip} maxWidth={260} side="right" />
+                    )}
+                  </div>
+                  <p className="text-[12px] text-[#9ca3af] mt-0.5">{step.description}</p>
+                </div>
+
+                {isDone ? (
+                  <span className="text-[12px] font-medium text-[#059669] flex-shrink-0">Done</span>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (step.id === "category") setCategoryModalOpen(true);
+                      else if (step.id === "location") setLocationModalOpen(true);
+                      else if (step.id === "product") setProductModalOpen(true);
+                      else if (step.id === "settings") setSettingsModalOpen(true);
+                      else if (step.id === "partner") setPartnerModalOpen(true);
+                    }}
+                    className="flex-shrink-0 h-8 px-3 text-[12px] bg-[#0d9488] hover:bg-[#0f766e] text-white gap-1"
+                  >
+                    {step.cta}
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <button
-          onClick={() => router.push("/onboarding")}
-          className="h-8 px-3 rounded-md bg-[#0d9488] hover:bg-[#0f766e] text-white text-[12px] font-medium"
-        >
-          Continue Setup
-        </button>
-        <button
-          onClick={() => {
-            localStorage.setItem("setup_banner_dismissed", "true");
-            setDismissed(true);
-          }}
-          className="p-1 text-[#6b7280] hover:text-[#111827]"
-        >
-          <XIcon size={16} />
-        </button>
-      </div>
+
+      <QuickCreateCategoryModal
+        open={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+        mode="category"
+        onCreated={() => {
+          setCategoryModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["onboarding-status"] });
+        }}
+      />
+
+      <QuickCreateLocationModal
+        open={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        onCreated={() => {
+          setLocationModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["onboarding-status"] });
+        }}
+      />
+
+      <QuickCreateProductModal
+        open={productModalOpen}
+        onClose={() => setProductModalOpen(false)}
+        onCreated={() => {
+          setProductModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["onboarding-status"] });
+        }}
+      />
+
+      <QuickConfigureSettingsModal
+        open={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        onSaved={() => {
+          setSettingsModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["onboarding-status"] });
+        }}
+      />
+
+      <QuickCreatePartnerModal
+        open={partnerModalOpen}
+        onClose={() => setPartnerModalOpen(false)}
+        onCreated={() => {
+          setPartnerModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["onboarding-status"] });
+        }}
+      />
     </div>
   );
 }
