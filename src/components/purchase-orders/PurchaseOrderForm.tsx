@@ -1266,7 +1266,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                       {pt}
                     </option>
                   ))}
-                  <option value="__add_new__">+ Add New Payment Term</option>
+                  <option value="__add_new__" style={{ color: "#0d9488", fontWeight: 600 }}>+ Create Payment Term</option>
                 </select>
                 {showAddPaymentTerm && (
                   <div className="mt-2 flex gap-2">
