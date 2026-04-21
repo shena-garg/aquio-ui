@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api-client";
 import { organizationSettingsService } from "@/services/organization-settings";
+import { QuickCreateProductModal } from "@/components/products/QuickCreateProductModal";
 import {
   getVendorCompaniesWithLocations,
   getMyOrganization,
@@ -304,10 +305,12 @@ function PartnerCard({
 function ProductTypeahead({
   value,
   onSelect,
+  onCreateNew,
   hasError,
 }: {
   value: ProductSearchResult | null;
   onSelect: (p: ProductSearchResult) => void;
+  onCreateNew?: (query: string) => void;
   hasError?: boolean;
 }) {
   const [query, setQuery] = useState(value?.name ?? "");
@@ -391,11 +394,8 @@ function ProductTypeahead({
 
   const dropdownContent = open && (
     <div
-      ref={(el) => {
-        // Attach to wrapper for outside-click detection
-      }}
       style={dropdownStyle}
-      className="z-[9999] bg-white border border-[#e5e7eb] rounded-md shadow-lg max-h-48 overflow-y-auto"
+      className="z-[9999] bg-white border border-[#e5e7eb] rounded-md shadow-lg max-h-56 overflow-y-auto"
     >
       {results.length > 0
         ? results.map((p) => (
@@ -418,6 +418,20 @@ function ProductTypeahead({
               No products found
             </div>
           )}
+      {onCreateNew && (
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setOpen(false);
+            onCreateNew(query);
+          }}
+          className="w-full text-left px-3 py-2 text-[13px] text-[#0d9488] font-medium hover:bg-[#f0fdfa] border-t border-[#e5e7eb] flex items-center gap-1.5"
+        >
+          <span className="text-[16px] leading-none">+</span>
+          {query.trim() ? `Create "${query.trim()}"` : "Create New Product"}
+        </button>
+      )}
     </div>
   );
 
@@ -434,10 +448,8 @@ function ProductTypeahead({
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => {
-            if (results.length > 0) {
-              updateDropdownPosition();
-              setOpen(true);
-            }
+            updateDropdownPosition();
+            if (results.length > 0 || onCreateNew) setOpen(true);
           }}
           placeholder="Search product..."
           className={`w-full h-8 pl-7 pr-2.5 border-0 outline-none bg-transparent focus:bg-[#f0fdfa] rounded text-[13px] text-[#111827] ${
@@ -870,6 +882,24 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     }
 
     updateRow(rowId, { variant });
+  }
+
+  // ── Quick-create product modal ───────────────────────────────────────────
+  const [createProductForRowId, setCreateProductForRowId] = useState<string | null>(null);
+  const [createProductInitialName, setCreateProductInitialName] = useState("");
+
+  async function handleProductCreated(created: { _id: string; name: string }) {
+    setCreateProductForRowId(null);
+    // Fetch full product so we have variants + gst + unitOfMeasurement
+    try {
+      const res = await searchProducts(created.name);
+      const found = res.find((p) => p._id === created._id) ?? res[0] ?? null;
+      if (found && createProductForRowId) {
+        handleProductSelect(createProductForRowId, found);
+      }
+    } catch {
+      // Silently ignore — user can manually select from the dropdown
+    }
   }
 
   function addRow() {
@@ -1371,6 +1401,10 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                           <ProductTypeahead
                             value={row.product}
                             onSelect={(p) => handleProductSelect(row.id, p)}
+                            onCreateNew={(q) => {
+                              setCreateProductInitialName(q);
+                              setCreateProductForRowId(row.id);
+                            }}
                             hasError={attempted && !row.product}
                           />
                         </div>
@@ -1539,6 +1573,10 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                                 onSelect={(p) =>
                                   handleProductSelect(row.id, p)
                                 }
+                                onCreateNew={(q) => {
+                                  setCreateProductInitialName(q);
+                                  setCreateProductForRowId(row.id);
+                                }}
                                 hasError={attempted && !row.product}
                               />
                             </td>
@@ -1843,6 +1881,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           </div>
         </div>
       </div>
+
+      <QuickCreateProductModal
+        open={createProductForRowId !== null}
+        onClose={() => setCreateProductForRowId(null)}
+        onCreated={handleProductCreated}
+        initialName={createProductInitialName}
+      />
     </div>
   );
 }
