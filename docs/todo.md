@@ -64,7 +64,7 @@ None remaining.
 
 - [x] **Sign-up API** — Fully integrated via `authService.signup()`
 - [x] **Email verification flow** — Implemented
-- [ ] **Password strength indicator** — Visual feedback during sign-up
+- [x] **Password strength indicator** — Strength bar + checklist (length, uppercase, number, special char)
 - [x] **Forgot password flow** — `/forgot-password` and `/reset-password` pages implemented
 
 ---

@@ -6,10 +6,24 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Check, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/services/auth";
+
+function getPasswordStrength(password: string): { score: number; label: string; color: string } {
+  if (!password) return { score: 0, label: "", color: "" };
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  if (score <= 1) return { score, label: "Weak", color: "#dc2626" };
+  if (score <= 2) return { score, label: "Fair", color: "#f59e0b" };
+  if (score <= 3) return { score, label: "Good", color: "#3b82f6" };
+  return { score, label: "Strong", color: "#0d9488" };
+}
 
 const signupSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
@@ -32,6 +46,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
 
   const {
     register,
@@ -180,6 +195,10 @@ export default function SignupPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Min. 8 characters"
                   {...register("password")}
+                  onChange={(e) => {
+                    register("password").onChange(e);
+                    setPasswordValue(e.target.value);
+                  }}
                   className={`w-full border ${
                     errors.password ? "border-[#dc2626]" : "border-gray-300"
                   } rounded-md px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
@@ -196,6 +215,45 @@ export default function SignupPage() {
               {errors.password && (
                 <p className="text-[12px] text-[#dc2626]">{errors.password.message}</p>
               )}
+
+              {/* Password strength indicator */}
+              {passwordValue.length > 0 && (() => {
+                const { score, label, color } = getPasswordStrength(passwordValue);
+                const checks = [
+                  { label: "At least 8 characters", met: passwordValue.length >= 8 },
+                  { label: "Uppercase letter", met: /[A-Z]/.test(passwordValue) },
+                  { label: "Number", met: /[0-9]/.test(passwordValue) },
+                  { label: "Special character", met: /[^A-Za-z0-9]/.test(passwordValue) },
+                ];
+                return (
+                  <div className="mt-1 space-y-2">
+                    {/* Bar */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1 flex-1">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div
+                            key={i}
+                            className="h-1 flex-1 rounded-full transition-all duration-300"
+                            style={{ backgroundColor: score >= i ? color : "#e5e7eb" }}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[11px] font-medium" style={{ color }}>{label}</span>
+                    </div>
+                    {/* Checklist */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                      {checks.map((c) => (
+                        <div key={c.label} className="flex items-center gap-1">
+                          {c.met
+                            ? <Check size={11} className="text-[#0d9488] flex-shrink-0" />
+                            : <X size={11} className="text-[#9ca3af] flex-shrink-0" />}
+                          <span className={`text-[11px] ${c.met ? "text-[#374151]" : "text-[#9ca3af]"}`}>{c.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Submit */}
