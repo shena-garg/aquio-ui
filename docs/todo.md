@@ -7,22 +7,12 @@ Last updated: 2026-04-25
 
 ---
 
-## Code-Level Issues (Found in Codebase)
-
-### Incomplete Features / Placeholder UI
+## Placeholder UI (Pending Implementation)
 
 | File | Line | Issue |
 |------|------|-------|
-| `src/components/purchase-orders/details/PODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" placeholder |
-| `src/components/sales-orders/details/SODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" placeholder |
-
-
-### Silent Error Handling
-
-| File | Line | Context |
-|------|------|---------|
-| `src/components/products/ProductForm.tsx` | 289 | File upload error — no toast |
-| `src/components/products/details/ProductDetailsHeader.tsx` | 58 | Archive product — no error toast |
+| `src/components/purchase-orders/details/PODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" |
+| `src/components/sales-orders/details/SODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" |
 
 ---
 
