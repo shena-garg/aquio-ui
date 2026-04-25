@@ -1,7 +1,7 @@
 # To-Do List
 
 Consolidated list of all TODOs, incomplete features, code issues, and planned roadmap items.
-Last updated: 2026-04-25
+Last updated: 2026-04-25 (AI layer added)
 
 ---
 
@@ -47,19 +47,31 @@ Last updated: 2026-04-25
 
 > Ordered by user impact and build feasibility. Items marked 🔥 are workflow blockers for serious procurement teams.
 
+### Immediate (Next 1–2 months)
 1. 🔥 **Approval Workflows** — Biggest adoption blocker for teams with 5+ people
 2. 🔥 **Invoice & Three-Way Matching** — PO → GRN → Invoice; required before finance can pay
 3. 🔥 **Notifications tab** — Replace "Coming soon" on PO/SO detail pages
 4. **Sign-up API integration** — Wire up the frontend form
-5. **Bulk import** (CSV for products, partners)
+5. ⭐ **Invoice OCR (AI Phase 1)** — Upload invoice → Claude extracts line items; immediate daily ROI
+
+### Short-term (Month 2–4)
 6. **RFQ Module** — Pre-PO quotation workflow
 7. **Payment Tracking** — Mark invoices as paid, track outstanding
-8. **Supplier Scorecards** — Surface on-time delivery % and pricing consistency
-9. **PO → SO linking**
-10. **GST reconciliation + Tally integration**
-11. **Smart features** (AI/ML layer) — see Smart Procurement section
-12. **Supplier Portal**
-13. **Mobile app / PWA**
+8. **Bulk import** (CSV for products, partners)
+9. **AI Chat sidebar** — Natural language queries over procurement data
+10. **Price anomaly detection (AI Phase 2)** — Needs ~2 months of invoice data
+
+### Medium-term (Month 4–8)
+11. **Supplier scorecards** — On-time delivery %, price consistency
+12. **Demand forecasting (AI Phase 3)** — Needs 6+ months of SO/PO history
+13. **Cash flow forecast (AI Phase 3)**
+14. **PO → SO linking**
+15. **GST reconciliation + Tally integration**
+
+### Long-term (Month 8+)
+16. **Supplier Portal** — Long-term moat
+17. **Process intelligence (AI Phase 4)** — Bottleneck analysis, health score
+18. **Mobile app / PWA**
 
 ---
 
@@ -221,22 +233,73 @@ The pre-PO workflow. Most SMB procurement tools skip this — it's a major diffe
 
 ---
 
-## Smart Procurement (AI/ML Layer)
+## AI Layer
 
-> These features transform Aquio from a transaction tool into a decision-support system.
+> Transforms Aquio from a transaction tool into an intelligent decision-support system.
+> Architecture: Claude API (LLM) + vector DB (embeddings/semantic search) + ML service (Python/FastAPI for forecasting + anomaly detection) + AI Gateway module in NestJS.
+> Build order: Phase 1 (LLM, no training data needed) → Phase 2 (statistical models, needs 2–3 months data) → Phase 3 (predictive + conversational) → Phase 4 (process intelligence).
 
-- [ ] **Demand forecasting** — Predict next month's procurement needs per product based on SO history and seasonality; suggest PO quantities
-- [ ] **Smart reorder suggestions** — AI-computed reorder point and quantity using consumption velocity + lead time per supplier
-- [ ] **Price anomaly detection** — Flag when a quoted price is statistically unusual vs. historical data for that product/supplier pair
-- [ ] **Duplicate invoice detection** — Automatically catch invoices with same amount + supplier + date range (common fraud vector)
-- [ ] **Supplier recommendation** — "Other buyers in your category get better prices from [Supplier X]" — anonymized benchmarking
-- [ ] **OCR invoice scanning** — Upload invoice image/PDF → AI extracts vendor name, invoice number, line items, total → pre-fill the invoice form
-- [ ] **Smart search** — Natural language search: "Show me all steel pipe orders from last quarter above ₹1L" → translates to filters
-- [ ] **Spend clustering** — Auto-group similar ad-hoc purchases to suggest catalog products and consolidation opportunities
-- [ ] **Lead time prediction** — Based on supplier history, predict realistic delivery dates at PO creation
-- [ ] **Risk scoring** — Supplier risk score based on delivery delays, price volatility, GST compliance, concentration risk
-- [ ] **Auto-categorization** — When a new product is added, suggest category + HSN code based on name using ML model
-- [ ] **Cash flow forecast** — Based on open POs and payment terms, project outgoing payments over next 30/60/90 days
+### Phase 1 — Intelligent Document Processing (Start here, immediate ROI)
+
+- [ ] **Invoice OCR & extraction** ⭐ *Start with this* — Upload invoice PDF/image → Claude API extracts vendor name, GSTIN, invoice number, date, line items, GST, total → pre-fills invoice form. Endpoint: `PATCH /invoices/:id/extract`. Eliminates manual invoice entry.
+- [ ] **Contract intelligence** — Upload supplier rate contract → AI extracts agreed prices per SKU, validity period, payment conditions, penalty clauses, MOQs → stored as structured data; alerts when PO deviates from contract rates
+- [ ] **Supplier quote parsing** — Paste or forward a supplier email quote → AI parses into structured RFQ response with line items, prices, delivery dates pre-filled
+- [ ] **GRN from delivery challan** — Scan/upload paper delivery challan → AI reads product names, quantities, batch numbers → pre-fills GRN form
+
+### Phase 1 — Conversational Procurement (Chat Interface)
+
+- [ ] **AI chat sidebar** — Natural language assistant embedded in the sidebar; powered by Claude API + RAG over org's own procurement data
+- [ ] **Query your data** — *"What did we spend on packaging in Q1?"*, *"Which suppliers delivered late more than twice?"*, *"Show unmatched invoices above ₹50,000"*
+- [ ] **Take actions via chat** — *"Create a PO for 500kg steel pipes from Tata Steel, delivery by 15th May"*, *"Send RFQ for 1000 M8 bolts to approved suppliers"*
+- [ ] **Alert explanations** — *"Why was this invoice flagged?"* → AI explains in plain English with supporting data points
+- [ ] **Document drafting** — *"Write a payment reminder email to this supplier"*, *"Summarise this supplier's performance for last 6 months"*
+- [ ] **Natural language search** — *"Show me all steel pipe orders from last quarter above ₹1L"* → AI translates to filters and executes
+
+### Phase 2 — Anomaly Detection & Fraud Prevention (needs 2–3 months of data)
+
+- [ ] **Duplicate invoice detection** — Flag invoices with same supplier + same amount + overlapping date range; blocking warning before approval; catches accidental double-submission and fraud
+- [ ] **Price spike detection** — Compare PO/invoice unit price to 90-day moving average for that product/supplier; cross-supplier average; alert with deviation %
+- [ ] **Split PO detection** — Flag multiple small POs to same supplier in short window that together exceed approval threshold (maverick buying workaround)
+- [ ] **Quantity short-shipping detection** — Flag if a supplier consistently delivers 2–3% less than ordered across multiple GRNs
+- [ ] **Bid collusion detection** — Flag when multiple RFQ quotes are suspiciously similar in price (within 1–2%) — possible supplier cartel
+- [ ] **New supplier risk alert** — First PO to new supplier triggers review prompt and checklist
+- [ ] **Supplier risk scoring** — Score based on: delivery delays, price volatility, GST compliance status, order concentration risk; shown on partner detail page
+
+### Phase 2 — Smart Recommendations (needs data accumulation)
+
+- [ ] **Supplier recommendation** — On PO creation: show ranked suppliers for each product with price, on-time %, and last purchase date. *"Tata Steel: best price+delivery. Essar: 4% cheaper but 40% late rate."*
+- [ ] **Order consolidation suggestions** — Detect pending purchase requests that can be merged into one PO for freight savings or volume discounts
+- [ ] **Optimal order quantity (EOQ)** — AI-computed quantity per product using consumption rate, holding cost, supplier MOQ, and demand variability; shown as suggestion on PO form
+- [ ] **Auto-categorization** — New product added → AI suggests category + HSN code based on product name using Claude; user confirms
+- [ ] **Spend consolidation** — *"You're buying this product from 4 suppliers. Consolidating to 2 gives negotiating leverage."*
+- [ ] **Auto-approval for low-risk orders** — Learn patterns of repeat, always-approved orders → auto-approve below a threshold from trusted suppliers with audit trail note
+
+### Phase 3 — Predictive Intelligence (needs 6+ months of data)
+
+- [ ] **Demand forecasting** — Predict next 30/60/90 days procurement needs per product from SO history + seasonality + growth trend; shown as "Suggested POs" on dashboard
+- [ ] **Price forecasting** — Integrate commodity price APIs (LME, MCX) for raw materials; *"Steel prices likely to rise 6–9% next month — consider forward buying"*
+- [ ] **Lead time prediction** — Before raising PO: *"Based on 12 past deliveries, expect 8–11 days from this supplier, not their stated 7."* Adjusts delivery date expectations
+- [ ] **Cash flow forecast** — From open POs + payment terms → project outgoing payments over next 30/60/90 days; timeline view for finance
+- [ ] **Stockout risk prediction** — Current stock + consumption velocity + supplier lead time → *"You'll run out of M8 bolts in 12 days. Lead time is 8 days. Order now."*
+- [ ] **Smart reorder suggestions** — AI-computed reorder point and quantity using consumption velocity + lead time variability per supplier; auto-draft PO when triggered
+- [ ] **Seasonal buying patterns** — Detect and surface annual patterns: *"You typically buy 40% more packaging in October — consider early procurement."*
+
+### Phase 4 — Process Intelligence (needs all modules running)
+
+- [ ] **Bottleneck analysis** — *"Your average approval time is 3.4 days. 68% of delays are with one approver. Consider redistributing or setting escalation rules."*
+- [ ] **Procurement health score** — Single 0–100 score per org: on-time delivery %, invoice match rate, budget adherence, approval SLA. Dashboard widget with drill-down.
+- [ ] **Cycle time benchmarking** — Compare your PO-to-GRN cycle time against category averages
+- [ ] **Smart notification prioritisation** — AI decides what's worth alerting vs. batching into daily digest; surface only what needs human action
+- [ ] **Savings tracking** — Compare actual vs. benchmark/budget prices; compute negotiated savings over time
+- [ ] **Spend clustering** — Auto-group similar ad-hoc purchases to suggest catalog consolidation opportunities
+
+### AI Infrastructure (required across all phases)
+
+- [ ] **AI Gateway module** (NestJS) — Single entry point routing to Claude API / embedding service / ML service; handles rate limiting, cost tracking, response caching, fallback on errors
+- [ ] **Vector database** — Pinecone or pgvector; embed products, suppliers, POs for semantic search and RAG
+- [ ] **Feature store** — Precomputed features updated asynchronously: supplier score, 90-day price avg, demand velocity, lead time stats; cached in Redis; AI reads from here not raw DB
+- [ ] **ML service** (Python/FastAPI) — Demand forecasting (Prophet/ARIMA), anomaly detection (Isolation Forest), scoring models; separate lightweight service consumed by aquio-backend
+- [ ] **AI cost dashboard** — Track Claude API + embedding API spend per feature; set budget alerts
 
 ---
 
