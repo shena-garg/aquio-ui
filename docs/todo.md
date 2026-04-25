@@ -18,12 +18,6 @@ None remaining.
 | `src/components/purchase-orders/details/PODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" placeholder |
 | `src/components/sales-orders/details/SODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" placeholder |
 
-### Outdated Content
-
-| File | Line | Issue |
-|------|------|-------|
-| `src/app/(auth)/login/page.tsx` | 162 | Copyright says `© 2024` — should be updated |
-| `src/app/(auth)/signup/page.tsx` | 219 | Copyright says `© 2024` — should be updated |
 
 ### Silent Error Handling
 
