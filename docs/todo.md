@@ -7,17 +7,10 @@ Last updated: 2026-04-25 (AI layer added)
 
 ## Code-Level Issues (Found in Codebase)
 
-### TODOs in Code
-
-| File | Line | Issue |
-|------|------|-------|
-| `src/app/(auth)/signup/page.tsx` | 46 | `// TODO: Replace with actual signup API call` — Sign-up form logs payload to console, no API integration |
-
 ### Debug Console Statements (Should Remove)
 
 | File | Line | Statement |
 |------|------|-----------|
-| `src/app/(auth)/signup/page.tsx` | 47 | `console.log("Signup payload:", values)` |
 | `src/components/purchase-orders/modals/ReceiptFormModal.tsx` | 230 | `console.log("orderId:", orderId)` |
 
 ### Incomplete Features / Placeholder UI
@@ -77,8 +70,7 @@ Last updated: 2026-04-25 (AI layer added)
 
 ## Sign-Up & Auth
 
-- [ ] **Wire up sign-up API** — Replace TODO placeholder with actual API call
-- [ ] **Remove console.log** from sign-up form
+- [x] **Sign-up API** — Fully integrated via `authService.signup()`
 - [x] **Email verification flow** — Implemented
 - [ ] **Password strength indicator** — Visual feedback during sign-up
 - [x] **Forgot password flow** — `/forgot-password` and `/reset-password` pages implemented
@@ -348,7 +340,7 @@ The pre-PO workflow. Most SMB procurement tools skip this — it's a major diffe
 - [ ] **Keyboard shortcuts** — G+P for products, G+O for orders, G+S for suppliers
 - [ ] **Recently viewed** — Quick access to last 5 orders/products/suppliers from sidebar
 - [ ] **Saved/pinned filters** — Save a filter set (e.g. "My overdue orders") and restore with one click
-- [ ] **Update copyright year** — Change `© 2024` → `© 2025` on login and signup pages
+- [x] **Update copyright year** — Changed `© 2024` → `© 2025` on login and signup pages
 
 ---
 

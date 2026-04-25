@@ -159,7 +159,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-[11px] text-gray-400">
-          © 2024 Aquio Inc. Enterprise Platform.
+          © 2025 Aquio Inc. Enterprise Platform.
         </p>
       </div>
     </div>
