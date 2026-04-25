@@ -9,10 +9,6 @@ Last updated: 2026-04-25
 
 ## Code-Level Issues (Found in Codebase)
 
-### Debug Console Statements
-
-None remaining.
-
 ### Incomplete Features / Placeholder UI
 
 | File | Line | Issue |
