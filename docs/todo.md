@@ -1,7 +1,9 @@
 # To-Do List
 
-Consolidated list of all TODOs, incomplete features, code issues, and planned roadmap items.
-Last updated: 2026-04-25 (AI layer added)
+Pending work, open issues, and planned roadmap items.
+Last updated: 2026-04-25
+
+> Completed features have been moved to [docs/features.md](./features.md).
 
 ---
 
@@ -36,8 +38,7 @@ None remaining.
 1. 🔥 **Approval Workflows** — Biggest adoption blocker for teams with 5+ people
 2. 🔥 **Invoice & Three-Way Matching** — PO → GRN → Invoice; required before finance can pay
 3. 🔥 **Notifications tab** — Replace "Coming soon" on PO/SO detail pages
-4. **Sign-up API integration** — Wire up the frontend form
-5. ⭐ **Invoice OCR (AI Phase 1)** — Upload invoice → Claude extracts line items; immediate daily ROI
+4. ⭐ **Invoice OCR (AI Phase 1)** — Upload invoice → Claude extracts line items; immediate daily ROI
 
 ### Short-term (Month 2–4)
 6. **RFQ Module** — Pre-PO quotation workflow
@@ -57,15 +58,6 @@ None remaining.
 16. **Supplier Portal** — Long-term moat
 17. **Process intelligence (AI Phase 4)** — Bottleneck analysis, health score
 18. **Mobile app / PWA**
-
----
-
-## Sign-Up & Auth
-
-- [x] **Sign-up API** — Fully integrated via `authService.signup()`
-- [x] **Email verification flow** — Implemented
-- [x] **Password strength indicator** — Strength bar + checklist (length, uppercase, number, special char)
-- [x] **Forgot password flow** — `/forgot-password` and `/reset-password` pages implemented
 
 ---
 
