@@ -7,11 +7,9 @@ Last updated: 2026-04-25 (AI layer added)
 
 ## Code-Level Issues (Found in Codebase)
 
-### Debug Console Statements (Should Remove)
+### Debug Console Statements
 
-| File | Line | Statement |
-|------|------|-----------|
-| `src/components/purchase-orders/modals/ReceiptFormModal.tsx` | 230 | `console.log("orderId:", orderId)` |
+None remaining.
 
 ### Incomplete Features / Placeholder UI
 

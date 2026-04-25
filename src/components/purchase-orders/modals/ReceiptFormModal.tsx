@@ -227,7 +227,6 @@ export function ReceiptFormModal({
   async function handleSubmit() {
     setAttempted(true);
     if (!canSubmit) return;
-    console.log("orderId:", orderId);
     setIsSubmitting(true);
 
     const payload = {
