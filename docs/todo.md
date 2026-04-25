@@ -198,16 +198,23 @@ Multiple `@typescript-eslint/no-explicit-any` suppressions in `ProductDetailsTab
 
 ## Backend Rewrite
 
-- [ ] **Rewrite backend in NestJS** — Module-by-module migration planned. See `docs/data-models.md` for schema blueprint and `docs/api-contracts.md` for endpoint contracts.
+- [x] **Rewrite backend in NestJS** — Fully complete. All Phase 1 modules live on Render as of 2026-04-25. aquio-ui points to aquio-backend in production.
 
 ---
 
-## Priority Order
+## Deployment
 
-1. Sign-up API integration + remove debug logs
-2. Notifications tab (replace "Coming soon")
-3. Onboarding wizard (Phase 2)
-4. Approval workflows
-5. Bulk import (CSV)
+- [x] **Netlify deployment** — `netlify.toml` configured. Build: `npm run build`, publish: `.next`, plugin: `@netlify/plugin-nextjs`. Set `NEXT_PUBLIC_API_BASE_URL` in Netlify env vars.
+- [x] **Render backend deployment** — Build: `npm run build`, start: `node dist/main`.
+
+---
+
+## Priority Order (as of 2026-04-25)
+
+1. Notifications tab (replace "Coming soon" on PO/SO detail pages)
+2. Sign-up API integration + remove debug logs
+3. Approval workflows
+4. Bulk import (CSV for products, partners)
+5. PO → SO linking
 6. GST/Tally integration
 7. Mobile app/PWA

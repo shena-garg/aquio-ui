@@ -1,6 +1,6 @@
 # CLAUDE.md — Aquio UI
 
-> **This frontend is ~90% complete. Structural changes (folder reorganization, library swaps, architecture overhauls) should be avoided unless explicitly requested by the user.**
+> **This frontend is feature-complete and live on Netlify. Structural changes (folder reorganization, library swaps, architecture overhauls) should be avoided unless explicitly requested by the user.**
 
 ## Project Overview
 
@@ -42,11 +42,13 @@ src/
 │   │   └── details/
 │   ├── products/               # ProductForm, ProductsTable
 │   │   └── details/
-│   ├── partners/               # PartnersTable
-│   ├── locations/              # LocationsTable, LocationForm
+│   ├── partners/               # PartnersTable, QuickCreatePartnerModal
+│   │   └── details/            # PartnerDetailsHeader, PartnerDetailsInfoCard, PartnerDetailsTabs
+│   ├── locations/              # LocationsTable, LocationForm, LocationFormFields, QuickCreateLocationModal
 │   ├── users/                  # UsersTable, UserForm
 │   ├── roles/                  # RolesTable, RoleForm
-│   └── categories/             # CategoriesAccordion
+│   ├── categories/             # CategoriesAccordion, QuickCreateCategoryModal
+│   └── settings/               # QuickConfigureSettingsModal
 ├── services/                   # API service layer (one file per entity)
 │   ├── auth.ts
 │   ├── purchase-orders.ts
@@ -88,10 +90,11 @@ npx tsc --noEmit   # Type check without emitting
 Only one environment variable is needed:
 
 ```
-NEXT_PUBLIC_API_BASE_URL=https://beta-backend.aquio.ai
+NEXT_PUBLIC_API_BASE_URL=https://<your-render-backend-url>.onrender.com
 ```
 
 Copy `.env.example` to `.env.local` and set the API URL.
+For Netlify deployment, set this in Netlify's environment variables dashboard.
 
 ## State Management
 
