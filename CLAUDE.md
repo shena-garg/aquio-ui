@@ -136,14 +136,22 @@ Copy `.env.example` to `.env.local` and set the API URL.
 - `useAuth().hasPermission("entity.action")` for inline permission checks
 - Permission format: `{entity}.{action}` (e.g., `purchase-order.force-close`)
 
-## Backend Cutover Status (as of 2026-04-04)
+## Backend Cutover Status (as of 2026-04-21)
 
-- **aquio-backend is fully built and deployed on Render** — all Phase 1 modules complete
-- **Cutover is in progress** — aquio-ui is being pointed to the new Render backend
-- `NEXT_PUBLIC_API_BASE_URL` in production Vercel/Render env should point to the new backend Render URL
+- **aquio-backend is fully built and deployed on Render** — all Phase 1 modules complete including PDF generation
+- **aquio-ui is live and pointing to aquio-backend** — cutover complete
+- `NEXT_PUBLIC_API_BASE_URL` in production env points to the Render backend URL
 - In `.env.local` for development: use Render URL or `http://localhost:3001` if running locally
 - The email verification banner (`/verify-email`) is implemented in the frontend
 - The forgot password page (`/forgot-password` and `/reset-password`) is implemented in the frontend
+
+## Key Component Patterns (Important for Future Work)
+
+- **Custom typeahead dropdowns** — Use fixed positioning via `getBoundingClientRect` + `useRef`. See `ProductTypeahead` and `PaymentTermsTypeahead` in `PurchaseOrderForm.tsx` as the canonical pattern. Reposition on scroll/resize while open.
+- **Inline quick-create modals** — Pattern: `onCreateNew?: (query: string) => void` prop on typeaheads; parent manages modal open state and `initialName` pre-fill. See `QuickCreateProductModal`, `QuickCreatePartnerModal`, `QuickCreateCategoryModal`, `QuickCreateLocationModal`.
+- **`initialName` prop** — All quick-create modals accept `initialName?: string` to pre-fill the name field when triggered from a search input.
+- **Partner details page** — `src/app/(dashboard)/partners/[id]/page.tsx` uses React Query, edit mode state, `PartnerDetailsHeader` + `PartnerDetailsInfoCard` + `PartnerDetailsTabs`.
+- **PDF buttons on order headers** — Both `PODetailsHeader` and `SODetailsHeader` have Generate PDF / Download PDF logic. `purchaseOrderPDF` is `{ id, name }` object (not string). Download opens `${NEXT_PUBLIC_API_BASE_URL}/files/download/${id}` in new tab.
 
 ---
 

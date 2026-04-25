@@ -57,21 +57,17 @@ Multiple `@typescript-eslint/no-explicit-any` suppressions in `ProductDetailsTab
 - [ ] **Remove console.log** from sign-up form
 - [ ] **Email verification flow** — Verify email after sign-up before allowing login
 - [ ] **Password strength indicator** — Visual feedback during sign-up
-- [ ] **Forgot password flow** — Login page links to `/forgot-password` but page doesn't exist
+- [x] **Forgot password flow** — `/forgot-password` and `/reset-password` pages implemented
 
 ---
 
 ## Onboarding
 
 ### Phase 2: Guided Setup Wizard
-After first login, show a checklist/wizard on Dashboard:
-1. Company Details — Tax number, contact, address (pre-fill from sign-up)
-2. Add Your First Location — Name, GST, address
-3. Invite Team Members — Optional, skip allowed
-4. Add Your First Partner — Name, tax number, location
-5. Add Your First Product — Name, category, variant, unit, GST
-
-Each step skippable. Progress bar. Can revisit.
+- [x] **Onboarding wizard built** — 5-step checklist on Dashboard (Location → Settings → Category → Partner → Product)
+- [x] **Setup banner on Dashboard** — Shows incomplete steps with direct links to fix them
+- [x] Bug fix: Partner step was always showing incomplete (ObjectId vs string mismatch in `countDocuments`)
+- [x] Bug fix: Settings step was always incomplete for existing orgs (now checks for doc existence, not paymentTerms array length)
 
 ### Phase 3: Organic Discovery
 - Remove wizard once key steps done
@@ -191,7 +187,7 @@ Each step skippable. Progress bar. Can revisit.
 
 ## UX Polish (Cross-cutting)
 
-- [ ] Dark mode
+- [x] Dark mode — toggle in sidebar user menu
 - [ ] Keyboard shortcuts (G+P for products, G+O for orders)
 - [ ] Saved/pinned filters per user
 - [ ] Recently viewed orders/products
