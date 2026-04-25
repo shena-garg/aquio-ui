@@ -369,15 +369,3 @@ The pre-PO workflow. Most SMB procurement tools skip this — it's a major diffe
 - [ ] **Shiprocket / Delhivery** — Shipment tracking integration for outbound SO logistics
 - [ ] **Slack / Teams** — Post order status changes, approval requests to channels
 
----
-
-## Backend Rewrite
-
-- [x] **Rewrite backend in NestJS** — Fully complete. All Phase 1 modules live on Render.
-
----
-
-## Deployment
-
-- [x] **Netlify deployment** — `netlify.toml` configured. Build: `npm run build`, publish: `.next`, plugin: `@netlify/plugin-nextjs`.
-- [x] **Render backend deployment** — Build: `npm run build`, start: `node dist/main`.
