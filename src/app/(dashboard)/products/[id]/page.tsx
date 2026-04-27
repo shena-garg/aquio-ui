@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
@@ -116,6 +116,7 @@ function buildEditState(product: {
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -133,6 +134,14 @@ export default function ProductDetailPage() {
       toast.error("Failed to load product. Please try again.");
     }
   }, [isError]);
+
+  // Auto-enter edit mode when navigated here with ?edit=true
+  useEffect(() => {
+    if (product && searchParams.get("edit") === "true" && !isEditing) {
+      setEditState(buildEditState(product));
+      setIsEditing(true);
+    }
+  }, [product, searchParams, isEditing]);
 
   function handleEditStart() {
     if (!product) return;

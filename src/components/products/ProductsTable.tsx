@@ -295,7 +295,7 @@ export function ProductsTable({
             <>
               <RequirePermission permission="product.edit">
                 <DropdownMenuItem
-                  onClick={() => router.push(`/products/${product._id}/edit`)}
+                  onClick={() => router.push(`/products/${product._id}?edit=true`)}
                 >
                   Edit Product
                 </DropdownMenuItem>
