@@ -42,9 +42,9 @@ function SetPasswordForm() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") ?? "";
-  const prefillCode = params.get("code") ?? "";
 
   const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -52,10 +52,11 @@ function SetPasswordForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { code: prefillCode, newPassword: "", confirmPassword: "" },
+    defaultValues: { code: "", newPassword: "", confirmPassword: "" },
   });
 
   async function onSubmit(values: FormValues) {
+    setSubmitError(null);
     try {
       await authService.setPassword(email, values.code, values.newPassword);
       toast.success("Password set successfully! Please log in.");
@@ -64,7 +65,7 @@ function SetPasswordForm() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to set password";
-      toast.error(message);
+      setSubmitError(message);
     }
   }
 
@@ -98,6 +99,14 @@ function SetPasswordForm() {
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+
+            {/* Inline submit error */}
+            {submitError && (
+              <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {submitError}
+              </div>
+            )}
+
             {/* Verification Code */}
             <div>
               <label
