@@ -47,6 +47,8 @@ interface ProductRow {
   variant: ProductVariant | null;
   quantity: number;
   price: number;
+  quantityStr: string;
+  priceStr: string;
 }
 
 let rowIdCounter = 0;
@@ -55,7 +57,7 @@ function nextRowId(): string {
 }
 
 function emptyRow(): ProductRow {
-  return { id: nextRowId(), product: null, variant: null, quantity: 0, price: 0 };
+  return { id: nextRowId(), product: null, variant: null, quantity: 0, price: 0, quantityStr: "", priceStr: "" };
 }
 
 // ---------------------------------------------------------------------------
@@ -809,6 +811,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           variant,
           quantity: qty,
           price,
+          quantityStr: qty > 0 ? String(qty) : "",
+          priceStr: price > 0 ? String(price) : "",
         };
       });
       setProductRows(rows);
@@ -887,6 +891,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           variant,
           quantity: qty,
           price,
+          quantityStr: qty > 0 ? String(qty) : "",
+          priceStr: price > 0 ? String(price) : "",
         };
       });
       setProductRows(rows);
@@ -1575,11 +1581,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                           <input
                             type="text"
                             inputMode="decimal"
-                            value={row.quantity === 0 ? "" : row.quantity.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 3 })}
+                            value={row.quantityStr}
                             onChange={(e) => {
                               const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                               updateRow(row.id, {
-                                quantity: raw ? parseFloat(raw) : 0,
+                                quantityStr: raw,
+                                quantity: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.quantity,
                               });
                             }}
                             disabled={!hasProduct}
@@ -1594,11 +1601,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             <input
                               type="text"
                               inputMode="decimal"
-                              value={row.price === 0 ? "" : row.price.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                              value={row.priceStr}
                               onChange={(e) => {
                                 const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                 updateRow(row.id, {
-                                  price: raw ? parseFloat(raw) : 0,
+                                  priceStr: raw,
+                                  price: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.price,
                                 });
                               }}
                               disabled={!hasProduct}
@@ -1729,11 +1737,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                                 <input
                                   type="text"
                                   inputMode="decimal"
-                                  value={row.quantity === 0 ? "" : row.quantity.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 3 })}
+                                  value={row.quantityStr}
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                     updateRow(row.id, {
-                                      quantity: raw ? parseFloat(raw) : 0,
+                                      quantityStr: raw,
+                                      quantity: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.quantity,
                                     });
                                   }}
                                   disabled={!hasProduct}
@@ -1755,11 +1764,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                                 <input
                                   type="text"
                                   inputMode="decimal"
-                                  value={row.price === 0 ? "" : row.price.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                  value={row.priceStr}
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                     updateRow(row.id, {
-                                      price: raw ? parseFloat(raw) : 0,
+                                      priceStr: raw,
+                                      price: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.price,
                                     });
                                   }}
                                   disabled={!hasProduct}
