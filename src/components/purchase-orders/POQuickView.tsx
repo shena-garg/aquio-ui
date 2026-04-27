@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PurchaseOrder, POOrderStatus } from "@/services/purchase-orders";
+import { getUOMAbbreviation } from "@/lib/uom";
 
 // ── Badge configs ────────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
   }, 0);
 
   const hasUniformUOM = po.hasUniformUOM !== false;
-  const commonUOM = po.commonUOM ?? "";
+  const commonUOM = getUOMAbbreviation(po.commonUOM ?? "");
 
   // Close on Escape
   useEffect(() => {
@@ -164,8 +165,13 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
                 </thead>
                 <tbody>
                   {products.map((p, idx) => {
-                    const lineTotal = parseFloat(p.totalAmount.$numberDecimal);
-                    const price = parseFloat(p.price.value.$numberDecimal);
+                    const lineTotal = typeof p.totalAmount === "number"
+                      ? p.totalAmount
+                      : parseFloat(p.totalAmount.$numberDecimal);
+                    const price = typeof p.price.value === "number"
+                      ? p.price.value
+                      : parseFloat(p.price.value.$numberDecimal);
+                    const uomAbbr = getUOMAbbreviation(p.quantity.postfix ?? "");
                     const ordered = p.quantity.value;
                     const rem = remainingItems.find(
                       (r) => r.productId === p.product._id && r.variantId === p.variant._id
@@ -188,8 +194,8 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
                         </td>
                         <td className="py-3 px-2 text-right text-[13px] text-[#111827] whitespace-nowrap">
                           {ordered.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 3 })}
-                          {p.quantity.postfix && (
-                            <span className="text-[11px] text-[#9ca3af] ml-0.5">{p.quantity.postfix}</span>
+                          {uomAbbr && (
+                            <span className="text-[11px] text-[#9ca3af] ml-0.5">{uomAbbr}</span>
                           )}
                         </td>
                         <td className="py-3 px-2 text-right whitespace-nowrap">
@@ -197,8 +203,8 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
                             <div className="flex flex-col items-end">
                               <span className="text-[13px] line-through text-[#9ca3af]">
                                 {remainingQty.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 3 })}
-                                {p.quantity.postfix && (
-                                  <span className="text-[11px] ml-0.5">{p.quantity.postfix}</span>
+                                {uomAbbr && (
+                                  <span className="text-[11px] ml-0.5">{uomAbbr}</span>
                                 )}
                               </span>
                               <span className="text-[10px] font-medium text-[#ea580c]">Force Closed</span>
@@ -206,8 +212,8 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
                           ) : (
                             <span className={`text-[13px] ${remainingQty > 0 ? "text-[#dc2626] font-medium" : "text-[#111827]"}`}>
                               {remainingQty.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 3 })}
-                              {p.quantity.postfix && (
-                                <span className="text-[11px] text-[#9ca3af] ml-0.5">{p.quantity.postfix}</span>
+                              {uomAbbr && (
+                                <span className="text-[11px] text-[#9ca3af] ml-0.5">{uomAbbr}</span>
                               )}
                             </span>
                           )}
