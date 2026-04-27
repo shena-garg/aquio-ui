@@ -42,6 +42,7 @@ function SetPasswordForm() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") ?? "";
+  const prefillCode = params.get("code") ?? "";
 
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ function SetPasswordForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { code: "", newPassword: "", confirmPassword: "" },
+    defaultValues: { code: prefillCode, newPassword: "", confirmPassword: "" },
   });
 
   async function onSubmit(values: FormValues) {
