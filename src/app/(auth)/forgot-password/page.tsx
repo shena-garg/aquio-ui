@@ -49,6 +49,8 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   /* ── Step 1 form ── */
   const emailForm = useForm<EmailFormValues>({
@@ -57,6 +59,7 @@ export default function ForgotPasswordPage() {
   });
 
   async function handleEmailSubmit(values: EmailFormValues) {
+    setEmailError(null);
     try {
       await authService.forgotPassword(values.email);
       setEmail(values.email);
@@ -66,7 +69,7 @@ export default function ForgotPasswordPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to send reset code";
-      toast.error(message);
+      setEmailError(message);
     }
   }
 
@@ -77,6 +80,7 @@ export default function ForgotPasswordPage() {
   });
 
   async function handleResetSubmit(values: ResetFormValues) {
+    setResetError(null);
     try {
       await authService.setPassword(email, values.code, values.newPassword);
       toast.success("Password reset successfully");
@@ -85,7 +89,7 @@ export default function ForgotPasswordPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to reset password";
-      toast.error(message);
+      setResetError(message);
     }
   }
 
@@ -135,6 +139,12 @@ export default function ForgotPasswordPage() {
                   Enter your email and we&apos;ll send you a verification code
                 </p>
               </div>
+
+              {emailError && (
+                <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                  {emailError}
+                </div>
+              )}
 
               {/* Email field */}
               <div className="flex flex-col gap-1.5">
@@ -204,6 +214,12 @@ export default function ForgotPasswordPage() {
                   <span className="font-medium text-gray-700">{email}</span>
                 </p>
               </div>
+
+              {resetError && (
+                <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                  {resetError}
+                </div>
+              )}
 
               {/* Email (read-only) */}
               <div className="flex flex-col gap-1.5">
