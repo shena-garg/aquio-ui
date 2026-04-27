@@ -2,52 +2,48 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/services/auth";
 
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid, isDirty },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    mode: "onChange",
-  });
+  function validate() {
+    const errs: { email?: string; password?: string } = {};
+    if (!email.trim()) errs.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Enter a valid email address";
+    if (!password) errs.password = "Password is required";
+    return errs;
+  }
 
-  async function onSubmit(values: LoginFormValues) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const errs = validate();
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0 || isSubmitting) return;
+
     setLoginError(null);
+    setIsSubmitting(true);
     try {
-      const loginResponse = await authService.login(values);
+      const loginResponse = await authService.login({ email: email.trim(), password });
       localStorage.setItem("accessToken", loginResponse.data.accessToken);
       const userResponse = await authService.me();
       localStorage.setItem("user", JSON.stringify(userResponse.data));
       router.push("/dashboard");
     } catch {
       setLoginError("Incorrect email or password. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
-
-  const isDisabled = isSubmitting || !isDirty || !isValid;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start pt-16 sm:justify-center sm:pt-0 bg-[#F6F7F8] px-4 sm:px-6">
@@ -67,36 +63,31 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="px-6 sm:px-10 py-8 flex flex-col gap-6">
+          <form onSubmit={handleSubmit} className="px-6 sm:px-10 py-8 flex flex-col gap-6">
 
             {/* Email field */}
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
                 type="email"
                 placeholder="name@company.com"
-                {...register("email", { onChange: () => setLoginError(null) })}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className={`w-full border ${
-                  errors.email ? "border-[#dc2626]" : "border-gray-300"
+                  fieldErrors.email ? "border-[#dc2626]" : "border-gray-300"
                 } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
               />
-              {errors.email && (
-                <p className="text-[12px] text-[#dc2626] mt-1">{errors.email.message}</p>
+              {fieldErrors.email && (
+                <p className="text-[12px] text-[#dc2626] mt-1">{fieldErrors.email}</p>
               )}
             </div>
 
             {/* Password field */}
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -104,9 +95,10 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••••••"
-                  {...register("password", { onChange: () => setLoginError(null) })}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className={`w-full border ${
-                    errors.password ? "border-[#dc2626]" : "border-gray-300"
+                    fieldErrors.password ? "border-[#dc2626]" : "border-gray-300"
                   } rounded-md px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
                 />
                 <button
@@ -118,8 +110,8 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-[12px] text-[#dc2626] mt-1">{errors.password.message}</p>
+              {fieldErrors.password && (
+                <p className="text-[12px] text-[#dc2626] mt-1">{fieldErrors.password}</p>
               )}
               <div className="flex justify-end">
                 <Link
@@ -141,7 +133,7 @@ export default function LoginPage() {
             {/* Submit button */}
             <Button
               type="submit"
-              disabled={isDisabled}
+              disabled={isSubmitting}
               className="w-full h-12 rounded-md !bg-[#0d9488] hover:!bg-[#0f766e] text-white text-sm font-semibold tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
