@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const {
     register,
@@ -35,6 +35,7 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: LoginFormValues) {
+    setLoginError(null);
     try {
       const loginResponse = await authService.login(values);
       localStorage.setItem("accessToken", loginResponse.data.accessToken);
@@ -42,7 +43,7 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(userResponse.data));
       router.push("/dashboard");
     } catch {
-      toast.error("Login failed. Please check your credentials and try again.");
+      setLoginError("Incorrect email or password. Please try again.");
     }
   }
 
@@ -80,7 +81,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="name@company.com"
-                {...register("email")}
+                {...register("email", { onChange: () => setLoginError(null) })}
                 className={`w-full border ${
                   errors.email ? "border-[#dc2626]" : "border-gray-300"
                 } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
@@ -103,7 +104,7 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••••••"
-                  {...register("password")}
+                  {...register("password", { onChange: () => setLoginError(null) })}
                   className={`w-full border ${
                     errors.password ? "border-[#dc2626]" : "border-gray-300"
                   } rounded-md px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
@@ -129,6 +130,13 @@ export default function LoginPage() {
                 </Link>
               </div>
             </div>
+
+            {/* Login error */}
+            {loginError && (
+              <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {loginError}
+              </div>
+            )}
 
             {/* Submit button */}
             <Button
