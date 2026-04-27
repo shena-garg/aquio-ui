@@ -818,8 +818,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Populate form for duplicate (only copy relevant fields) ───────────
   function populateForDuplicate(
     order: any,
-    vendorList: VendorCompany[],
-    org: Organization
+    _vendorList: VendorCompany[],
+    _org: Organization
   ) {
     // Partners
     if (order.supplier?.id) {
@@ -1198,7 +1198,6 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         payload.status = status;
       }
       const isSO = orderType === "sales";
-      const orderLabel = isSO ? "sales order" : "purchase order";
       const basePath = isSO ? "/sales-orders" : "/purchase-orders";
 
       if (isEditMode && editId) {
