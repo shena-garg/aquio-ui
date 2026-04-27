@@ -161,7 +161,6 @@ export function CancelPOModal({
   // Reset form whenever the modal is dismissed externally
   useEffect(() => {
     if (!isOpen) resetForm();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   return (

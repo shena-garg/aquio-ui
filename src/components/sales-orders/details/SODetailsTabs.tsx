@@ -32,8 +32,7 @@ interface SODetailsTabsProps {
   order: SalesOrder;
 }
 
-const TAB_KEYS = ["products", "shipments", "notifications", "activity"] as const;
-type TabKey = (typeof TAB_KEYS)[number];
+type TabKey = "products" | "shipments" | "notifications" | "activity";
 
 export function SODetailsTabs({ order }: SODetailsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("products");
@@ -683,7 +682,7 @@ function ShipmentSummaryCard({
                                     </button>
                                   </PopoverTrigger>
                                   <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
-                                    <div>{closedByNames[rightRemainingItem?.closedBy!] ? `Force Closed by ${closedByNames[rightRemainingItem?.closedBy!]}` : "Force Closed"}</div>
+                                    <div>{closedByNames[rightRemainingItem?.closedBy ?? ""] ? `Force Closed by ${closedByNames[rightRemainingItem?.closedBy ?? ""]}` : "Force Closed"}</div>
                                     {rightRemainingItem?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(rightRemainingItem.closedAt)}</div>}
                                     {canForceClose && (
                                       <button
@@ -1204,7 +1203,7 @@ function ProductsTable({
                             </button>
                           </PopoverTrigger>
                           <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
-                            <div>{closedByNames[remaining?.closedBy!] ? `Force Closed by ${closedByNames[remaining?.closedBy!]}` : "Force Closed"}</div>
+                            <div>{closedByNames[remaining?.closedBy ?? ""] ? `Force Closed by ${closedByNames[remaining?.closedBy ?? ""]}` : "Force Closed"}</div>
                             {remaining?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remaining.closedAt)}</div>}
                             {canForceClose && (
                               <button
@@ -1361,7 +1360,7 @@ function ProductsTable({
                               </button>
                             </PopoverTrigger>
                             <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
-                              <div>{closedByNames[remaining?.closedBy!] ? `Force Closed by ${closedByNames[remaining?.closedBy!]}` : "Force Closed"}</div>
+                              <div>{closedByNames[remaining?.closedBy ?? ""] ? `Force Closed by ${closedByNames[remaining?.closedBy ?? ""]}` : "Force Closed"}</div>
                               {remaining?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remaining.closedAt)}</div>}
                               {canForceClose && (
                                 <button
