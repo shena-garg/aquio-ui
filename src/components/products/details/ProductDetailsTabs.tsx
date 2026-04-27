@@ -11,6 +11,8 @@ import {
   type CustomAttribute,
 } from "@/services/categories";
 import { productsService, type CreateProductPayload } from "@/services/products";
+import { getEntityActivityLog, getUsers } from "@/services/activity";
+import { SimpleActivityTimeline } from "@/components/activity/SimpleActivityTimeline";
 import {
   LineChart,
   Line,
@@ -31,8 +33,7 @@ interface ProductDetailsTabsProps {
   product: Product;
 }
 
-const TAB_KEYS = ["variants", "analytics"] as const;
-type TabKey = (typeof TAB_KEYS)[number];
+type TabKey = "variants" | "analytics" | "activity";
 
 export function ProductDetailsTabs({
   product,
@@ -42,6 +43,7 @@ export function ProductDetailsTabs({
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "variants", label: "Variants", count: product.variants.length },
     { key: "analytics", label: "Analytics" },
+    { key: "activity", label: "Activity" },
   ];
 
   return (
@@ -85,6 +87,8 @@ export function ProductDetailsTabs({
           <VariantsTab product={product} />
         ) : activeTab === "analytics" ? (
           <AnalyticsTab product={product} />
+        ) : activeTab === "activity" ? (
+          <ActivityTab productId={product._id} />
         ) : null}
       </div>
     </div>
@@ -913,6 +917,29 @@ function computeDateRange(
     fromDate: from.toISOString().slice(0, 10),
     toDate: to.toISOString().slice(0, 10),
   };
+}
+
+function ActivityTab({ productId }: { productId: string }) {
+  const { data: events = [], isLoading: loadingEvents } = useQuery({
+    queryKey: ["activity", "product", productId],
+    queryFn: () => getEntityActivityLog("product", productId),
+    staleTime: 2 * 60 * 1000,
+  });
+  const { data: users = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ["audit-users"],
+    queryFn: getUsers,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (loadingEvents || loadingUsers) {
+    return <div className="flex justify-center py-10"><Loader2 className="animate-spin text-gray-400" size={20} /></div>;
+  }
+
+  return (
+    <div className="px-4 sm:px-6 py-5">
+      <SimpleActivityTimeline events={events} users={users} />
+    </div>
+  );
 }
 
 function AnalyticsTab({ product }: { product: Product }) {

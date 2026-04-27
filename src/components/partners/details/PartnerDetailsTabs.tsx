@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { Plus, MapPin } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { partnersService, type Partner, type PartnerLocation } from "@/services/partners";
+import { getEntityActivityLog, getUsers } from "@/services/activity";
+import { SimpleActivityTimeline } from "@/components/activity/SimpleActivityTimeline";
 import {
   LocationFormFields,
   LocationValues,
@@ -190,8 +192,7 @@ function LocationCard({ location }: { location: PartnerLocation }) {
 // Tabs
 // ---------------------------------------------------------------------------
 
-const TAB_KEYS = ["locations"] as const;
-type TabKey = (typeof TAB_KEYS)[number];
+type TabKey = "locations" | "activity";
 
 interface PartnerDetailsTabsProps {
   partner: Partner;
@@ -205,7 +206,21 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "locations", label: "Locations", count: locations.length },
+    { key: "activity", label: "Activity" },
   ];
+
+  const { data: activityEvents = [], isLoading: loadingActivity } = useQuery({
+    queryKey: ["activity", "partner", partner._id],
+    queryFn: () => getEntityActivityLog("partner", partner._id),
+    staleTime: 2 * 60 * 1000,
+    enabled: activeTab === "activity",
+  });
+  const { data: activityUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ["audit-users"],
+    queryFn: getUsers,
+    staleTime: 5 * 60 * 1000,
+    enabled: activeTab === "activity",
+  });
 
   return (
     <div className="flex flex-col flex-1 mt-2 min-h-0">
@@ -280,6 +295,16 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === "activity" && (
+          (loadingActivity || loadingUsers) ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="animate-spin text-gray-400" size={20} />
+            </div>
+          ) : (
+            <SimpleActivityTimeline events={activityEvents} users={activityUsers} />
+          )
         )}
       </div>
 

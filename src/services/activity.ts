@@ -7,9 +7,15 @@ import apiClient from "@/lib/api-client";
 export type AuditAction =
   | "create"
   | "update"
+  | "delete"
+  | "archive"
+  | "invite"
+  | "activate"
   | "cancel"
   | "receipt_create"
-  | "forcefully_close_item";
+  | "receipt_update"
+  | "forcefully_close_item"
+  | "undo_forcefully_close_item";
 
 export interface AuditEvent {
   _id: string;
@@ -68,6 +74,20 @@ export interface DiffResult {
 export async function getActivityLog(poId: string): Promise<AuditEvent[]> {
   const { data } = await apiClient.get<AuditEvent[]>(
     `/audit-trail/entity/purchase_order/${poId}/changes`
+  );
+  return data;
+}
+
+export async function getEntityActivityLog(entityType: string, entityId: string): Promise<AuditEvent[]> {
+  const { data } = await apiClient.get<AuditEvent[]>(
+    `/audit-trail/entity/${entityType}/${entityId}/changes`
+  );
+  return data;
+}
+
+export async function getUserActivityLog(userId: string): Promise<AuditEvent[]> {
+  const { data } = await apiClient.get<AuditEvent[]>(
+    `/audit-trail/by-user/${userId}`
   );
   return data;
 }
