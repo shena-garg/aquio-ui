@@ -459,9 +459,10 @@ function FullPageSkeleton() {
 
 interface ProductFormProps {
   editId?: string;
+  initialData?: import("@/services/products").Product;
 }
 
-export function ProductForm({ editId }: ProductFormProps) {
+export function ProductForm({ editId, initialData }: ProductFormProps) {
   const isEditMode = !!editId;
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -471,6 +472,9 @@ export function ProductForm({ editId }: ProductFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [settings, setSettings] = useState<OrganizationSettings | null>(null);
 
+  // Prevents the subCategoryId effect from resetting variant rows on duplicate init
+  const skipNextSubcategoryEffect = useRef(false);
+
   useEffect(() => {
     Promise.all([
       categoriesService.list().then((r) => r.data),
@@ -479,11 +483,74 @@ export function ProductForm({ editId }: ProductFormProps) {
       .then(([catData, settingsData]) => {
         setCategories(catData.categories ?? []);
         setSettings(settingsData);
+
+        if (initialData) {
+          setName(initialData.name);
+          setUnitOfMeasurement(initialData.unitOfMeasurement);
+          setCategoryId(initialData.categoryId);
+          setGst(String(initialData.gst));
+          setDescription(initialData.description ?? "");
+          setTerms(initialData.termsOfConditions ?? []);
+          // SKU, HSN code, files intentionally left empty
+
+          // Build attribute rows from subcategory + custom attributes
+          const cat = (catData.categories ?? []).find((c: Category) => c._id === initialData.categoryId);
+          const subCat = cat?.subCategories?.find((sc: SubCategory) => sc._id === initialData.subCategoryId);
+          const subCatAttrs: CustomAttribute[] = subCat?.customAttributes ?? [];
+          const subCatLabelSet = new Set(subCatAttrs.map((a) => a.label));
+
+          const labelToRowId = new Map<string, string>();
+
+          // Subcategory-sourced rows (same as what the effect would create)
+          const subRows: AttributeRow[] = subCatAttrs.map((attr) => {
+            const row = makeAttributeRowFromCustom(attr);
+            labelToRowId.set(attr.label, row.id);
+            return row;
+          });
+
+          // Custom attribute rows (not in subcategory)
+          const firstAttrs = initialData.variants[0]?.customAttributes ?? [];
+          const customRows: AttributeRow[] = firstAttrs
+            .filter((a) => !subCatLabelSet.has(a.label))
+            .map((a) => {
+              const id = crypto.randomUUID();
+              labelToRowId.set(a.label, id);
+              return {
+                id,
+                label: a.label,
+                unit: a.unit,
+                required: false,
+                valueType: "text" as const,
+                dropdownOptions: [],
+                fromSubCategory: false,
+              };
+            });
+
+          setAttributeRows([...subRows, ...customRows]);
+
+          // Build variant columns with values mapped to row IDs
+          setVariantColumns(
+            initialData.variants.map((v) => ({
+              id: crypto.randomUUID(),
+              name: v.name,
+              values: Object.fromEntries(
+                v.customAttributes
+                  .map((a) => [labelToRowId.get(a.label) ?? "", a.value ?? ""])
+                  .filter(([k]) => k !== "")
+              ),
+            }))
+          );
+
+          // Set subcategoryId last — skip the effect it triggers
+          skipNextSubcategoryEffect.current = true;
+          setSubCategoryId(initialData.subCategoryId);
+        }
       })
       .catch(() => {
         toast.error("Failed to load form data. Please try again.");
       })
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Form state ────────────────────────────────────────────────────────
@@ -522,6 +589,10 @@ export function ProductForm({ editId }: ProductFormProps) {
 
   // When subcategory changes, rebuild attribute rows (preserve custom ones)
   useEffect(() => {
+    if (skipNextSubcategoryEffect.current) {
+      skipNextSubcategoryEffect.current = false;
+      return;
+    }
     setAttributeRows((prev) => {
       const customRows = prev.filter((r) => !r.fromSubCategory);
       const newSubRows = subCategoryAttributes.map((attr) => {
