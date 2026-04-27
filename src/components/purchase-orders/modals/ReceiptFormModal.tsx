@@ -36,6 +36,7 @@ interface ProductRow {
   alreadyReceived: number;
   remaining: number;
   deliveredQuantity: number;
+  deliveredQuantityStr: string;
 }
 
 interface UploadedFile {
@@ -107,6 +108,7 @@ export function ReceiptFormModal({
         alreadyReceived,
         remaining,
         deliveredQuantity,
+        deliveredQuantityStr: deliveredQuantity > 0 ? String(deliveredQuantity) : "",
       };
     });
   }
@@ -161,16 +163,25 @@ export function ReceiptFormModal({
     }
   }
 
-  function updateQuantity(index: number, value: number) {
+  function updateQuantity(index: number, raw: string) {
     setRows((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], deliveredQuantity: Math.max(0, value) };
+      const numeric = raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : next[index].deliveredQuantity;
+      next[index] = {
+        ...next[index],
+        deliveredQuantityStr: raw,
+        deliveredQuantity: Math.max(0, numeric),
+      };
       return next;
     });
   }
 
   function resetQuantity(index: number) {
-    updateQuantity(index, 0);
+    setRows((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], deliveredQuantity: 0, deliveredQuantityStr: "" };
+      return next;
+    });
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -400,12 +411,12 @@ export function ReceiptFormModal({
                           <div className="flex items-center gap-1">
                             <input
                               type="text"
-                              inputMode="numeric"
-                              value={row.deliveredQuantity === 0 ? "" : row.deliveredQuantity.toLocaleString("en-IN")}
+                              inputMode="decimal"
+                              value={row.deliveredQuantityStr}
                               placeholder="0"
                               onChange={(e) => {
-                                const raw = e.target.value.replace(/[^0-9]/g, "");
-                                updateQuantity(idx, raw === "" ? 0 : parseInt(raw, 10));
+                                const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+                                updateQuantity(idx, raw);
                               }}
                               onFocus={(e) => {
                                 const len = e.target.value.length;
