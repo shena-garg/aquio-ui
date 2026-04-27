@@ -20,7 +20,8 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLoginEndpoint = error.config?.url?.includes("/users/login");
+    if (error.response?.status === 401 && !isLoginEndpoint) {
       window.location.href = "/login";
     }
     return Promise.reject(error);
