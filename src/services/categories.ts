@@ -18,6 +18,7 @@ export interface Category {
   _id: string;
   name: string;
   status: string;
+  parentId?: string | null;
   subCategories: SubCategory[];
 }
 
