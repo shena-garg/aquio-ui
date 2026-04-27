@@ -783,6 +783,7 @@ export function ProductForm({ editId }: ProductFormProps) {
     try {
       const payload = {
         name: name.trim(),
+        sku: sku.trim() || undefined,
         unitOfMeasurement,
         categoryId,
         subCategoryId,

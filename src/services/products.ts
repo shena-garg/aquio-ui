@@ -39,6 +39,7 @@ export interface ProductsResponse {
 
 export interface CreateProductPayload {
   name: string;
+  sku?: string;
   unitOfMeasurement: string;
   categoryId: string;
   subCategoryId: string;
