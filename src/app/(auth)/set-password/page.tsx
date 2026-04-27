@@ -16,7 +16,11 @@ const schema = z
       .string()
       .length(6, "Code must be 6 digits")
       .regex(/^\d+$/, "Code must be numeric"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    newPassword: z.string()
+      .min(8, "At least 8 characters")
+      .regex(/[A-Z]/, "At least one uppercase letter")
+      .regex(/[a-z]/, "At least one lowercase letter")
+      .regex(/[0-9]/, "At least one number"),
     confirmPassword: z.string(),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
