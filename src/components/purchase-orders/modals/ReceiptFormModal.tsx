@@ -101,7 +101,11 @@ export function ReceiptFormModal({
         variantId: p.variant._id,
         productName: p.metadata.product.name,
         variantName: p.metadata.variant.name,
-        unitPrice: p.price.value.$numberDecimal,
+        unitPrice: String(
+          typeof p.price.value === "object" && p.price.value !== null
+            ? (p.price.value as { $numberDecimal: string }).$numberDecimal
+            : p.price.value
+        ),
         taxRate: p.gst.value,
         ordered,
         uom: p.quantity.postfix,
