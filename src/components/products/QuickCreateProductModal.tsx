@@ -316,7 +316,7 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
           } else {
             setCategoryId(created._id);
             setSubCategoryId("");
-            setCategories((prev) => [...prev, { _id: created._id, name: created.name, parentId: null, subCategories: [] } as Category]);
+            setCategories((prev) => [...prev, { _id: created._id, name: created.name, status: "active", parentId: null, subCategories: [] }]);
           }
         }}
       />
