@@ -74,6 +74,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
 
   const pdfAllowedStatuses = ["issued", "confirmed", "completed"];
   const canGeneratePdf = pdfAllowedStatuses.includes(order.status);
+  const hasPdf = !!order.purchaseOrderPDF && canGeneratePdf;
 
   async function handleGeneratePdf() {
     setIsGeneratingPdf(true);
@@ -114,7 +115,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   const showCreateReceipt = status === "issued" || status === "confirmed";
   const hasSecondaryActions = hasNotes || hasTerms || showCreateReceipt;
 
-  const canRegenerate = !!order.purchaseOrderPDF && canGeneratePdf;
+  const canRegenerate = hasPdf;
 
   const dropdownMenu = (
     <DropdownMenu>
@@ -251,7 +252,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   /* ── Desktop: everything in one row ── */
   const rightContent = (
     <div className="hidden sm:flex items-center gap-2">
-      {order.purchaseOrderPDF ? (
+      {hasPdf ? (
         <Button
           variant="outline"
           className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
@@ -325,7 +326,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   /* ── Mobile: Row 1 = Download icon + three-dot ── */
   const rightContentMobile = (
     <div className="flex sm:hidden items-center gap-1.5">
-      {order.purchaseOrderPDF ? (
+      {hasPdf ? (
         <Button
           variant="outline"
           className="h-9 w-9 rounded-[6px] p-0"
