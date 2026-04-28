@@ -1073,6 +1073,12 @@ function IndividualReceiptCard({
   );
 }
 
+function parseDecimal(val: { $numberDecimal: string } | number | string): number {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") return parseFloat(val);
+  return parseFloat(val.$numberDecimal);
+}
+
 /* ── Products table ──────────────────────────────────────────────────────────── */
 
 function ProductsTable({
@@ -1198,10 +1204,10 @@ function ProductsTable({
                 </div>
                 <div className="flex flex-col items-end gap-[2px] flex-shrink-0">
                   <span className="text-[13px] font-semibold text-[#111827] whitespace-nowrap">
-                    ₹{parseFloat(product.totalAmount.$numberDecimal).toLocaleString("en-IN")}
+                    ₹{parseDecimal(product.totalAmount).toLocaleString("en-IN")}
                   </span>
                   <span className="text-[11px] text-[#6b7280] whitespace-nowrap">
-                    ₹{product.price.value.$numberDecimal} @ GST {product.gst.value}%
+                    ₹{parseDecimal(product.price.value)} @ GST {product.gst.value}%
                   </span>
                 </div>
               </div>
@@ -1443,7 +1449,7 @@ function ProductsTable({
 
                   {/* Unit Price */}
                   <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
-                    ₹ {product.price.value.$numberDecimal}
+                    ₹ {parseDecimal(product.price.value)}
                   </td>
 
                   {/* Tax% */}
@@ -1453,9 +1459,7 @@ function ProductsTable({
 
                   {/* Line Total */}
                   <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
-                    ₹ {parseFloat(
-                      product.totalAmount.$numberDecimal,
-                    ).toLocaleString("en-IN")}
+                    ₹ {parseDecimal(product.totalAmount).toLocaleString("en-IN")}
                   </td>
                 </tr>
               );
