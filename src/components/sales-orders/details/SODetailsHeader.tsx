@@ -114,6 +114,8 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
   const showCreateShipment = status === "issued" || status === "confirmed";
   const hasSecondaryActions = hasNotes || hasTerms || showCreateShipment;
 
+  const canRegenerate = !!order.purchaseOrderPDF && canGeneratePdf;
+
   const dropdownMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -122,6 +124,14 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
+        {canRegenerate && (
+          <>
+            <DropdownMenuItem onClick={handleGeneratePdf} disabled={isGeneratingPdf}>
+              {isGeneratingPdf ? "Generating…" : "Re-generate PDF"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         {status === "cancelled" || status === "completed" ? (
           <DropdownMenuItem
             onClick={() =>

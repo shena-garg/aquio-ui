@@ -114,6 +114,8 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   const showCreateReceipt = status === "issued" || status === "confirmed";
   const hasSecondaryActions = hasNotes || hasTerms || showCreateReceipt;
 
+  const canRegenerate = !!order.purchaseOrderPDF && canGeneratePdf;
+
   const dropdownMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -122,6 +124,14 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
+        {canRegenerate && (
+          <>
+            <DropdownMenuItem onClick={handleGeneratePdf} disabled={isGeneratingPdf}>
+              {isGeneratingPdf ? "Generating…" : "Re-generate PDF"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         {status === "cancelled" || status === "completed" ? (
           <DropdownMenuItem
             onClick={() =>
