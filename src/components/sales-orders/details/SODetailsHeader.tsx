@@ -82,8 +82,10 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
       await salesOrdersService.generatePdf(order.id ?? order._id);
       toast.success("PDF generated successfully");
       queryClient.invalidateQueries({ queryKey: ["sales-order", order.id ?? order._id] });
-    } catch {
-      toast.error("Failed to generate PDF");
+    } catch (err: unknown) {
+      const apiMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(apiMessage ?? "Failed to generate PDF");
     } finally {
       setIsGeneratingPdf(false);
     }
