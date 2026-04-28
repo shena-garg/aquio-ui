@@ -14,10 +14,26 @@ export type SOOrderStatus =
   | "draft"
   | "cancelled";
 
-export interface Supplier {
-  id: string;
-  name: string;
+export interface EntityAddress {
+  _id?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  gstNumber?: string;
 }
+
+export interface OrderEntity {
+  id?: string;
+  name: string;
+  taxNumber?: string;
+  contactNumber?: string;
+  address?: EntityAddress;
+}
+
+export type Supplier = OrderEntity;
 
 export interface SOProductMetadata {
   product: { name: string };
@@ -73,8 +89,8 @@ export interface SalesOrder {
   referenceId: string;
   supplierReferenceId: string;
   supplier: Supplier;
-  buyer?: { name: string };
-  biller?: { name: string };
+  buyer?: OrderEntity;
+  biller?: OrderEntity;
   purchaseOrderPDF?: { id: string; name: string };
   totalAmount: { $numberDecimal: string } | number;
   totalQuantity?: number;
