@@ -160,13 +160,15 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
           </>
         ) : status === "issued" ? (
           <>
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(`/sales-orders/${order.id}/edit`)
-              }
-            >
-              Edit Order
-            </DropdownMenuItem>
+            {order.receiptStatus === "pending" && (
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/sales-orders/${order.id}/edit`)
+                }
+              >
+                Edit Order
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() =>
                 router.push(
@@ -197,13 +199,15 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
           </>
         ) : status === "confirmed" ? (
           <>
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(`/sales-orders/${order.id}/edit`)
-              }
-            >
-              Edit Order
-            </DropdownMenuItem>
+            {order.receiptStatus === "pending" && (
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/sales-orders/${order.id}/edit`)
+                }
+              >
+                Edit Order
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() =>
                 router.push(

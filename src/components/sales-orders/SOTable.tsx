@@ -430,11 +430,13 @@ function ActionMenu({ order, onCancel, onConfirm, onForceClose }: ActionMenuProp
         </>
       ) : status === "issued" ? (
         <>
-          <RequirePermission permission="sales-order.edit">
-            <DropdownMenuItem onClick={() => router.push(`/sales-orders/${order.id}/edit`)}>
-              Edit Order
-            </DropdownMenuItem>
-          </RequirePermission>
+          {order.receiptStatus === "pending" && (
+            <RequirePermission permission="sales-order.edit">
+              <DropdownMenuItem onClick={() => router.push(`/sales-orders/${order.id}/edit`)}>
+                Edit Order
+              </DropdownMenuItem>
+            </RequirePermission>
+          )}
           <RequirePermission permission="sales-order.add">
             <DropdownMenuItem
               onClick={() => router.push(`/sales-orders/create?duplicateFrom=${order.id}`)}
@@ -467,11 +469,13 @@ function ActionMenu({ order, onCancel, onConfirm, onForceClose }: ActionMenuProp
         </>
       ) : status === "confirmed" ? (
         <>
-          <RequirePermission permission="sales-order.edit">
-            <DropdownMenuItem onClick={() => router.push(`/sales-orders/${order.id}/edit`)}>
-              Edit Order
-            </DropdownMenuItem>
-          </RequirePermission>
+          {order.receiptStatus === "pending" && (
+            <RequirePermission permission="sales-order.edit">
+              <DropdownMenuItem onClick={() => router.push(`/sales-orders/${order.id}/edit`)}>
+                Edit Order
+              </DropdownMenuItem>
+            </RequirePermission>
+          )}
           <RequirePermission permission="sales-order.add">
             <DropdownMenuItem
               onClick={() => router.push(`/sales-orders/create?duplicateFrom=${order.id}`)}

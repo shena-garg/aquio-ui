@@ -160,13 +160,15 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
           </>
         ) : status === "issued" ? (
           <>
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(`/purchase-orders/${order.id}/edit`)
-              }
-            >
-              Edit Order
-            </DropdownMenuItem>
+            {order.receiptStatus === "pending" && (
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/purchase-orders/${order.id}/edit`)
+                }
+              >
+                Edit Order
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() =>
                 router.push(
@@ -197,13 +199,15 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
           </>
         ) : status === "confirmed" ? (
           <>
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(`/purchase-orders/${order.id}/edit`)
-              }
-            >
-              Edit Order
-            </DropdownMenuItem>
+            {order.receiptStatus === "pending" && (
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/purchase-orders/${order.id}/edit`)
+                }
+              >
+                Edit Order
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() =>
                 router.push(
