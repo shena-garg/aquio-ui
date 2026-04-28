@@ -31,13 +31,16 @@ import type { Product } from "@/services/products";
 
 interface ProductDetailsTabsProps {
   product: Product;
+  isEditing?: boolean;
 }
 
 type TabKey = "variants" | "analytics" | "activity";
 
 export function ProductDetailsTabs({
   product,
+  isEditing,
 }: ProductDetailsTabsProps) {
+  if (isEditing) return null;
   const [activeTab, setActiveTab] = useState<TabKey>("variants");
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [

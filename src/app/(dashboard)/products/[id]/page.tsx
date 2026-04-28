@@ -253,6 +253,7 @@ export default function ProductDetailPage() {
         />
         <ProductDetailsTabs
           product={product}
+          isEditing={isEditing}
         />
       </ErrorBoundary>
     </div>
