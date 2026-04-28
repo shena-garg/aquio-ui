@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Filter, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const SELECT_INPUT_CLASS =
 
 export default function UsersPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -53,7 +54,6 @@ export default function UsersPage() {
     data,
     isLoading,
     isError,
-    refetch,
   } = useQuery({
     queryKey: ["users", page, limit, activeTab, searchField, searchValue],
     queryFn: () =>
@@ -293,7 +293,7 @@ export default function UsersPage() {
             roles={roles ?? []}
             isLoading={isLoading}
             activeTab={activeTab}
-            onRefresh={refetch}
+            onRefresh={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
           />
         </div>
       </ErrorBoundary>
