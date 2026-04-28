@@ -173,15 +173,18 @@ function Cell({ label, value }: { label: string; value: string }) {
 
 function EditCell({
   label,
+  required,
   children,
 }: {
   label: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
         {label}
+        {required && <span className="text-[#dc2626] ml-0.5">*</span>}
       </div>
       {children}
     </div>
@@ -291,7 +294,7 @@ export function ProductDetailsInfoCard({
     </EditCell>
   );
   const hsnField = (
-    <EditCell label="HSN Code">
+    <EditCell label="HSN Code" required>
       <input
         value={editState.hsnCode}
         onChange={(e) => updateField("hsnCode", e.target.value)}
@@ -300,7 +303,7 @@ export function ProductDetailsInfoCard({
     </EditCell>
   );
   const categoryField = (
-    <EditCell label="Category">
+    <EditCell label="Category" required>
       <SearchableSelect
         value={editState.categoryId}
         options={categoryOptions}
@@ -318,7 +321,7 @@ export function ProductDetailsInfoCard({
     </EditCell>
   );
   const subCategoryField = (
-    <EditCell label="Subcategory">
+    <EditCell label="Subcategory" required>
       <SearchableSelect
         value={editState.subCategoryId}
         options={subCategoryOptions}
@@ -335,7 +338,7 @@ export function ProductDetailsInfoCard({
     </EditCell>
   );
   const gstField = (
-    <EditCell label="GST">
+    <EditCell label="GST" required>
       <SearchableSelect
         value={String(editState.gst)}
         options={gstOptions}
@@ -345,7 +348,7 @@ export function ProductDetailsInfoCard({
     </EditCell>
   );
   const uomField = (
-    <EditCell label="Unit of Measurement">
+    <EditCell label="Unit of Measurement" required>
       <SearchableSelect
         value={editState.unitOfMeasurement}
         options={uomOptions}
@@ -361,7 +364,7 @@ export function ProductDetailsInfoCard({
       <div className="rounded-[10px] border border-[#0d9488]/30 bg-white px-4 pt-[10px] pb-3">
         {/* Product Name (full width) */}
         <div>
-          <EditCell label="Product Name">
+          <EditCell label="Product Name" required>
             <input
               value={editState.name}
               onChange={(e) => updateField("name", e.target.value)}

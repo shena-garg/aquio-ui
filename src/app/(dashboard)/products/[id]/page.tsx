@@ -157,6 +157,13 @@ export default function ProductDetailPage() {
   async function handleSave() {
     if (!product || !editState) return;
 
+    if (!editState.name.trim()) { toast.error("Product name is required."); return; }
+    if (!editState.unitOfMeasurement) { toast.error("Unit of measurement is required."); return; }
+    if (!editState.categoryId) { toast.error("Category is required."); return; }
+    if (!editState.subCategoryId) { toast.error("Subcategory is required."); return; }
+    if (!editState.hsnCode.trim()) { toast.error("HSN code is required."); return; }
+    if (!editState.gst && editState.gst !== 0) { toast.error("GST is required."); return; }
+
     setIsSaving(true);
     try {
       const payload: CreateProductPayload = {
