@@ -16,15 +16,28 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Global error handling — only redirect to /login on 401 when a session token
-// exists (expired/invalid session). Public auth endpoints (forgot password,
-// set password, verify code) return 401 for wrong credentials and should
-// show an inline error, not redirect.
+// These endpoints return 401 for wrong credentials / wrong code — not session expiry.
+// A 401 from them must never trigger the global logout redirect.
+const AUTH_ACTION_ENDPOINTS = [
+  "/users/login",
+  "/users/verify-code",
+  "/users/resend-verification",
+  "/auth/refresh",
+  "/auth/forgot-password",
+  "/auth/set-password",
+];
+
+// Redirect to /login on 401 only when a session token exists AND the request
+// was not to an auth-action endpoint (where 401 means "wrong credentials").
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const hasToken = !!localStorage.getItem("accessToken");
-    if (error.response?.status === 401 && hasToken) {
+    const requestUrl: string = error.config?.url ?? "";
+    const isAuthAction = AUTH_ACTION_ENDPOINTS.some((path) =>
+      requestUrl.includes(path),
+    );
+    if (error.response?.status === 401 && hasToken && !isAuthAction) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
       window.location.href = "/login";
