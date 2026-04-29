@@ -33,4 +33,22 @@ apiClient.interceptors.response.use(
   }
 );
 
+export async function uploadFile(
+  file: File,
+): Promise<{ id: string; name: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await apiClient.post<{ id: string; name: string }>(
+    "/files/upload",
+    formData,
+    {
+      transformRequest: (data, headers) => {
+        if (headers) delete (headers as Record<string, string>)["Content-Type"];
+        return data;
+      },
+    },
+  );
+  return res.data;
+}
+
 export default apiClient;

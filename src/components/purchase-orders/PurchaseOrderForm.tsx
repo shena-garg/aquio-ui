@@ -15,7 +15,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import apiClient from "@/lib/api-client";
+import { uploadFile } from "@/lib/api-client";
 import { organizationSettingsService } from "@/services/organization-settings";
 import { productsService } from "@/services/products";
 import { QuickCreateProductModal } from "@/components/products/QuickCreateProductModal";
@@ -963,18 +963,10 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     setIsUploading(true);
     try {
       for (const file of Array.from(fileList)) {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await apiClient.post("/files/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        const uploaded = res.data;
+        const uploaded = await uploadFile(file);
         setFiles((prev) => [
           ...prev,
-          {
-            id: uploaded.id ?? uploaded._id ?? "",
-            name: uploaded.name ?? uploaded.fileName ?? file.name,
-          },
+          { id: uploaded.id, name: uploaded.name },
         ]);
       }
     } catch {

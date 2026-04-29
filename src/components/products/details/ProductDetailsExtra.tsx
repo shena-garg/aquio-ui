@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { ChevronDown, Loader2, Paperclip, Plus, X } from "lucide-react";
 import { toast } from "sonner";
-import apiClient from "@/lib/api-client";
+import { uploadFile } from "@/lib/api-client";
 import type { Product } from "@/services/products";
 import type { ProductEditState } from "@/app/(dashboard)/products/[id]/page";
 
@@ -65,13 +65,8 @@ export function ProductDetailsExtra({
     if (!file || !editState) return;
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await apiClient.post<{ id: string; name: string }>(
-        "/files/upload",
-        formData,
-      );
-      updateField("files", [...editState.files, res.data]);
+      const uploaded = await uploadFile(file);
+      updateField("files", [...editState.files, uploaded]);
     } catch {
       toast.error("Failed to upload file");
     } finally {
