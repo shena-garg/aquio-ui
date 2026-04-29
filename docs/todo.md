@@ -7,6 +7,37 @@ Last updated: 2026-04-25
 
 ---
 
+## Infrastructure
+
+### Audit Trail: Migrate from MongoDB Outbox to BullMQ
+
+**Current implementation (as of 2026-04-29):** MongoDB Outbox pattern.
+- When any entity action occurs (create, update, confirm, cancel, receipt, etc.), a pending entry is written to the `audit_outbox` collection (fire-and-forget — main API response is not blocked).
+- A NestJS cron job runs every 30 seconds, reads pending entries in batches of 100, writes them to `audittrails`, and marks them processed.
+- Failed entries are retried up to 3 times then marked `failed` for manual inspection.
+- Processed entries auto-delete after 7 days (MongoDB TTL index on `processedAt`).
+
+**Why migrate to BullMQ (Redis-backed queue):**
+- The one remaining failure window with the current approach: server process crashes *after* the main write but *before* the outbox write lands in MongoDB. This is a microsecond window, but it means zero-drop guarantee cannot be claimed.
+- BullMQ (with Redis persistence) survives server crashes — jobs are durable in Redis. Even if the Render instance restarts, jobs remain queued and are processed on next boot.
+- BullMQ adds built-in retry with exponential backoff, dead-letter queue, job progress tracking, and a UI dashboard (Bull Board) — operationally much richer than the cron approach.
+- Required for SOC 2 / compliance-grade audit trail.
+
+**Migration steps when ready:**
+1. Add Render Redis add-on (managed Redis, ~$10/mo on starter plan).
+2. Install `@nestjs/bullmq` and `bullmq` packages in `aquio-backend`.
+3. Replace `audit_outbox` MongoDB collection with a BullMQ queue named `audit`.
+4. `auditService.queue()` becomes `this.auditQueue.add('log', params)` — same fire-and-forget call pattern at every call site, no other service changes needed.
+5. Add `AuditProcessor` (BullMQ worker) that writes to `audittrails` on job processing.
+6. Remove the `@Cron flushOutbox` method from `AuditService` and the `AuditOutbox` schema/collection.
+7. Configure `defaultJobOptions: { attempts: 5, backoff: { type: 'exponential', delay: 2000 } }` on the queue.
+8. Optionally add Bull Board UI at `/admin/queues` for job monitoring (behind admin auth).
+
+**Files to change:** `audit.service.ts`, `audit.module.ts`, `audit-outbox.schema.ts` (delete), `app.module.ts` (add BullModule.forRoot), Render dashboard (add Redis env vars).
+**No changes needed** in any of the 6 caller services (`orders`, `products`, `partners`, `locations`, `users`, `categories`) — the `void this.auditService.queue(...)` call signature stays identical.
+
+---
+
 ## Placeholder UI (Pending Implementation)
 
 | File | Line | Issue |
