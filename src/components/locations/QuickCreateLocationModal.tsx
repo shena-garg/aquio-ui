@@ -33,11 +33,14 @@ export function QuickCreateLocationModal({ open, onClose, onCreated }: Props) {
     setLoc((prev) => ({ ...prev, ...updates }));
   }
 
+  const [submitError, setSubmitError] = useState("");
+
   function reset() {
     setLoc(EMPTY_LOCATION);
     setErrors({});
     setGstError("");
     setIsSubmitting(false);
+    setSubmitError("");
   }
 
   function handleClose() {
@@ -91,7 +94,7 @@ export function QuickCreateLocationModal({ open, onClose, onCreated }: Props) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to create location";
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -124,6 +127,9 @@ export function QuickCreateLocationModal({ open, onClose, onCreated }: Props) {
             showIsDefault
           />
         </div>
+
+        {/* Error */}
+        {submitError && <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{submitError}</p>}
 
         {/* Footer */}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">

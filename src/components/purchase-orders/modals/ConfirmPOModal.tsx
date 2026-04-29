@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import {
   Dialog,
@@ -40,9 +39,11 @@ export function ConfirmPOModal({
   const isSales = orderType === "sales";
   const [supplierReferenceId, setSupplierReferenceId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   function resetForm() {
     setSupplierReferenceId("");
+    setError("");
   }
 
   function handleClose() {
@@ -67,7 +68,7 @@ export function ConfirmPOModal({
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? (isSales ? "Failed to confirm sales order" : "Failed to confirm purchase order");
-      toast.error(message);
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -128,6 +129,9 @@ export function ConfirmPOModal({
             />
           </div>
         </div>
+
+        {/* Error */}
+        {error && <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{error}</p>}
 
         {/* Footer */}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">

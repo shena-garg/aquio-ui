@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "sonner"; // toast.success only
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { categoriesService } from "@/services/categories";
@@ -47,7 +47,7 @@ export function CategoryForm({ mode, categoryId, initialValues }: CategoryFormPr
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ??
         `Failed to ${isEdit ? "update" : "create"} category`;
-      toast.error(message);
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }

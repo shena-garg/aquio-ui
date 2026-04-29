@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import {
   Dialog,
@@ -27,9 +26,10 @@ export function SetDefaultLocationModal({
   location,
 }: SetDefaultLocationModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   function handleClose() {
-    if (!isSubmitting) onClose();
+    if (!isSubmitting) { setError(""); onClose(); }
   }
 
   async function handleConfirm() {
@@ -55,7 +55,7 @@ export function SetDefaultLocationModal({
         axios.isAxiosError(error) && error.response?.data?.message
           ? error.response.data.message
           : "Failed to set default location";
-      toast.error(message);
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -97,6 +97,9 @@ export function SetDefaultLocationModal({
             location.
           </p>
         </div>
+
+        {/* Error */}
+        {error && <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{error}</p>}
 
         {/* Footer */}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">

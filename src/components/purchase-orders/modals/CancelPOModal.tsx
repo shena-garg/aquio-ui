@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "sonner"; // toast.success only
 import { Search, Loader2, X, Plus } from "lucide-react";
 import {
   Dialog,
@@ -49,6 +49,7 @@ export function CancelPOModal({
   const [isAddingReason, setIsAddingReason] = useState(false);
   const [showNewReasonInput, setShowNewReasonInput] = useState(false);
   const [newReasonValue, setNewReasonValue] = useState("");
+  const [error, setError] = useState("");
 
   const { data: settings, isLoading: loadingReasons } = useQuery({
     queryKey: ["organization-settings"],
@@ -74,6 +75,7 @@ export function CancelPOModal({
     setNotes("");
     setShowNewReasonInput(false);
     setNewReasonValue("");
+    setError("");
   }
 
   function handleClose() {
@@ -131,7 +133,7 @@ export function CancelPOModal({
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to add reason";
-      toast.error(message);
+      setError(message);
     } finally {
       setIsAddingReason(false);
     }
@@ -152,7 +154,7 @@ export function CancelPOModal({
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? (isSales ? "Failed to cancel sales order" : "Failed to cancel purchase order");
-      toast.error(message);
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -324,6 +326,9 @@ export function CancelPOModal({
             />
           </div>
         </div>
+
+        {/* Error */}
+        {error && <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{error}</p>}
 
         {/* Footer */}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import {
   Dialog,
@@ -40,6 +39,7 @@ export function ForceClosePOModal({
 }: ForceClosePOModalProps) {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
   // Build table rows: remaining items with qty > 0, matched to product details
@@ -76,6 +76,7 @@ export function ForceClosePOModal({
 
   function handleClose() {
     setSelectedKeys(new Set());
+    setError("");
     onClose();
   }
 
@@ -118,7 +119,7 @@ export function ForceClosePOModal({
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to force close products";
-      toast.error(message);
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -293,6 +294,9 @@ export function ForceClosePOModal({
               </table>
             </div>
         </div>
+
+        {/* Error */}
+        {error && <p className="px-6 pb-1 text-[13px] text-[#dc2626]">{error}</p>}
 
         {/* Footer — fixed */}
         <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">

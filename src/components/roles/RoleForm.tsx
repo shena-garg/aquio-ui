@@ -355,6 +355,7 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   function updateEntity(entity: string, state: EntityState) {
     setEntityStates((prev) => ({ ...prev, [entity]: state }));
@@ -419,7 +420,7 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ??
         `Failed to ${isEdit ? "update" : "create"} role`;
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -516,6 +517,9 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
               ))}
             </div>
           </div>
+
+          {/* Error */}
+          {submitError && <p className="text-[13px] text-[#dc2626] mb-3">{submitError}</p>}
 
           {/* Action buttons */}
           <div className="flex justify-end gap-2 pb-6">

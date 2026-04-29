@@ -115,6 +115,7 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
   const [errors, setErrors] = useState<FormErrors>({});
   const [gstError, setGstError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [pinLooking, setPinLooking] = useState(false);
 
   // ── Pin code auto-fill ─────────────────────────────────────────────────────
@@ -229,7 +230,7 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ??
         `Failed to ${isEdit ? "update" : "create"} location`;
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -476,8 +477,11 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
               })()}
             </div>
 
+            {/* Error */}
+            {submitError && <p className="text-[13px] text-[#dc2626] mt-4">{submitError}</p>}
+
             {/* Action buttons */}
-            <div className="mt-8 flex justify-end gap-2 border-t border-gray-200 pt-4">
+            <div className="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4">
               <Button
                 variant="outline"
                 onClick={() => router.push("/locations")}

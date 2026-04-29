@@ -54,12 +54,15 @@ export function QuickCreateCategoryModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attempted, setAttempted] = useState(false);
 
+  const [submitError, setSubmitError] = useState("");
+
   function reset() {
     setName("");
     setNameError("");
     setAttributes([]);
     setIsSubmitting(false);
     setAttempted(false);
+    setSubmitError("");
   }
 
   function handleClose() {
@@ -143,7 +146,7 @@ export function QuickCreateCategoryModal({
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? `Failed to create ${isSubcategory ? "subcategory" : "category"}`;
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -292,6 +295,9 @@ export function QuickCreateCategoryModal({
             </div>
           )}
         </div>
+
+        {/* Error */}
+        {submitError && <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{submitError}</p>}
 
         {/* Footer */}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">

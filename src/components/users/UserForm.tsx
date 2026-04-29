@@ -39,6 +39,7 @@ export function UserForm({ mode, userId, initialValues, headerless = false }: Us
   const [roleId, setRoleId] = useState(initialValues?.roleId ?? "");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const { data: roles } = useQuery({
     queryKey: ["roles"],
@@ -98,7 +99,7 @@ export function UserForm({ mode, userId, initialValues, headerless = false }: Us
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ??
         `Failed to ${mode === "edit" ? "update" : "create"} user`;
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -235,8 +236,11 @@ export function UserForm({ mode, userId, initialValues, headerless = false }: Us
               </div>
             </div>
 
+            {/* Error */}
+            {submitError && <p className="text-[13px] text-[#dc2626] mt-4">{submitError}</p>}
+
             {/* Action buttons */}
-            <div className="mt-8 flex justify-end gap-2 border-t border-gray-200 pt-4">
+            <div className="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4">
               <Button
                 variant="outline"
                 onClick={() => router.push("/users")}

@@ -89,9 +89,12 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
     if (open && initialName) setName(initialName);
   }, [open, initialName]);
 
+  const [submitError, setSubmitError] = useState("");
+
   function reset() {
     setName(""); setCategoryId(""); setSubCategoryId(""); setUnitOfMeasurement("");
     setSku(""); setHsnCode(""); setGst(""); setErrors({}); setIsSubmitting(false);
+    setSubmitError("");
   }
 
   function handleClose() {
@@ -136,7 +139,7 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
       handleClose();
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Failed to create product";
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -283,6 +286,9 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
               </p>
             </div>
           )}
+
+          {/* Error */}
+          {submitError && <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{submitError}</p>}
 
           {/* Footer */}
           <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">

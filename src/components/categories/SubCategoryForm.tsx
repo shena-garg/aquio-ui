@@ -57,6 +57,7 @@ export function SubCategoryForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [nameError, setNameError] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   // ── Attribute helpers ───────────────────────────────────────────────────────
 
@@ -145,7 +146,7 @@ export function SubCategoryForm({
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? `Failed to ${isEdit ? "update" : "create"} subcategory`;
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -336,8 +337,11 @@ export function SubCategoryForm({
             </div>
           </div>
 
+          {/* Error */}
+          {submitError && <p className="text-[13px] text-[#dc2626] mt-4">{submitError}</p>}
+
           {/* Action buttons */}
-          <div className="mt-6 flex justify-end gap-2">
+          <div className="mt-4 flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => router.push("/categories")}

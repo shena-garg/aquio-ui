@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import {
   Dialog,
@@ -28,9 +27,10 @@ export function DeactivateUserModal({
   userName,
 }: DeactivateUserModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   function handleClose() {
-    if (!isSubmitting) onClose();
+    if (!isSubmitting) { setError(""); onClose(); }
   }
 
   async function handleDeactivate() {
@@ -46,7 +46,7 @@ export function DeactivateUserModal({
         axios.isAxiosError(error) && error.response?.data?.message
           ? error.response.data.message
           : "Failed to deactivate user";
-      toast.error(message);
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -86,6 +86,9 @@ export function DeactivateUserModal({
             log in until reactivated.
           </p>
         </div>
+
+        {/* Error */}
+        {error && <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{error}</p>}
 
         {/* Footer */}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">
