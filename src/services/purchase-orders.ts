@@ -195,7 +195,7 @@ export const purchaseOrdersService = {
     }),
 
   generatePdf: (id: string) =>
-    apiClient.patch<PurchaseOrder>(`/purchase-orders/${id}/pdf`, null),
+    apiClient.patch<PurchaseOrder>(`/purchase-orders/${id}/pdf`),
 
   undoForceClose: (id: string, productId: string, variantId: string) =>
     apiClient.patch(`/purchase-orders/${id}/undo-forcefully-close`, { productId, variantId }),

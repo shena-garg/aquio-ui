@@ -183,7 +183,7 @@ export const salesOrdersService = {
     apiClient.patch(`/purchase-orders/${id}/forcefully-close-multiple`, { items }),
 
   generatePdf: (id: string) =>
-    apiClient.patch<SalesOrder>(`/purchase-orders/${id}/pdf`, null),
+    apiClient.patch<SalesOrder>(`/purchase-orders/${id}/pdf`),
 
   undoForceClose: (id: string, productId: string, variantId: string) =>
     apiClient.patch(`/purchase-orders/${id}/undo-forcefully-close`, { productId, variantId }),
