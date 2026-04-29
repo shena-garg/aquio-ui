@@ -9,7 +9,7 @@ Last updated: 2026-04-25
 
 | Layer | Platform | Details |
 |---|---|---|
-| Frontend (aquio-ui) | Netlify | Build: `npm run build`, publish: `.next`, plugin: `@netlify/plugin-nextjs` |
+| Frontend (aquio-ui) | Vercel | Build: `npm run build`, framework: Next.js (auto-detected) |
 | Backend (aquio-backend) | Render | Build: `npm run build`, start: `node dist/main` |
 | Database | MongoDB Atlas | Shared with prokure-backend (same collections) |
 
@@ -20,6 +20,7 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 ## Auth & Sign-Up
 
 - **Sign-up** — Company name, name, email, phone, password. Calls `POST /organizations/signup`. Stores JWT, redirects to `/onboarding`.
+- **Password rules** — Enforced on all password flows (signup, set-password, change-password): min 8 characters, at least one uppercase letter, one lowercase letter, one number, one special character. Validated on both UI (Zod/manual) and backend (`class-validator` `@Matches` decorators).
 - **Password strength indicator** — Live strength bar (Weak/Fair/Good/Strong) + checklist (8+ chars, uppercase, number, special char) on the signup form.
 - **Login** — Email + password. Multi-org: if user belongs to multiple orgs, prompted to choose. JWT + refresh token stored in localStorage.
 - **Email verification** — Banner on `/verify-email` after signup. Backend sends verification email via Resend.
@@ -49,12 +50,12 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 
 ## Purchase Orders
 
-- **List page** — Filterable by status (draft, issued, confirmed, completed, cancelled), date range, supplier. Sortable columns. Column visibility preferences saved in localStorage.
-- **Detail page** — Full order view: supplier/consignee/buyer cards, product table, receipt history, activity timeline, audit trail.
+- **List page** — Filterable by status (draft, issued, confirmed, completed, cancelled), date range, supplier. Sortable columns. Column visibility preferences saved in localStorage. Auto-refreshes every 30 seconds.
+- **Detail page** — Full order view: supplier/consignee/buyer cards, product table, receipt history, activity timeline, audit trail. Auto-refreshes every 30 seconds so peer actions (confirm, cancel, receipts) appear without a manual refresh.
 - **Create / Edit** — Shared `PurchaseOrderForm` component. Supplier, consignee, buyer selection with location. Product typeahead with inline quick-create. Payment terms custom dropdown with inline create. Attach files. Terms & conditions list. Issue date and delivery date pickers.
 - **Duplicate** — Create a copy of any existing order pre-filled with the same data.
 - **Status transitions** — Draft → Issued → Confirmed → Completed. Cancel at any non-completed stage. Force close (permission-gated).
-- **Receipts (GRN)** — Record partial or full receipt per product. Quantity and notes. Receipt status: pending / partial / completed / force closed / excess delivered.
+- **Receipts (GRN)** — Record partial or full receipt per product. Quantity, notes, and file attachments. Attached files shown as clickable download links on receipt cards. Receipt status: pending / partial / completed / force closed / excess delivered.
 - **PDF** — Generate PDF (pdfkit + NotoSans, uploaded to S3). Download from order header. Allowed for issued/confirmed/completed orders.
 - **Delay tracking** — `delayDays` computed from expected delivery date. Overdue banner shown on detail page. Daily cron recalculates all open orders.
 - **CSV export** — Export filtered order list.
@@ -64,8 +65,9 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 ## Sales Orders
 
 - **All PO features apply** — Same `PurchaseOrderForm` with `orderType="sales"`. Same modals reused with relabelled fields (Supplier→Customer, Receipt→Shipment).
-- **Shipment tracking** — Mirror of PO receipts for outbound shipments.
+- **Shipment tracking** — Mirror of PO receipts for outbound shipments. Attached files shown as clickable download links on shipment cards.
 - **PDF** — Same generate/download flow as PO.
+- **Auto-refresh** — List and detail pages both poll every 30 seconds.
 
 ---
 
@@ -141,8 +143,8 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 
 ## Files
 
-- **Upload** — Attach files to POs/SOs during create/edit. `POST /files/upload` (multipart).
-- **Download** — `GET /files/download/:id` streams file from S3.
+- **Upload** — Attach files to POs/SOs and receipts/shipments during create/edit. All uploads go through the `uploadFile()` helper in `api-client.ts` which correctly omits the `Content-Type` header so the browser sets the multipart boundary automatically. `POST /files/upload` (multipart).
+- **Download** — `GET /files/download/:id` streams file from S3. Files on product detail pages and receipt/shipment cards are rendered as clickable download links (pill with Paperclip icon).
 - **Programmatic upload** — `filesService.uploadBuffer()` used by PDF generation to upload generated PDFs to S3 without Multer.
 
 ---

@@ -1,6 +1,6 @@
 # CLAUDE.md — Aquio UI
 
-> **This frontend is feature-complete and live on Netlify. Structural changes (folder reorganization, library swaps, architecture overhauls) should be avoided unless explicitly requested by the user.**
+> **This frontend is feature-complete and live on Vercel. Structural changes (folder reorganization, library swaps, architecture overhauls) should be avoided unless explicitly requested by the user.**
 
 ## Project Overview
 
@@ -94,7 +94,7 @@ NEXT_PUBLIC_API_BASE_URL=https://<your-render-backend-url>.onrender.com
 ```
 
 Copy `.env.example` to `.env.local` and set the API URL.
-For Netlify deployment, set this in Netlify's environment variables dashboard.
+For Vercel deployment, set this in the Vercel project's environment variables dashboard.
 
 ## State Management
 
