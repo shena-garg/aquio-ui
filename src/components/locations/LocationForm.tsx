@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { locationsService } from "@/services/locations";
+import { CountrySelect, getZipValidation } from "./LocationFormFields";
 
 interface LocationFormProps {
   mode: "create" | "edit";
@@ -122,8 +123,8 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
     async (value: string) => {
       setZip(value);
 
-      // Auto-lookup when 6 digits entered (Indian pin code)
-      if (/^\d{6}$/.test(value)) {
+      // Auto-lookup only for India (6-digit pin)
+      if (/^\d{6}$/.test(value) && country === "India") {
         setPinLooking(true);
         const result = await lookupPinCode(value);
         setPinLooking(false);
@@ -135,7 +136,7 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
         }
       }
     },
-    []
+    [country]
   );
 
   // ── GST auto-fill ───────────────────────────────────────────────────────────
@@ -175,7 +176,12 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
     if (!addressLine1.trim()) errs.addressLine1 = "Address is required";
     if (!city.trim()) errs.city = "City is required";
     if (!state.trim()) errs.state = "State is required";
-    if (!zip.trim()) errs.zip = "Zip code is required";
+    if (!zip.trim()) {
+      errs.zip = "Zip code is required";
+    } else {
+      const zipCheck = getZipValidation(zip, country);
+      if (zipCheck.error) errs.zip = zipCheck.error;
+    }
     if (!country.trim()) errs.country = "Country is required";
     return errs;
   }
@@ -333,48 +339,57 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
                 />
               </div>
 
-              {/* Pin Code & Country — side by side */}
+              {/* Country & Pin Code — side by side */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Pin / Zip Code <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="e.g. 110001"
-                      value={zip}
-                      onChange={(e) => handleZipChange(e.target.value)}
-                      className={inputClass(errors.zip)}
-                    />
-                    {pinLooking && (
-                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                        <Loader2 className="h-4 w-4 animate-spin text-[#0d9488]" />
-                      </div>
-                    )}
-                  </div>
-                  {errors.zip && (
-                    <p className="text-[12px] text-[#dc2626] mt-1">{errors.zip}</p>
-                  )}
-                  <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
-                    <MapPin size={10} />
-                    Enter 6-digit pin code to auto-fill city &amp; state
-                  </p>
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Country <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter country"
+                  <CountrySelect
                     value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className={inputClass(errors.country)}
+                    onChange={(name) => setCountry(name)}
+                    hasError={!!errors.country}
                   />
                   {errors.country && (
                     <p className="text-[12px] text-[#dc2626] mt-1">{errors.country}</p>
                   )}
+                </div>
+                <div>
+                  {(() => {
+                    const zipValidation = getZipValidation(zip, country);
+                    return (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Pin / Zip Code <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder={zipValidation.hint.split(" (")[0]}
+                            value={zip}
+                            onChange={(e) => handleZipChange(e.target.value)}
+                            className={inputClass(errors.zip || zipValidation.error)}
+                          />
+                          {pinLooking && (
+                            <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                              <Loader2 className="h-4 w-4 animate-spin text-[#0d9488]" />
+                            </div>
+                          )}
+                        </div>
+                        {errors.zip ? (
+                          <p className="text-[12px] text-[#dc2626] mt-1">{errors.zip}</p>
+                        ) : zipValidation.error ? (
+                          <p className="text-[12px] text-[#dc2626] mt-1">{zipValidation.error}</p>
+                        ) : (
+                          <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
+                            <MapPin size={10} />
+                            {zipValidation.hint}
+                            {country === "India" && " — auto-fills city & state"}
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

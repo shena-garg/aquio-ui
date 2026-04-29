@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Loader2, MapPin } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, MapPin, Search } from "lucide-react";
 import { HelpTooltip } from "@/components/ui/HelpTooltip";
 
 // ── GST helpers ───────────────────────────────────────────────────────────────
@@ -35,6 +35,178 @@ export function validateGst(gst: string): { valid: boolean; state?: string; erro
   if (!stateName) return { valid: false, error: `Invalid state code: ${stateCode}` };
   return { valid: true, state: stateName };
 }
+
+// ── Countries ─────────────────────────────────────────────────────────────────
+
+interface CountryEntry {
+  name: string;
+  pattern?: RegExp;
+  hint: string;
+}
+
+export const COUNTRIES: CountryEntry[] = [
+  { name: "India",           pattern: /^\d{6}$/,                    hint: "6-digit pin code (e.g. 400001)" },
+  { name: "United States",   pattern: /^\d{5}(-\d{4})?$/,           hint: "5-digit zip code (e.g. 10001)" },
+  { name: "United Kingdom",  pattern: /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i, hint: "UK postcode (e.g. SW1A 1AA)" },
+  { name: "United Arab Emirates", hint: "Postal code (optional)" },
+  { name: "Canada",          pattern: /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i, hint: "Postal code (e.g. K1A 0B1)" },
+  { name: "Australia",       pattern: /^\d{4}$/,                    hint: "4-digit postcode (e.g. 2000)" },
+  { name: "Singapore",       pattern: /^\d{6}$/,                    hint: "6-digit postal code (e.g. 018960)" },
+  { name: "Germany",         pattern: /^\d{5}$/,                    hint: "5-digit PLZ (e.g. 10115)" },
+  { name: "France",          pattern: /^\d{5}$/,                    hint: "5-digit postal code (e.g. 75001)" },
+  { name: "China",           pattern: /^\d{6}$/,                    hint: "6-digit postal code" },
+  { name: "Japan",           pattern: /^\d{3}-?\d{4}$/,             hint: "7-digit postal code (e.g. 100-0001)" },
+  { name: "South Korea",     pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Malaysia",        pattern: /^\d{5}$/,                    hint: "5-digit postcode" },
+  { name: "Indonesia",       pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Thailand",        pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Saudi Arabia",    pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Bangladesh",      pattern: /^\d{4}$/,                    hint: "4-digit postal code" },
+  { name: "Sri Lanka",       pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Nepal",           pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Pakistan",        pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Vietnam",         pattern: /^\d{6}$/,                    hint: "6-digit postal code" },
+  { name: "Philippines",     pattern: /^\d{4}$/,                    hint: "4-digit postal code" },
+  { name: "Netherlands",     pattern: /^\d{4}\s?[A-Z]{2}$/i,        hint: "Postal code (e.g. 1234 AB)" },
+  { name: "Italy",           pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Spain",           pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Brazil",          pattern: /^\d{5}-?\d{3}$/,             hint: "CEP (e.g. 01310-100)" },
+  { name: "Mexico",          pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "South Africa",    pattern: /^\d{4}$/,                    hint: "4-digit postal code" },
+  { name: "New Zealand",     pattern: /^\d{4}$/,                    hint: "4-digit postal code" },
+  { name: "Switzerland",     pattern: /^\d{4}$/,                    hint: "4-digit postal code" },
+  { name: "Sweden",          pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Nigeria",         pattern: /^\d{6}$/,                    hint: "6-digit postal code" },
+  { name: "Kenya",           pattern: /^\d{5}$/,                    hint: "5-digit postal code" },
+  { name: "Other",           hint: "Enter postal code" },
+];
+
+export function getZipValidation(
+  zip: string,
+  countryName: string,
+): { hint: string; error?: string } {
+  const entry = COUNTRIES.find(
+    (c) => c.name.toLowerCase() === countryName.trim().toLowerCase(),
+  );
+  const hint = entry?.hint ?? "Enter postal code";
+  if (!zip.trim()) return { hint };
+  if (entry?.pattern && !entry.pattern.test(zip.trim())) {
+    return { hint, error: `Invalid format — expected: ${hint}` };
+  }
+  return { hint };
+}
+
+// ── Country searchable select ──────────────────────────────────────────────────
+
+export function CountrySelect({
+  value,
+  onChange,
+  hasError,
+}: {
+  value: string;
+  onChange: (name: string) => void;
+  hasError?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const displayValue = open ? query : value;
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return COUNTRIES;
+    const q = query.toLowerCase();
+    return COUNTRIES.filter((c) => c.name.toLowerCase().includes(q));
+  }, [query]);
+
+  function updatePosition() {
+    if (!inputRef.current) return;
+    const rect = inputRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: "fixed",
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }
+
+  function handleFocus() {
+    setQuery("");
+    updatePosition();
+    setOpen(true);
+  }
+
+  function handleSelect(name: string) {
+    onChange(name);
+    setQuery("");
+    setOpen(false);
+    inputRef.current?.blur();
+  }
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    function reposition() { updatePosition(); }
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrapperRef}>
+      <div className="relative flex items-center">
+        <Search size={13} className="absolute left-2.5 text-gray-400 pointer-events-none" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={displayValue}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={handleFocus}
+          placeholder="Select country"
+          className={`w-full border ${hasError ? "border-[#dc2626]" : "border-gray-300"} rounded-md pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
+        />
+      </div>
+      {open && filtered.length > 0 && (
+        <div
+          style={dropdownStyle}
+          className="max-h-48 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+        >
+          {filtered.map((c) => (
+            <button
+              key={c.name}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => handleSelect(c.name)}
+              className={`flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-gray-50 ${
+                c.name === value ? "bg-[#f0fdfa] text-[#0d9488] font-medium" : "text-gray-900"
+              }`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Pincode lookup ────────────────────────────────────────────────────────────
 
 async function lookupPinCode(
   pin: string,
@@ -115,10 +287,13 @@ export function LocationFormFields({
 }: Props) {
   const [pinLooking, setPinLooking] = useState(false);
 
+  const zipValidation = getZipValidation(values.zip, values.country);
+
   const handleZipChange = useCallback(
     async (value: string) => {
       onChange({ zip: value });
-      if (/^\d{6}$/.test(value)) {
+      // Only auto-lookup for India (6-digit pin)
+      if (/^\d{6}$/.test(value) && values.country === "India") {
         setPinLooking(true);
         const result = await lookupPinCode(value);
         setPinLooking(false);
@@ -126,7 +301,6 @@ export function LocationFormFields({
           onChange({
             city: values.city || result.city,
             state: values.state || result.state,
-            country: values.country || result.country,
           });
         }
       }
@@ -237,8 +411,21 @@ export function LocationFormFields({
         />
       </div>
 
-      {/* Pin / Country */}
+      {/* Country + Pin */}
       <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Country <span className="text-red-500">*</span>
+          </label>
+          <CountrySelect
+            value={values.country}
+            onChange={(name) => onChange({ country: name })}
+            hasError={!!errors.country}
+          />
+          {errors.country && (
+            <p className="text-[12px] text-[#dc2626] mt-1">{errors.country}</p>
+          )}
+        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Pin / Zip Code <span className="text-red-500">*</span>
@@ -246,10 +433,10 @@ export function LocationFormFields({
           <div className="relative">
             <input
               type="text"
-              placeholder="e.g. 110001"
+              placeholder={zipValidation.hint.split(" (")[0]}
               value={values.zip}
               onChange={(e) => handleZipChange(e.target.value)}
-              className={inp(errors.zip)}
+              className={inp(errors.zip || zipValidation.error)}
             />
             {pinLooking && (
               <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
@@ -259,25 +446,13 @@ export function LocationFormFields({
           </div>
           {errors.zip ? (
             <p className="text-[12px] text-[#dc2626] mt-1">{errors.zip}</p>
+          ) : zipValidation.error ? (
+            <p className="text-[12px] text-[#dc2626] mt-1">{zipValidation.error}</p>
           ) : (
             <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
-              <MapPin size={10} /> 6-digit pin auto-fills city &amp; state
+              <MapPin size={10} /> {zipValidation.hint}
+              {values.country === "India" && " — auto-fills city & state"}
             </p>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Country <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Country"
-            value={values.country}
-            onChange={(e) => onChange({ country: e.target.value })}
-            className={inp(errors.country)}
-          />
-          {errors.country && (
-            <p className="text-[12px] text-[#dc2626] mt-1">{errors.country}</p>
           )}
         </div>
       </div>

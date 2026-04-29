@@ -13,6 +13,7 @@ import {
   LocationFieldErrors,
   EMPTY_LOCATION,
   validateGst,
+  getZipValidation,
 } from "./LocationFormFields";
 
 interface Props {
@@ -50,7 +51,12 @@ export function QuickCreateLocationModal({ open, onClose, onCreated }: Props) {
     if (!loc.addressLine1.trim()) errs.addressLine1 = "Address is required";
     if (!loc.city.trim()) errs.city = "City is required";
     if (!loc.state.trim()) errs.state = "State is required";
-    if (!loc.zip.trim()) errs.zip = "Zip code is required";
+    if (!loc.zip.trim()) {
+      errs.zip = "Zip code is required";
+    } else {
+      const zipCheck = getZipValidation(loc.zip, loc.country);
+      if (zipCheck.error) errs.zip = zipCheck.error;
+    }
     if (!loc.country.trim()) errs.country = "Country is required";
     return errs;
   }
