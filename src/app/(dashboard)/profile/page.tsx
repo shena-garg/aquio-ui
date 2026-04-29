@@ -197,8 +197,16 @@ function ChangePasswordSection() {
     const errs: { oldPassword?: string; newPassword?: string } = {};
     if (!oldPassword) errs.oldPassword = "Current password is required";
     if (!newPassword) errs.newPassword = "New password is required";
-    else if (newPassword.length < 6)
-      errs.newPassword = "Password must be at least 6 characters";
+    else if (newPassword.length < 8)
+      errs.newPassword = "Password must be at least 8 characters";
+    else if (!/[A-Z]/.test(newPassword))
+      errs.newPassword = "Password must contain at least one uppercase letter";
+    else if (!/[a-z]/.test(newPassword))
+      errs.newPassword = "Password must contain at least one lowercase letter";
+    else if (!/[0-9]/.test(newPassword))
+      errs.newPassword = "Password must contain at least one number";
+    else if (!/[^A-Za-z0-9]/.test(newPassword))
+      errs.newPassword = "Password must contain at least one special character";
 
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
