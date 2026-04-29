@@ -611,6 +611,7 @@ interface PurchaseOrderFormProps {
 
 export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purchase" }: PurchaseOrderFormProps) {
   const isEditMode = !!editId;
+  const isDuplicateMode = !!duplicateFromId;
   const router = useRouter();
 
   // ── Bootstrap data ──────────────────────────────────────────────────────
@@ -991,7 +992,6 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Product rows ─────────────────────────────────────────────────────────
   const [productRows, setProductRows] = useState<ProductRow[]>([emptyRow()]);
   const [attempted, setAttempted] = useState(false);
-  const isDuplicateMode = !!duplicateFromId;
   const [submitError, setSubmitError] = useState("");
 
   // Field-level errors — collected all at once on submit

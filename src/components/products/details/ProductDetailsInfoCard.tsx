@@ -109,7 +109,6 @@ function SearchableSelect({
       window.removeEventListener("scroll", reposition, true);
       window.removeEventListener("resize", reposition);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
