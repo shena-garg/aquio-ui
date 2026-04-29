@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Download, Info, X as XIcon, Pencil } from "lucide-react";
+import { Download, Info, X as XIcon, Pencil, Paperclip } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
 import { toast } from "sonner";
@@ -992,12 +992,18 @@ function IndividualReceiptCard({
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {receipt.files.map((file: any, fIdx: number) => (
-                    <span
+                    <a
                       key={fIdx}
-                      className="text-[12px] font-normal leading-[15.6px] text-[#0d9488]"
+                      href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/files/download/${file.id ?? file._id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 bg-[#f3f4f6] hover:bg-[#e5e7eb] rounded px-2 py-1 transition-colors"
                     >
-                      {file.name ?? file.fileName ?? `File ${fIdx + 1}`}
-                    </span>
+                      <Paperclip size={11} className="text-[#6b7280]" />
+                      <span className="text-[11px] text-[#111827]">
+                        {file.name ?? file.fileName ?? `File ${fIdx + 1}`}
+                      </span>
+                    </a>
                   ))}
                 </div>
               </div>

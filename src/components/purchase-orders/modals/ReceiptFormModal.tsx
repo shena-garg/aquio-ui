@@ -7,7 +7,7 @@ import { Loader2, X, Plus, Paperclip } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { getUOMAbbreviation } from "@/lib/uom";
-import apiClient from "@/lib/api-client";
+import apiClient, { uploadFile } from "@/lib/api-client";
 import type {
   PurchaseOrder,
   POReceipt,
@@ -197,19 +197,8 @@ export function ReceiptFormModal({
     setIsUploading(true);
     try {
       for (const file of Array.from(fileList)) {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await apiClient.post("/files/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        const uploaded = res.data;
-        setFiles((prev) => [
-          ...prev,
-          {
-            id: uploaded.id ?? uploaded._id ?? "",
-            name: uploaded.name ?? uploaded.fileName ?? file.name,
-          },
-        ]);
+        const uploaded = await uploadFile(file);
+        setFiles((prev) => [...prev, { id: uploaded.id, name: uploaded.name }]);
       }
     } catch {
       setSubmitError("Failed to upload file");
