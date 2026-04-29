@@ -292,6 +292,7 @@ function SKUSettingsDialog({
   const [separator, setSeparator] = useState(settings.skuSeparator);
   const [nextNumber, setNextNumber] = useState(settings.nextSKUNumber);
   const [saving, setSaving] = useState(false);
+  const [skuSaveError, setSkuSaveError] = useState("");
 
   async function handleSave() {
     setSaving(true);
@@ -304,7 +305,7 @@ function SKUSettingsDialog({
       });
       onClose();
     } catch {
-      toast.error("Failed to save SKU settings");
+      setSkuSaveError("Failed to save SKU settings");
     } finally {
       setSaving(false);
     }
@@ -400,8 +401,11 @@ function SKUSettingsDialog({
           )}
         </div>
 
+        {skuSaveError && (
+          <p className="px-5 pb-2 text-[13px] text-[#dc2626]">{skuSaveError}</p>
+        )}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-[#e5e7eb]">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-[13px]">
+          <Button variant="outline" size="sm" onClick={() => { onClose(); setSkuSaveError(""); }} className="h-8 text-[13px]">
             Cancel
           </Button>
           <Button
@@ -469,6 +473,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
 
   // ── Bootstrap data ──────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [settings, setSettings] = useState<OrganizationSettings | null>(null);
 
@@ -547,7 +552,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
         }
       })
       .catch(() => {
-        toast.error("Failed to load form data. Please try again.");
+        setLoadError("Failed to load form data. Please try again.");
       })
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -573,6 +578,8 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
   const [files, setFiles] = useState<{ id: string; name: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [gstInputError, setGstInputError] = useState("");
+  const [fileUploadError, setFileUploadError] = useState("");
 
   // ── SKU settings dialog ─────────────────────────────────────────────
   const [skuSettingsOpen, setSkuSettingsOpen] = useState(false);
@@ -687,9 +694,10 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
   async function handleAddGst() {
     const val = parseFloat(newGstValue);
     if (isNaN(val) || val < 0) {
-      toast.error("Enter a valid GST percentage");
+      setGstInputError("Enter a valid GST percentage");
       return;
     }
+    setGstInputError("");
     setAddingGst(true);
     try {
       await apiClient.post("/organization-settings/my-own/applicable-gst", { gst: val });
@@ -704,7 +712,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to add GST rate";
-      toast.error(message);
+      setGstInputError(message);
     } finally {
       setAddingGst(false);
     }
@@ -746,7 +754,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
         ]);
       }
     } catch {
-      toast.error("Failed to upload file");
+      setFileUploadError("Failed to upload file");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -901,6 +909,13 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
           {isEditMode ? "Edit Product" : "New Product"}
         </span>
       </div>
+
+      {/* ── Load error ──────────────────────────────────────────────── */}
+      {loadError && (
+        <div className="bg-red-50 border-b border-red-200 px-4 sm:px-6 py-2.5 text-[13px] text-[#dc2626]">
+          {loadError}
+        </div>
+      )}
 
       {/* ── Error banner ──────────────────────────────────────────── */}
       {(submitError || Object.keys(fieldErrors).length > 0) && (
@@ -1432,6 +1447,9 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
                   Max 10MB per file
                 </span>
               </div>
+              {fileUploadError && (
+                <p className="text-[12px] text-[#dc2626] mt-1">{fileUploadError}</p>
+              )}
             </div>
           </div>
 
@@ -1517,8 +1535,11 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
               <span className="text-sm text-gray-500">%</span>
             </div>
           </div>
+          {gstInputError && (
+            <p className="px-5 pb-2 text-[13px] text-[#dc2626]">{gstInputError}</p>
+          )}
           <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">
-            <Button variant="outline" onClick={() => { setAddGstOpen(false); setNewGstValue(""); }} disabled={addingGst} className="border-gray-200 text-gray-600">
+            <Button variant="outline" onClick={() => { setAddGstOpen(false); setNewGstValue(""); setGstInputError(""); }} disabled={addingGst} className="border-gray-200 text-gray-600">
               Cancel
             </Button>
             <Button onClick={handleAddGst} disabled={addingGst || !newGstValue.trim()} className="bg-[#0d9488] hover:bg-[#0f766e] text-white">

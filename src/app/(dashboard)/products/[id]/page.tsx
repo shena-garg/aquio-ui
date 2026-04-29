@@ -121,6 +121,7 @@ export default function ProductDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editState, setEditState] = useState<ProductEditState | null>(null);
+  const [editError, setEditError] = useState("");
 
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ["product", id],
@@ -152,17 +153,19 @@ export default function ProductDetailPage() {
   function handleEditCancel() {
     setIsEditing(false);
     setEditState(null);
+    setEditError("");
   }
 
   async function handleSave() {
     if (!product || !editState) return;
 
-    if (!editState.name.trim()) { toast.error("Product name is required."); return; }
-    if (!editState.unitOfMeasurement) { toast.error("Unit of measurement is required."); return; }
-    if (!editState.categoryId) { toast.error("Category is required."); return; }
-    if (!editState.subCategoryId) { toast.error("Subcategory is required."); return; }
-    if (!editState.hsnCode.trim()) { toast.error("HSN code is required."); return; }
-    if (!editState.gst && editState.gst !== 0) { toast.error("GST is required."); return; }
+    if (!editState.name.trim()) { setEditError("Product name is required."); return; }
+    if (!editState.unitOfMeasurement) { setEditError("Unit of measurement is required."); return; }
+    if (!editState.categoryId) { setEditError("Category is required."); return; }
+    if (!editState.subCategoryId) { setEditError("Subcategory is required."); return; }
+    if (!editState.hsnCode.trim()) { setEditError("HSN code is required."); return; }
+    if (!editState.gst && editState.gst !== 0) { setEditError("GST is required."); return; }
+    setEditError("");
 
     setIsSaving(true);
     try {
@@ -195,7 +198,7 @@ export default function ProductDetailPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to update product.";
-      toast.error(message);
+      setEditError(message);
     } finally {
       setIsSaving(false);
     }
@@ -239,6 +242,9 @@ export default function ProductDetailPage() {
           onEditCancel={handleEditCancel}
           onSave={handleSave}
         />
+        {editError && (
+          <p className="px-6 py-2 text-[13px] text-[#dc2626] bg-red-50 border-b border-red-100">{editError}</p>
+        )}
         <ProductDetailsInfoCard
           product={product}
           isEditing={isEditing}

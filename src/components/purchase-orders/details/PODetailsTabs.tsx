@@ -392,6 +392,7 @@ function ReceiptSummaryCard({
   const canForceClose = hasPermission("purchase-order.force-close");
 
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
+  const [forceCloseError, setForceCloseError] = useState("");
   const [forceCloseModal, setForceCloseModal] = useState<{
     open: boolean;
     mode: "close" | "undo";
@@ -436,7 +437,7 @@ function ReceiptSummaryCard({
       setForceCloseModal(null);
     } catch (err: unknown) {
       const message = (err as any)?.response?.data?.message ?? `Failed to ${forceCloseModal.mode === "close" ? "force close" : "undo force close"}`;
-      toast.error(message);
+      setForceCloseError(message);
     } finally {
       setIsForceClosing(false);
     }
@@ -920,10 +921,13 @@ function ReceiptSummaryCard({
         </div>
       </div>
 
+      {forceCloseError && (
+        <p className="mx-4 sm:mx-8 mt-3 text-[13px] text-[#dc2626]">{forceCloseError}</p>
+      )}
       {forceCloseModal && (
         <ForceCloseProductModal
           isOpen={!!forceCloseModal}
-          onClose={() => setForceCloseModal(null)}
+          onClose={() => { setForceCloseModal(null); setForceCloseError(""); }}
           onConfirm={handleForceCloseConfirm}
           productName={forceCloseModal.productName}
           variantName={forceCloseModal.variantName}
@@ -1096,6 +1100,7 @@ function ProductsTable({
   const remainingItems = useMemo(() => order.remainingItems ?? [], [order.remainingItems]);
 
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
+  const [forceCloseError, setForceCloseError] = useState("");
   const [forceCloseModal, setForceCloseModal] = useState<{
     open: boolean;
     mode: "close" | "undo";
@@ -1144,7 +1149,7 @@ function ProductsTable({
       setForceCloseModal(null);
     } catch (err: unknown) {
       const message = (err as any)?.response?.data?.message ?? `Failed to ${forceCloseModal.mode === "close" ? "force close" : "undo force close"}`;
-      toast.error(message);
+      setForceCloseError(message);
     } finally {
       setIsForceClosing(false);
     }
@@ -1506,10 +1511,13 @@ function ProductsTable({
         </div>
       </div>
 
+      {forceCloseError && (
+        <p className="px-4 sm:px-8 mt-3 text-[13px] text-[#dc2626]">{forceCloseError}</p>
+      )}
       {forceCloseModal && (
         <ForceCloseProductModal
           isOpen={!!forceCloseModal}
-          onClose={() => setForceCloseModal(null)}
+          onClose={() => { setForceCloseModal(null); setForceCloseError(""); }}
           onConfirm={handleForceCloseConfirm}
           productName={forceCloseModal.productName}
           variantName={forceCloseModal.variantName}

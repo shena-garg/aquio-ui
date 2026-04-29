@@ -36,6 +36,7 @@ export function PartnerDetailsHeader({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   async function handleDelete() {
     if (!confirm(`Deactivate "${partner.name}"? This cannot be undone.`)) return;
@@ -46,7 +47,7 @@ export function PartnerDetailsHeader({
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       router.push("/partners");
     } catch {
-      toast.error("Failed to deactivate partner");
+      setDeleteError("Failed to deactivate partner");
     } finally {
       setIsDeleting(false);
     }
@@ -119,5 +120,12 @@ export function PartnerDetailsHeader({
     </div>
   );
 
-  return <PageHeader title={partner.name} left={badge} right={actions} />;
+  return (
+    <>
+      <PageHeader title={partner.name} left={badge} right={actions} />
+      {deleteError && (
+        <p className="px-6 py-2 text-[13px] text-[#dc2626] bg-red-50 border-b border-red-100">{deleteError}</p>
+      )}
+    </>
+  );
 }

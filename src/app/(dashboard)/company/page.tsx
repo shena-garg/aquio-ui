@@ -73,6 +73,7 @@ function CompanyForm({ org }: { org: OrgData | undefined }) {
   const [phoneNumber, setPhoneNumber] = useState(org?.phoneNumber ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [submitError, setSubmitError] = useState("");
 
   async function handleSave() {
     const errs: FormErrors = {};
@@ -103,7 +104,7 @@ function CompanyForm({ org }: { org: OrgData | undefined }) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to update company information";
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -199,7 +200,8 @@ function CompanyForm({ org }: { org: OrgData | undefined }) {
       </div>
 
       {/* Save button */}
-      <div className="mt-8 flex justify-end border-t border-gray-200 pt-4">
+      {submitError && <p className="text-[13px] text-[#dc2626] mt-4">{submitError}</p>}
+      <div className="mt-4 flex justify-end border-t border-gray-200 pt-4">
         <Button
           onClick={handleSave}
           disabled={isSubmitting}

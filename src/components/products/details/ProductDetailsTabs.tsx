@@ -359,6 +359,7 @@ function VariantsTab({ product }: { product: Product }) {
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [variantError, setVariantError] = useState("");
 
   // Always fetch subcategory custom attributes so they're ready when dialog opens
   const { data: subCategoryData, isLoading: isSubCatLoading } = useQuery({
@@ -450,7 +451,7 @@ function VariantsTab({ product }: { product: Product }) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to save variant.";
-      toast.error(message);
+      setVariantError(message);
     } finally {
       setIsSaving(false);
     }
@@ -458,7 +459,7 @@ function VariantsTab({ product }: { product: Product }) {
 
   async function handleDeleteVariant(variantId: string) {
     if (variants.length <= 1) {
-      toast.error("Product must have at least one variant.");
+      setVariantError("Product must have at least one variant.");
       return;
     }
     setIsSaving(true);
@@ -478,7 +479,7 @@ function VariantsTab({ product }: { product: Product }) {
       toast.success("Variant deleted");
       queryClient.invalidateQueries({ queryKey: ["product", product._id] });
     } catch {
-      toast.error("Failed to delete variant");
+      setVariantError("Failed to delete variant");
     } finally {
       setIsSaving(false);
     }
@@ -589,18 +590,23 @@ function VariantsTab({ product }: { product: Product }) {
 
   if (variants.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-sm text-[#6b7280]">
-        No variants defined
-        {isActive && (
-          <button
-            onClick={handleStartAdd}
-            className="ml-2 flex items-center gap-1 text-[13px] text-[#0d9488] font-medium hover:text-[#0f766e]"
-          >
-            <Plus size={14} />
-            Add Variant
-          </button>
+      <>
+        {variantError && (
+          <p className="px-6 pt-3 text-[13px] text-[#dc2626]">{variantError}</p>
         )}
-      </div>
+        <div className="flex items-center justify-center h-48 text-sm text-[#6b7280]">
+          No variants defined
+          {isActive && (
+            <button
+              onClick={handleStartAdd}
+              className="ml-2 flex items-center gap-1 text-[13px] text-[#0d9488] font-medium hover:text-[#0f766e]"
+            >
+              <Plus size={14} />
+              Add Variant
+            </button>
+          )}
+        </div>
+      </>
     );
   }
 
@@ -619,6 +625,10 @@ function VariantsTab({ product }: { product: Product }) {
   if (attributeRows.length === 0) {
     // No custom attributes — just show variant names
     return (
+      <>
+      {variantError && (
+        <p className="px-6 pt-3 text-[13px] text-[#dc2626]">{variantError}</p>
+      )}
       <div className="mx-6 mt-4 mb-6">
         <div className="border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
           <table className="w-full">
@@ -658,24 +668,34 @@ function VariantsTab({ product }: { product: Product }) {
           </table>
         </div>
       </div>
+      </>
     );
   }
 
   // Split-table for > 2 variants, regular table for 1-2
   if (variants.length > 2) {
     return (
-      <SplitVariantsTable
-        variants={variants}
-        attributeRows={attributeRows}
-        onEdit={isActive ? handleEditVariant : undefined}
-        onDelete={isActive ? handleDeleteVariant : undefined}
-        onAdd={isActive ? handleStartAdd : undefined}
-      />
+      <>
+        {variantError && (
+          <p className="px-6 pt-3 text-[13px] text-[#dc2626]">{variantError}</p>
+        )}
+        <SplitVariantsTable
+          variants={variants}
+          attributeRows={attributeRows}
+          onEdit={isActive ? handleEditVariant : undefined}
+          onDelete={isActive ? handleDeleteVariant : undefined}
+          onAdd={isActive ? handleStartAdd : undefined}
+        />
+      </>
     );
   }
 
   // Regular single table for 1-2 variants
   return (
+    <>
+    {variantError && (
+      <p className="px-6 pt-3 text-[13px] text-[#dc2626]">{variantError}</p>
+    )}
     <div className="mx-6 mt-4 mb-6">
       <div className="border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
         <table className="w-full">
@@ -731,6 +751,7 @@ function VariantsTab({ product }: { product: Product }) {
         </table>
       </div>
     </div>
+    </>
   );
 }
 

@@ -348,6 +348,7 @@ export default function SettingsPage() {
   const [skuPrefix, setSkuPrefix] = useState("");
   const [skuSeparator, setSkuSeparator] = useState("");
   const [nextSKUNumber, setNextSKUNumber] = useState(1);
+  const [saveError, setSaveError] = useState("");
 
   // ── Dirty check ──
 
@@ -470,7 +471,7 @@ export default function SettingsPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to save settings";
-      toast.error(message);
+      setSaveError(message);
     } finally {
       setIsSaving(false);
     }
@@ -683,6 +684,11 @@ export default function SettingsPage() {
 
             </div>
           </div>
+
+          {/* Save error */}
+          {saveError && (
+            <p className="px-5 sm:px-6 py-2 text-[13px] text-[#dc2626] border-t border-gray-200 bg-white">{saveError}</p>
+          )}
 
           {/* Sticky save bar */}
           <div

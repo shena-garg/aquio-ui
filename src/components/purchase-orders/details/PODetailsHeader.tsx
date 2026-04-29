@@ -61,6 +61,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [forceCloseOpen, setForceCloseOpen] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState("");
 
   const { status } = order;
 
@@ -85,7 +86,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
     } catch (err: unknown) {
       const apiMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.error(apiMessage ?? "Failed to generate PDF");
+      setPdfError(apiMessage ?? "Failed to generate PDF");
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -439,6 +440,10 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
             })}
           </span>
         </div>
+      )}
+
+      {pdfError && (
+        <p className="px-6 py-2 text-[13px] text-[#dc2626] bg-red-50 border-b border-red-100">{pdfError}</p>
       )}
 
       <CancelPOModal

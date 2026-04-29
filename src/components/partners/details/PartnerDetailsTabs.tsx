@@ -36,6 +36,7 @@ function AddPartnerLocationModal({ open, partnerId, onClose, onCreated }: AddLoc
   const [errors, setErrors] = useState<LocationFieldErrors>({});
   const [gstError, setGstError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   function handleChange(updates: Partial<LocationValues>) {
     setLoc((prev) => ({ ...prev, ...updates }));
@@ -46,6 +47,7 @@ function AddPartnerLocationModal({ open, partnerId, onClose, onCreated }: AddLoc
     setErrors({});
     setGstError("");
     setIsSubmitting(false);
+    setSubmitError("");
   }
 
   function handleClose() {
@@ -94,7 +96,7 @@ function AddPartnerLocationModal({ open, partnerId, onClose, onCreated }: AddLoc
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to add location";
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -126,6 +128,9 @@ function AddPartnerLocationModal({ open, partnerId, onClose, onCreated }: AddLoc
           />
         </div>
 
+        {submitError && (
+          <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{submitError}</p>
+        )}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">
           <Button
             variant="outline"

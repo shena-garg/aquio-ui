@@ -47,6 +47,7 @@ export function ProductDetailsHeader({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isArchiving, setIsArchiving] = useState(false);
+  const [archiveError, setArchiveError] = useState("");
 
   async function handleArchive() {
     setIsArchiving(true);
@@ -56,7 +57,7 @@ export function ProductDetailsHeader({
       queryClient.invalidateQueries({ queryKey: ["products"] });
       router.push("/products");
     } catch {
-      toast.error("Failed to archive product");
+      setArchiveError("Failed to archive product");
     } finally {
       setIsArchiving(false);
     }
@@ -137,10 +138,15 @@ export function ProductDetailsHeader({
   );
 
   return (
-    <PageHeader
-      title={product.name}
-      left={leftContent}
-      right={rightContent}
-    />
+    <>
+      <PageHeader
+        title={product.name}
+        left={leftContent}
+        right={rightContent}
+      />
+      {archiveError && (
+        <p className="px-6 py-2 text-[13px] text-[#dc2626] bg-red-50 border-b border-red-100">{archiveError}</p>
+      )}
+    </>
   );
 }

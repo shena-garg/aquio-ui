@@ -293,6 +293,7 @@ export function QuickConfigureSettingsModal({ open, onClose, onSaved }: Props) {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   // Keep a reference to full settings so untouched fields aren't lost on save
   const [fullSettings, setFullSettings] = useState<OrganizationSettings | null>(null);
@@ -347,7 +348,10 @@ export function QuickConfigureSettingsModal({ open, onClose, onSaved }: Props) {
   }, [open]);
 
   function handleClose() {
-    if (!isSaving) onClose();
+    if (!isSaving) {
+      setSaveError("");
+      onClose();
+    }
   }
 
   async function handleSave() {
@@ -384,7 +388,7 @@ export function QuickConfigureSettingsModal({ open, onClose, onSaved }: Props) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to save settings";
-      toast.error(message);
+      setSaveError(message);
     } finally {
       setIsSaving(false);
     }
@@ -521,6 +525,9 @@ export function QuickConfigureSettingsModal({ open, onClose, onSaved }: Props) {
         )}
 
         {/* Footer */}
+        {saveError && (
+          <p className="px-5 pb-1 text-[13px] text-[#dc2626]">{saveError}</p>
+        )}
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-gray-200">
           <Button
             variant="outline"

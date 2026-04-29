@@ -616,6 +616,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
   // ── Bootstrap data ──────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [vendors, setVendors] = useState<VendorCompany[]>([]);
   const [ownOrg, setOwnOrg] = useState<Organization | null>(null);
   const [settings, setSettings] = useState<POFormSettings | null>(null);
@@ -647,7 +648,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         }
       })
       .catch(() => {
-        toast.error("Failed to load form data. Please try again.");
+        setLoadError("Failed to load form data. Please try again.");
       })
       .finally(() => setLoading(false));
   }, [editId, duplicateFromId]);
@@ -936,11 +937,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const [showAddPaymentTerm, setShowAddPaymentTerm] = useState(false);
   const [newPaymentTerm, setNewPaymentTerm] = useState("");
   const [addingPaymentTerm, setAddingPaymentTerm] = useState(false);
+  const [paymentTermError, setPaymentTermError] = useState("");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState<string[]>([]);
   const [termInput, setTermInput] = useState("");
   const [files, setFiles] = useState<{ id: string; name: string }[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [fileUploadError, setFileUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -970,7 +973,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         ]);
       }
     } catch {
-      toast.error("Failed to upload file");
+      setFileUploadError("Failed to upload file");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1038,9 +1041,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
     if (duplicateRow) {
       const dupIndex = productRows.findIndex((r) => r.id === duplicateRow.id);
-      toast.error(
-        `"${row.product?.name} – ${variant.name}" is already added as Product ${dupIndex + 1}. Update quantity there instead.`,
-        { duration: 8000 }
+      setSubmitError(
+        `"${row.product?.name} – ${variant.name}" is already added as Product ${dupIndex + 1}. Update quantity there instead.`
       );
       return;
     }
@@ -1118,7 +1120,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to add payment term";
-      toast.error(message);
+      setPaymentTermError(message);
     } finally {
       setAddingPaymentTerm(false);
     }
@@ -1280,6 +1282,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
             : `New ${orderType === "sales" ? "Sales" : "Purchase"} Order`}
         </span>
       </div>
+
+      {/* ── Load error ──────────────────────────────────────────────────── */}
+      {loadError && (
+        <div className="bg-red-50 border-b border-red-200 px-4 sm:px-6 py-2.5 text-[13px] text-[#dc2626]">
+          {loadError}
+        </div>
+      )}
 
       {/* ── Unavailable products banner ─────────────────────────────────── */}
       {hasUnavailableRows && (
@@ -1472,6 +1481,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                 )}
                 {fieldErrors.paymentTerms && (
                   <p className="text-[12px] text-[#dc2626] mt-1">{fieldErrors.paymentTerms}</p>
+                )}
+                {paymentTermError && (
+                  <p className="text-[12px] text-[#dc2626] mt-1">{paymentTermError}</p>
                 )}
               </div>
 
@@ -2062,6 +2074,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                     </button>
                     <span className="text-[11px] text-[#9ca3af]">Max 10MB per file</span>
                   </div>
+                  {fileUploadError && (
+                    <p className="text-[12px] text-[#dc2626] mt-1">{fileUploadError}</p>
+                  )}
                 </div>
               </div>
 

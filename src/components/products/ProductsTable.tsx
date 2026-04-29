@@ -233,6 +233,7 @@ export function ProductsTable({
   const router = useRouter();
   const [archiveProduct, setArchiveProduct] = useState<Product | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [archiveError, setArchiveError] = useState("");
 
   // Build the ordered, filtered list of active columns
   const activeCols = useMemo(
@@ -271,7 +272,7 @@ export function ProductsTable({
         axios.isAxiosError(error) && error.response?.data?.message
           ? error.response.data.message
           : "Failed to archive product";
-      toast.error(message);
+      setArchiveError(message);
     } finally {
       setIsArchiving(false);
     }
@@ -450,7 +451,7 @@ export function ProductsTable({
       <AlertDialog
         open={!!archiveProduct}
         onOpenChange={(open) => {
-          if (!open) setArchiveProduct(null);
+          if (!open) { setArchiveProduct(null); setArchiveError(""); }
         }}
       >
         <AlertDialogContent>
@@ -462,6 +463,9 @@ export function ProductsTable({
               it.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {archiveError && (
+            <p className="px-1 pb-1 text-[13px] text-[#dc2626]">{archiveError}</p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isArchiving}>Cancel</AlertDialogCancel>
             <AlertDialogAction

@@ -65,6 +65,7 @@ export default function PartnerDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editState, setEditState] = useState<PartnerEditState | null>(null);
+  const [editError, setEditError] = useState("");
 
   const { data: partner, isLoading, isError } = useQuery({
     queryKey: ["partner", id],
@@ -94,19 +95,21 @@ export default function PartnerDetailPage() {
   function handleEditCancel() {
     setIsEditing(false);
     setEditState(null);
+    setEditError("");
   }
 
   async function handleSave() {
     if (!partner || !editState) return;
 
     if (!editState.name.trim()) {
-      toast.error("Partner name is required.");
+      setEditError("Partner name is required.");
       return;
     }
     if (!editState.contactNumber.trim()) {
-      toast.error("Contact number is required.");
+      setEditError("Contact number is required.");
       return;
     }
+    setEditError("");
 
     setIsSaving(true);
     try {
@@ -126,7 +129,7 @@ export default function PartnerDetailPage() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to update partner.";
-      toast.error(message);
+      setEditError(message);
     } finally {
       setIsSaving(false);
     }
@@ -172,6 +175,9 @@ export default function PartnerDetailPage() {
           onEditCancel={handleEditCancel}
           onSave={handleSave}
         />
+        {editError && (
+          <p className="px-6 py-2 text-[13px] text-[#dc2626] bg-red-50 border-b border-red-100">{editError}</p>
+        )}
         <PartnerDetailsInfoCard
           partner={partner}
           isEditing={isEditing}

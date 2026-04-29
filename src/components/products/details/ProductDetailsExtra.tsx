@@ -26,6 +26,7 @@ export function ProductDetailsExtra({
   const [descExpanded, setDescExpanded] = useState(false);
   const [termsExpanded, setTermsExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const description = product.description?.trim();
@@ -68,7 +69,7 @@ export function ProductDetailsExtra({
       const uploaded = await uploadFile(file);
       updateField("files", [...editState.files, uploaded]);
     } catch {
-      toast.error("Failed to upload file");
+      setUploadError("Failed to upload file");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -195,6 +196,9 @@ export function ProductDetailsExtra({
                 onChange={handleFileUpload}
               />
             </div>
+            {uploadError && (
+              <p className="text-[12px] text-[#dc2626] mt-1">{uploadError}</p>
+            )}
           </div>
         </div>
       </div>

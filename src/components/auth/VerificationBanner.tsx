@@ -20,6 +20,8 @@ export function VerificationBanner() {
   const [code, setCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+  const [resendError, setResendError] = useState("");
 
   if (!user || user.accountVerified !== false) return null;
 
@@ -38,7 +40,7 @@ export function VerificationBanner() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Verification failed";
-      toast.error(message);
+      setVerifyError(message);
     } finally {
       setIsVerifying(false);
     }
@@ -54,7 +56,7 @@ export function VerificationBanner() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? "Failed to resend code";
-      toast.error(message);
+      setResendError(message);
     } finally {
       setIsResending(false);
     }
@@ -62,6 +64,9 @@ export function VerificationBanner() {
 
   return (
     <>
+      {resendError && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-1.5 text-center text-[13px] text-[#dc2626]">{resendError}</div>
+      )}
       <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 flex items-center justify-center gap-3 text-sm text-amber-800">
         <span>
           Please verify your email address. Check your inbox for a 6-digit code.
@@ -81,7 +86,7 @@ export function VerificationBanner() {
         </button>
       </div>
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
+      <Dialog open={showModal} onOpenChange={(v) => { setShowModal(v); if (!v) { setVerifyError(""); setCode(""); } }}>
         <DialogContent
           showCloseButton={false}
           className="max-w-[400px] p-0 gap-0"
@@ -110,9 +115,13 @@ export function VerificationBanner() {
               maxLength={6}
               placeholder="123456"
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => { setCode(e.target.value.replace(/\D/g, "")); setVerifyError(""); }}
               className="w-full border border-gray-300 rounded-md px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] tracking-[0.3em] text-center font-mono text-lg"
             />
+
+            {verifyError && (
+              <p className="text-[13px] text-[#dc2626]">{verifyError}</p>
+            )}
 
             <Button
               onClick={handleVerify}

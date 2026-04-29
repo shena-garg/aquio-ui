@@ -125,6 +125,7 @@ export function ReceiptFormModal({
   const [isUploading, setIsUploading] = useState(false);
   const [dateError, setDateError] = useState("");
   const [attempted, setAttempted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -145,6 +146,7 @@ export function ReceiptFormModal({
       );
       setDateError("");
       setAttempted(false);
+      setSubmitError("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -210,7 +212,7 @@ export function ReceiptFormModal({
         ]);
       }
     } catch {
-      toast.error("Failed to upload file");
+      setSubmitError("Failed to upload file");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -283,7 +285,7 @@ export function ReceiptFormModal({
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ??
         `Failed to ${mode === "create" ? "create" : "update"} ${isSales ? "shipment" : "receipt"}`;
-      toast.error(message);
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -556,6 +558,9 @@ export function ReceiptFormModal({
         </div>
 
         {/* Footer */}
+        {submitError && (
+          <p className="px-6 pb-1 text-[13px] text-[#dc2626]">{submitError}</p>
+        )}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#e5e7eb] flex-shrink-0">
           <Button
             variant="outline"
