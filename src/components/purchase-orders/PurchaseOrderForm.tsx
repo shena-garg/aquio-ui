@@ -12,10 +12,12 @@ import {
   Trash2,
   Search,
   CalendarDays,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api-client";
 import { organizationSettingsService } from "@/services/organization-settings";
+import { productsService } from "@/services/products";
 import { QuickCreateProductModal } from "@/components/products/QuickCreateProductModal";
 import {
   getVendorCompaniesWithLocations,
@@ -47,6 +49,7 @@ interface ProductRow {
   price: number;
   quantityStr: string;
   priceStr: string;
+  isUnavailable?: boolean;
 }
 
 let rowIdCounter = 0;
@@ -891,6 +894,37 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     // Reference ID, Supplier Reference ID, Internal Notes
   }
 
+  // ── Validate product availability after duplicate populate ───────────────
+  useEffect(() => {
+    if (!isDuplicateMode) return;
+    const rows = productRows;
+    if (rows.length === 0 || rows.every((r) => !r.product)) return;
+    const rowsWithProduct = rows.filter((r) => r.product?._id);
+    if (rowsWithProduct.length === 0) return;
+
+    Promise.all(
+      rowsWithProduct.map(async (row) => {
+        try {
+          const product = await productsService.getById(row.product!._id);
+          const variantExists = product.variants.some((v) => v._id === row.variant?._id);
+          const unavailable = product.status !== "active" || !variantExists;
+          return { id: row.id, unavailable };
+        } catch {
+          return { id: row.id, unavailable: true };
+        }
+      }),
+    ).then((results) => {
+      setProductRows((prev) =>
+        prev.map((r) => {
+          const result = results.find((res) => res.id === r.id);
+          return result ? { ...r, isUnavailable: result.unavailable } : r;
+        }),
+      );
+    });
+  // Run once after duplicate rows are populated (productRows settles after populateForDuplicate)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDuplicateMode]);
+
   // ── Order details state ─────────────────────────────────────────────────
   const [poNumber, setPoNumber] = useState("");
   const [referenceId, setReferenceId] = useState("");
@@ -957,6 +991,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Product rows ─────────────────────────────────────────────────────────
   const [productRows, setProductRows] = useState<ProductRow[]>([emptyRow()]);
   const [attempted, setAttempted] = useState(false);
+  const isDuplicateMode = !!duplicateFromId;
   const [submitError, setSubmitError] = useState("");
 
   // Field-level errors — collected all at once on submit
@@ -966,17 +1001,22 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     buyer?: string;
     poNumber?: string;
     paymentTerms?: string;
+    productsUnavailable?: string;
     productsEmpty?: string;
     productsIncomplete?: string;
   }
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const unavailableRows = productRows.filter((r) => r.isUnavailable);
+  const hasUnavailableRows = unavailableRows.length > 0;
+
   const incompleteRowIds = attempted
     ? new Set(
         productRows
           .filter(
             (r) =>
-              (r.product && (!r.variant || r.quantity <= 0 || r.price <= 0)) ||
-              (!r.product && (r.quantity > 0 || r.price > 0))
+              !r.isUnavailable &&
+              ((r.product && (!r.variant || r.quantity <= 0 || r.price <= 0)) ||
+              (!r.product && (r.quantity > 0 || r.price > 0)))
           )
           .map((r) => r.id)
       )
@@ -1043,17 +1083,17 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   }
 
   const totalAmount = productRows.reduce((sum, r) => {
-    if (!r.product || r.quantity <= 0 || r.price <= 0) return sum;
+    if (r.isUnavailable || !r.product || r.quantity <= 0 || r.price <= 0) return sum;
     return sum + calculateLineTotal(r.quantity, r.price, r.product.gst);
   }, 0);
 
   const totalQuantity = productRows.reduce((sum, r) => {
-    if (!r.product || r.quantity <= 0) return sum;
+    if (r.isUnavailable || !r.product || r.quantity <= 0) return sum;
     return sum + r.quantity;
   }, 0);
 
   const productUoms = productRows
-    .filter((r) => r.product && r.quantity > 0)
+    .filter((r) => !r.isUnavailable && r.product && r.quantity > 0)
     .map((r) => r.product!.unitOfMeasurement);
   const allSameUom = productUoms.length > 0 && productUoms.every((u) => u === productUoms[0]);
   const commonUom = allSameUom ? productUoms[0] : null;
@@ -1134,9 +1174,14 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       errors.paymentTerms = "Payment terms is required.";
     }
 
+    // Block if unavailable (deleted/archived) products remain
+    if (hasUnavailableRows) {
+      errors.productsUnavailable = `${unavailableRows.length} product${unavailableRows.length > 1 ? "s are" : " is"} no longer available. Remove ${unavailableRows.length > 1 ? "them" : "it"} before submitting.`;
+    }
+
     // Validate products
     const completeRows = productRows.filter(
-      (r) => r.product && r.variant && r.quantity > 0 && r.price > 0
+      (r) => !r.isUnavailable && r.product && r.variant && r.quantity > 0 && r.price > 0
     );
     if (completeRows.length === 0) {
       errors.productsEmpty = "At least one product with quantity and price is required.";
@@ -1145,8 +1190,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     // Check for incomplete rows (have product but missing data)
     const hasIncomplete = productRows.some(
       (r) =>
-        (r.product && (!r.variant || r.quantity <= 0 || r.price <= 0)) ||
-        (!r.product && (r.quantity > 0 || r.price > 0))
+        !r.isUnavailable &&
+        ((r.product && (!r.variant || r.quantity <= 0 || r.price <= 0)) ||
+        (!r.product && (r.quantity > 0 || r.price > 0)))
     );
     if (hasIncomplete) {
       errors.productsIncomplete = "All product rows must have a product, variant, quantity, and price.";
@@ -1235,6 +1281,16 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
             : `New ${orderType === "sales" ? "Sales" : "Purchase"} Order`}
         </span>
       </div>
+
+      {/* ── Unavailable products banner ─────────────────────────────────── */}
+      {hasUnavailableRows && (
+        <div className="flex items-start gap-2 bg-[#fffbeb] border-b border-[#fde68a] px-6 py-2.5">
+          <AlertTriangle size={14} className="text-[#d97706] flex-shrink-0 mt-0.5" />
+          <span className="text-[13px] text-[#92400e]">
+            {unavailableRows.length} product{unavailableRows.length > 1 ? "s" : ""} from the original order {unavailableRows.length > 1 ? "are" : "is"} no longer available and {unavailableRows.length > 1 ? "have" : "has"} been highlighted below. Remove {unavailableRows.length > 1 ? "them" : "it"} before submitting.
+          </span>
+        </div>
+      )}
 
       {/* ── Error banner ────────────────────────────────────────────────── */}
       {(submitError || Object.keys(fieldErrors).length > 0) && (
@@ -1488,6 +1544,37 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
               {/* Products – mobile cards */}
               <div className="lg:hidden space-y-2">
                 {productRows.map((row, idx) => {
+                  if (row.isUnavailable) {
+                    return (
+                      <div
+                        key={row.id}
+                        className="relative rounded-[8px] border border-[#fde68a] bg-[#fffbeb] px-3 pt-4 pb-2.5"
+                      >
+                        <span className="absolute -top-2.5 left-2.5 bg-[#d97706] text-white text-[10px] font-medium px-2 py-0.5 rounded-[4px]">
+                          Product {idx + 1}
+                        </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <AlertTriangle size={13} className="text-[#d97706] flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-[13px] text-[#92400e] line-through truncate">
+                                {row.product?.name ?? "Unknown product"}{row.variant?.name ? ` – ${row.variant.name}` : ""}
+                              </p>
+                              <p className="text-[11px] text-[#d97706] font-medium">No longer available</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeRow(row.id)}
+                            className="p-1.5 text-[#d97706] hover:text-[#dc2626] transition-colors flex-shrink-0"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   const hasProduct = !!row.product;
                   const gst = row.product?.gst ?? 0;
                   const uom = row.product?.unitOfMeasurement ?? "";
@@ -1666,6 +1753,31 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                     </thead>
                     <tbody>
                       {productRows.map((row) => {
+                        if (row.isUnavailable) {
+                          return (
+                            <tr key={row.id} className="border-b border-[#fde68a] bg-[#fffbeb]">
+                              <td colSpan={6} className="h-10 px-3">
+                                <div className="flex items-center gap-2">
+                                  <AlertTriangle size={13} className="text-[#d97706] flex-shrink-0" />
+                                  <span className="text-[13px] text-[#92400e] line-through">
+                                    {row.product?.name ?? "Unknown product"}{row.variant?.name ? ` – ${row.variant.name}` : ""}
+                                  </span>
+                                  <span className="text-[11px] text-[#d97706] font-medium">(no longer available)</span>
+                                </div>
+                              </td>
+                              <td className="h-10 pl-1 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => removeRow(row.id)}
+                                  className="p-1 text-[#d97706] hover:text-[#dc2626] transition-colors"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        }
+
                         const hasProduct = !!row.product;
                         const gst = row.product?.gst ?? 0;
                         const uom = row.product?.unitOfMeasurement ?? "";
