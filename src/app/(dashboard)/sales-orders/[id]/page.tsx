@@ -84,7 +84,8 @@ export default function SalesOrderDetailPage() {
     queryKey: ["sales-order", id],
     queryFn: () => salesOrdersService.getById(id).then((r) => r.data),
     enabled: !!id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 0,
+    refetchInterval: 30_000,
   });
 
   useEffect(() => {

@@ -135,7 +135,8 @@ export default function SalesOrdersPage() {
       salesOrdersService
         .list({ page, limit, tabStatus: activeStatus, ...activeFilters })
         .then((res) => res.data),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
+    refetchInterval: 30_000,
   });
 
   useEffect(() => {

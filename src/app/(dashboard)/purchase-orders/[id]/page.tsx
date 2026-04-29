@@ -84,7 +84,8 @@ export default function PurchaseOrderDetailPage() {
     queryKey: ["purchase-order", id],
     queryFn: () => purchaseOrdersService.getById(id).then((r) => r.data),
     enabled: !!id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 0,
+    refetchInterval: 30_000,
   });
 
   useEffect(() => {
