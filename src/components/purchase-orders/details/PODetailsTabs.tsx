@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Download, Info, X as XIcon, Pencil } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
@@ -1093,7 +1093,7 @@ function ProductsTable({
   const { hasPermission } = useAuth();
   const canForceClose = hasPermission("purchase-order.force-close");
 
-  const remainingItems = order.remainingItems ?? [];
+  const remainingItems = useMemo(() => order.remainingItems ?? [], [order.remainingItems]);
 
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
   const [forceCloseModal, setForceCloseModal] = useState<{

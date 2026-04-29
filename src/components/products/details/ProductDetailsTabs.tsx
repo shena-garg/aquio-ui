@@ -40,8 +40,9 @@ export function ProductDetailsTabs({
   product,
   isEditing,
 }: ProductDetailsTabsProps) {
-  if (isEditing) return null;
   const [activeTab, setActiveTab] = useState<TabKey>("variants");
+
+  if (isEditing) return null;
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "variants", label: "Variants", count: product.variants.length },
@@ -1091,7 +1092,7 @@ function AnalyticsTab({ product }: { product: Product }) {
 function ProcurementContent({
   productId,
   selectedVariant,
-  selectedPeriod,
+  selectedPeriod: _selectedPeriod,
   fromDate,
   toDate,
 }: {
@@ -1252,7 +1253,6 @@ function ProcurementContent({
                       borderRadius: 8,
                       border: "1px solid #e5e7eb",
                     }}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     formatter={((value: number, name: string) => {
                       const label =
                         name === "avgPrice"
@@ -1376,7 +1376,6 @@ const ALERT_BADGE_STYLES: Record<AlertLevel, { bg: string; text: string; label: 
   info:     { bg: "bg-[#eff6ff]", text: "text-[#2563eb]", label: "info",     dot: "bg-[#2563eb]" },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function computeSmartAlerts(data: any): SmartAlert[] {
   const alerts: SmartAlert[] = [];
   const summary = data?.summary;
@@ -1452,7 +1451,6 @@ function computeSmartAlerts(data: any): SmartAlert[] {
   return alerts;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SmartAlertsPanel({ data }: { data: any }) {
   const [expanded, setExpanded] = useState(false);
   const alerts = useMemo(() => computeSmartAlerts(data), [data]);
@@ -1624,7 +1622,6 @@ function VolumeIntelligenceCard({
 
 /* ── Price Intelligence Card ──────────────────────────────────────────── */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PriceIntelligenceCard({ summary }: { summary: any }) {
   const volatilityLevel: string = summary.priceVolatilityLevel ?? "low";
   const volatilityColor =
@@ -1716,7 +1713,7 @@ function PriceIntelligenceCard({ summary }: { summary: any }) {
 function SalesContent({
   productId,
   selectedVariant,
-  selectedPeriod,
+  selectedPeriod: _selectedPeriod,
   fromDate,
   toDate,
 }: {
@@ -1863,7 +1860,6 @@ function SalesContent({
                       borderRadius: 8,
                       border: "1px solid #e5e7eb",
                     }}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     formatter={((value: number, name: string) => {
                       const label =
                         name === "avgPrice"
@@ -1966,7 +1962,6 @@ function SalesContent({
 
 /* ── Sales Price Intelligence Card ────────────────────────────────────── */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SalesPriceIntelligenceCard({ summary }: { summary: any }) {
   const volatilityLevel: string = summary.priceVolatilityLevel ?? "low";
   const volatilityColor =
@@ -2056,7 +2051,6 @@ function SalesPriceIntelligenceCard({ summary }: { summary: any }) {
 
 /* ── Sales Smart Alerts Panel ────────────────────────────────────────── */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function computeSalesSmartAlerts(data: any): SmartAlert[] {
   const alerts: SmartAlert[] = [];
   const summary = data?.summary;
@@ -2148,7 +2142,6 @@ function computeSalesSmartAlerts(data: any): SmartAlert[] {
   return alerts;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SalesSmartAlertsPanel({ data }: { data: any }) {
   const [expanded, setExpanded] = useState(false);
   const alerts = useMemo(() => computeSalesSmartAlerts(data), [data]);
@@ -2612,7 +2605,7 @@ function waterfallSubtext(type: string, value: number): string {
 function MarginContent({
   productId,
   selectedVariant,
-  selectedPeriod,
+  selectedPeriod: _selectedPeriod,
   fromDate,
   toDate,
 }: {
@@ -2883,7 +2876,6 @@ function MarginContent({
                     borderRadius: 8,
                     border: "1px solid #e5e7eb",
                   }}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   formatter={((value: number) => [
                     `${value.toFixed(2)}%`,
                     "Gross Margin",

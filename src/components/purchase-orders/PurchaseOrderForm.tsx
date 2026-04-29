@@ -30,9 +30,7 @@ import {
   calculateLineTotal,
   type VendorCompany,
   type Organization,
-  type Location,
   type POFormSettings,
-  type CreatePOPayload,
   type ProductSearchResult,
   type ProductVariant,
 } from "@/services/purchaseOrderForm";
@@ -116,14 +114,6 @@ function numberToIndianWords(n: number): string {
   if (n < 0) result = "Minus " + result;
   if (decPart > 0) result += " and " + twoDigits(decPart) + " Paise";
   return result;
-}
-
-function formatAddress(loc: Location): string {
-  const a = loc.address;
-  if (!a) return "";
-  return [a.street, a.city, a.state, a.pincode, a.country]
-    .filter(Boolean)
-    .join(", ");
 }
 
 // ---------------------------------------------------------------------------
@@ -656,7 +646,6 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         toast.error("Failed to load form data. Please try again.");
       })
       .finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId, duplicateFromId]);
 
   // ── Build unified company list ──────────────────────────────────────────
@@ -722,8 +711,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Populate form from existing order (edit mode) ──────────────────────
   function populateFromOrder(
     order: any,
-    vendorList: VendorCompany[],
-    org: Organization
+    _vendorList: VendorCompany[],
+    _org: Organization
   ) {
     // Partners
     if (order.supplier?.id) {

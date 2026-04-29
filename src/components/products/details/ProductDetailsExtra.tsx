@@ -118,18 +118,8 @@ export function ProductDetailsExtra({
 
             {/* Right: Terms & Conditions */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280]">
-                  Terms & Conditions
-                </div>
-                <button
-                  type="button"
-                  onClick={addTerm}
-                  className="flex items-center gap-1 text-[11px] text-[#0d9488] font-medium hover:text-[#0f766e]"
-                >
-                  <Plus size={11} />
-                  Add
-                </button>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] mb-1.5">
+                Terms & Conditions
               </div>
               {editState.termsOfConditions.length > 0 ? (
                 <div className="space-y-1.5">
@@ -157,6 +147,14 @@ export function ProductDetailsExtra({
               ) : (
                 <p className="text-[13px] text-[#9ca3af]">No terms added</p>
               )}
+              <button
+                type="button"
+                onClick={addTerm}
+                className="flex items-center gap-1 text-[11px] text-[#0d9488] font-medium hover:text-[#0f766e] mt-1.5"
+              >
+                <Plus size={11} />
+                Add
+              </button>
             </div>
           </div>
 
