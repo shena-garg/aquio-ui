@@ -294,13 +294,16 @@ export function ProductDetailsExtra({
                 Files
               </div>
               {files.map((file, idx) => (
-                <div
+                <a
                   key={`${file.id}-${idx}`}
-                  className="flex items-center gap-1.5 bg-[#f3f4f6] rounded px-2 py-1"
+                  href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/files/download/${file.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 bg-[#f3f4f6] hover:bg-[#e5e7eb] rounded px-2 py-1 transition-colors"
                 >
                   <Paperclip size={11} className="text-[#6b7280]" />
                   <span className="text-[11px] text-[#111827]">{file.name}</span>
-                </div>
+                </a>
               ))}
             </div>
           </div>
