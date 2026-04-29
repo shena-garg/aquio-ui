@@ -993,6 +993,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     buyer?: string;
     poNumber?: string;
     paymentTerms?: string;
+    deliveryDate?: string;
     productsUnavailable?: string;
     productsEmpty?: string;
     productsIncomplete?: string;
@@ -1164,6 +1165,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     }
     if (!paymentTerms) {
       errors.paymentTerms = "Payment terms is required.";
+    }
+    if (deliveryDate && issueDate && deliveryDate < issueDate) {
+      errors.deliveryDate = "Delivery date cannot be before issue date.";
     }
 
     // Block if unavailable (deleted/archived) products remain
@@ -1480,6 +1484,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                       if (deliveryDate < e.target.value) {
                         setDeliveryDate(e.target.value);
                       }
+                      if (fieldErrors.deliveryDate) setFieldErrors((prev) => ({ ...prev, deliveryDate: undefined }));
                     }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
@@ -1504,10 +1509,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                     type="date"
                     value={deliveryDate}
                     min={issueDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    onChange={(e) => {
+                      setDeliveryDate(e.target.value);
+                      if (fieldErrors.deliveryDate) setFieldErrors((prev) => ({ ...prev, deliveryDate: undefined }));
+                    }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <div className="flex items-center justify-between h-9 border border-[#e5e7eb] rounded-[6px] px-3 bg-white cursor-pointer">
+                  <div className={`flex items-center justify-between h-9 border rounded-[6px] px-3 bg-white cursor-pointer ${fieldErrors.deliveryDate ? "border-[#dc2626]" : "border-[#e5e7eb]"}`}>
                     <span className="text-[13px] text-[#111827]">
                       {deliveryDate
                         ? new Date(deliveryDate + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
@@ -1516,6 +1524,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                     <CalendarDays className="h-4 w-4 text-[#6b7280]" />
                   </div>
                 </div>
+                {fieldErrors.deliveryDate && (
+                  <p className="text-[12px] text-[#dc2626] mt-1">{fieldErrors.deliveryDate}</p>
+                )}
               </div>
 
               {/* Internal Notes — spans 2 columns */}
