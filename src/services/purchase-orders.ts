@@ -105,6 +105,7 @@ export interface PurchaseOrder {
   receipts?: POReceipt[];
   notes?: string;
   termsAndConditions?: string[];
+  files?: { id: string; name: string }[];
 }
 
 export interface POStatusCounts {

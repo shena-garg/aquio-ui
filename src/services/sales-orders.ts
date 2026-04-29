@@ -105,6 +105,7 @@ export interface SalesOrder {
   receipts?: SOReceipt[];
   notes?: string;
   termsAndConditions?: string[];
+  files?: { id: string; name: string }[];
 }
 
 export interface SOStatusCounts {

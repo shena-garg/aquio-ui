@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { salesOrdersService } from "@/services/sales-orders";
 import { SODetailsHeader } from "@/components/sales-orders/details/SODetailsHeader";
@@ -129,6 +129,23 @@ export default function SalesOrderDetailPage() {
         <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-2">
           <SODetailsMetaStrip order={order} />
           <SODetailsDateStrip order={order} />
+          {order.files && order.files.length > 0 && (
+            <div className="border-t border-[#e5e7eb] mt-2 pt-2 flex items-center gap-3 flex-wrap">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] flex-shrink-0">Files</span>
+              {order.files.map((file: { id: string; name: string }, idx: number) => (
+                <a
+                  key={`${file.id}-${idx}`}
+                  href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/files/download/${file.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 bg-[#f3f4f6] hover:bg-[#e5e7eb] rounded px-2 py-1 transition-colors"
+                >
+                  <Paperclip size={11} className="text-[#6b7280]" />
+                  <span className="text-[11px] text-[#111827]">{file.name}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -186,6 +203,26 @@ export default function SalesOrderDetailPage() {
               </span>
             </div>
           </div>
+          {order.files && order.files.length > 0 && (
+            <>
+              <div className="border-t border-[#f3f4f6]" />
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#6b7280] flex-shrink-0">Files</span>
+                {order.files.map((file: { id: string; name: string }, idx: number) => (
+                  <a
+                    key={`${file.id}-${idx}`}
+                    href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/files/download/${file.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 bg-[#f3f4f6] hover:bg-[#e5e7eb] rounded px-2 py-1 transition-colors"
+                  >
+                    <Paperclip size={11} className="text-[#6b7280]" />
+                    <span className="text-[11px] text-[#111827]">{file.name}</span>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
       <SODetailsProgress order={order} />
