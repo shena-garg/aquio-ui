@@ -1251,12 +1251,15 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         const newId = result?._id ?? result?.id;
         router.push(newId ? `${basePath}/${newId}` : basePath);
       }
-    } catch {
+    } catch (err: unknown) {
       const label = orderType === "sales" ? "sales order" : "purchase order";
+      const apiMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setSubmitError(
-        isEditMode
-          ? `Failed to update ${label}. Please try again.`
-          : `Failed to create ${label}. Please try again.`
+        apiMessage ||
+          (isEditMode
+            ? `Failed to update ${label}. Please try again.`
+            : `Failed to create ${label}. Please try again.`)
       );
     } finally {
       setSubmitting(false);
@@ -1289,25 +1292,28 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       )}
 
       {/* ── Error banner ────────────────────────────────────────────────── */}
-      {(submitError || Object.keys(fieldErrors).length > 0) && (
-        <div className="flex items-start justify-between bg-[#fef2f2] border-b border-[#fecaca] px-6 py-2.5">
-          <div className="flex flex-col gap-0.5">
-            {submitError && (
-              <span className="text-[13px] text-[#b91c1c]">{submitError}</span>
-            )}
-            {Object.values(fieldErrors).map((msg, i) => (
-              <span key={i} className="text-[13px] text-[#b91c1c]">{msg}</span>
-            ))}
+      {(submitError || Object.keys(fieldErrors).length > 0) && (() => {
+        const allErrors = [
+          ...(submitError ? [submitError] : []),
+          ...Object.values(fieldErrors).filter(Boolean),
+        ] as string[];
+        return (
+          <div className="flex items-start justify-between bg-[#fef2f2] border-b border-[#fecaca] px-6 py-2.5">
+            <ul className="list-disc list-inside flex flex-col gap-0.5">
+              {allErrors.map((msg, i) => (
+                <li key={i} className="text-[13px] text-[#b91c1c]">{msg}</li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={() => { setSubmitError(""); setFieldErrors({}); setAttempted(false); }}
+              className="text-[#b91c1c] hover:text-[#991b1b] flex-shrink-0 mt-0.5 ml-4"
+            >
+              <X size={14} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => { setSubmitError(""); setFieldErrors({}); setAttempted(false); }}
-            className="text-[#b91c1c] hover:text-[#991b1b] flex-shrink-0 mt-0.5"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Scrollable content ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-auto">
