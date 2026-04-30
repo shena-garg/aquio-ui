@@ -314,6 +314,7 @@ export default function SalesOrdersPage() {
 
       <SOSearchBar
         activeFilters={activeFilters}
+        activeStatus={activeStatus}
         onSearch={handleSearch}
         onReset={handleReset}
         onRemoveFilter={handleRemoveFilter}

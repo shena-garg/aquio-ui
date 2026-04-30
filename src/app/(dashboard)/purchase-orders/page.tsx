@@ -309,6 +309,7 @@ export default function PurchaseOrdersPage() {
 
       <POSearchBar
         activeFilters={activeFilters}
+        activeStatus={activeStatus}
         onSearch={handleSearch}
         onReset={handleReset}
         onRemoveFilter={handleRemoveFilter}

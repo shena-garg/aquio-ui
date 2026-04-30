@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { SOActiveFilters } from "@/services/sales-orders";
+import type { SOActiveFilters, SOFilterStatus } from "@/services/sales-orders";
 
 // ── Field config ──────────────────────────────────────────────────────────────
 
@@ -108,6 +108,7 @@ const SELECT_INPUT_CLASS =
 
 interface SOSearchBarProps {
   activeFilters: SOActiveFilters;
+  activeStatus?: SOFilterStatus;
   onSearch: (params: SOActiveFilters) => void;
   onReset: () => void;
   onRemoveFilter: (key: keyof SOActiveFilters) => void;
@@ -117,17 +118,30 @@ interface SOSearchBarProps {
 
 export function SOSearchBar({
   activeFilters,
+  activeStatus,
   onSearch,
   onReset,
   onRemoveFilter,
 }: SOSearchBarProps) {
   const [selectedField, setSelectedField] = useState<FieldKey>("poNumber");
+
+  const visibleFields = activeStatus === "completed"
+    ? FIELDS.filter((f) => f.key !== "status")
+    : FIELDS;
+
+  // If the active tab changes and the selected field is no longer visible, reset to default
+  useEffect(() => {
+    if (!visibleFields.find((f) => f.key === selectedField)) {
+      setSelectedField("poNumber");
+      setInputValue("");
+    }
+  }, [activeStatus]); // eslint-disable-line react-hooks/exhaustive-deps
   const [inputValue, setInputValue] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const currentField = FIELDS.find((f) => f.key === selectedField)!;
+  const currentField = visibleFields.find((f) => f.key === selectedField) ?? visibleFields[0];
 
   // Clears input values only — used when the field selector changes
   function resetInputState() {
@@ -185,7 +199,7 @@ export function SOSearchBar({
         onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
         className={SELECT_INPUT_CLASS}
       >
-        {FIELDS.map((f) => (
+        {visibleFields.map((f) => (
           <option key={f.key} value={f.key}>{f.label}</option>
         ))}
       </select>
