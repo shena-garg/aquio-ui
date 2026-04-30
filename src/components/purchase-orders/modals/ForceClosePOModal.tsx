@@ -101,7 +101,7 @@ export function ForceClosePOModal({
   const totalOrderedQty = rows.reduce((sum, r) => sum + r.quantity.value, 0);
   const totalPendingQty = rows.reduce((sum, r) => sum + r.remainingQuantity, 0);
   const totalLineAmount = rows.reduce(
-    (sum, r) => sum + parseFloat(r.totalAmount.$numberDecimal),
+    (sum, r) => sum + r.totalAmount,
     0
   );
 
@@ -252,7 +252,7 @@ export function ForceClosePOModal({
                           {/* Unit Price */}
                           <td className="py-3 pr-4 whitespace-nowrap">
                             <div className="text-gray-900">
-                              ₹{row.price.value.$numberDecimal}
+                              ₹{row.price.value.toLocaleString("en-IN")}
                             </div>
                             <div className="text-xs text-gray-400">
                               @ {row.gst.value}% GST
@@ -261,10 +261,7 @@ export function ForceClosePOModal({
 
                           {/* Line Total */}
                           <td className="py-3 text-right text-gray-900 whitespace-nowrap">
-                            ₹
-                            {parseFloat(
-                              row.totalAmount.$numberDecimal
-                            ).toLocaleString("en-IN")}
+                            ₹{row.totalAmount.toLocaleString("en-IN")}
                           </td>
                         </tr>
                       );

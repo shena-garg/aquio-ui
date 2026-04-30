@@ -45,9 +45,9 @@ export interface SOProduct {
   variant: { _id: string };
   metadata: SOProductMetadata;
   quantity: { value: number; postfix: string };
-  price: { value: { $numberDecimal: string } };
+  price: { value: number };
   gst: { value: number };
-  totalAmount: { $numberDecimal: string };
+  totalAmount: number;
 }
 
 export interface SORemainingItem {

@@ -165,12 +165,8 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
                 </thead>
                 <tbody>
                   {products.map((p, idx) => {
-                    const lineTotal = typeof p.totalAmount === "number"
-                      ? p.totalAmount
-                      : parseFloat(p.totalAmount.$numberDecimal);
-                    const price = typeof p.price.value === "number"
-                      ? p.price.value
-                      : parseFloat(p.price.value.$numberDecimal);
+                    const lineTotal = p.totalAmount;
+                    const price = p.price.value;
                     const uomAbbr = getUOMAbbreviation(p.quantity.postfix ?? "");
                     const ordered = p.quantity.value;
                     const rem = remainingItems.find(
