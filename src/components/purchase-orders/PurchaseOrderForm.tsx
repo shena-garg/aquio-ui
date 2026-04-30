@@ -869,6 +869,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Original PO data (edit mode — never changes) ───────────────────────
   const originalPoNumber = useRef("");
   const originalStatus = useRef<string>("");
+  const duplicateValidationRan = useRef(false);
 
   // ── Populate form from existing order (edit mode) ──────────────────────
   function populateFromOrder(
@@ -1054,12 +1055,14 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   }
 
   // ── Validate product availability after duplicate populate ───────────────
+  // Runs once — but only after productRows is actually populated (not empty on mount).
+  // The ref prevents re-running after setProductRows updates the rows below.
   useEffect(() => {
-    if (!isDuplicateMode) return;
-    const rows = productRows;
-    if (rows.length === 0 || rows.every((r) => !r.product)) return;
-    const rowsWithProduct = rows.filter((r) => r.product?._id);
-    if (rowsWithProduct.length === 0) return;
+    if (!isDuplicateMode || duplicateValidationRan.current) return;
+    const rowsWithProduct = productRows.filter((r) => r.product?._id);
+    if (rowsWithProduct.length === 0) return; // Not populated yet — wait for next render
+
+    duplicateValidationRan.current = true;
 
     Promise.all(
       rowsWithProduct.map(async (row) => {
@@ -1080,9 +1083,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         }),
       );
     });
-  // Run once after duplicate rows are populated (productRows settles after populateForDuplicate)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDuplicateMode]);
+  }, [isDuplicateMode, productRows]);
 
   // ── Order details state ─────────────────────────────────────────────────
   const [poNumber, setPoNumber] = useState("");
