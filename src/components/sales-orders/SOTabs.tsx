@@ -12,7 +12,6 @@ interface Tab {
 const TABS: Tab[] = [
   { label: "All",          status: undefined,      countKey: "all"        },
   { label: "In Progress", status: "in_progress",  countKey: "inProgress" },
-  { label: "Completed",   status: "completed",    countKey: "completed"  },
   { label: "Drafts",      status: "draft",        countKey: "draft"      },
   { label: "Cancelled",   status: "cancelled",    countKey: "cancelled"  },
   { label: "Delayed",     status: "delayed",      countKey: "delayed"    },
