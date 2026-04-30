@@ -141,6 +141,13 @@ export function SOSearchBar({
           { value: "confirmed", label: "Confirmed" },
         ]};
       }
+      if (f.key === "status" && activeStatus === "delayed" && f.type === "select") {
+        return { ...f, options: [
+          { value: "issued",    label: "Issued"    },
+          { value: "confirmed", label: "Confirmed" },
+          { value: "completed", label: "Completed" },
+        ]};
+      }
       return f;
     });
 
