@@ -131,10 +131,11 @@ function ActionsMenu({ locationId }: { locationId: string }) {
 interface LocationsTableProps {
   locations: Location[];
   isLoading: boolean;
+  canEdit?: boolean;
   onRefresh: () => void;
 }
 
-export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTableProps) {
+export function LocationsTable({ locations, isLoading, canEdit = false, onRefresh }: LocationsTableProps) {
   const router = useRouter();
   const [defaultCandidate, setDefaultCandidate] = useState<Location | null>(null);
 
@@ -149,8 +150,8 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
             icon={<MapPin className="h-6 w-6 text-[#0d9488]" />}
             title="No locations yet"
             description="Add your first location with address and GST details."
-            actionLabel="Add Location"
-            onAction={() => router.push("/locations/create")}
+            actionLabel={canEdit ? "Add Location" : undefined}
+            onAction={canEdit ? () => router.push("/locations/create") : undefined}
           />
         ) : (
           locations.map((location) => (
@@ -172,7 +173,7 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
                 <p className="text-[13px] text-gray-600">
                   {formatAddress(location.addressLine1, location.addressLine2)}
                 </p>
-                <ActionsMenu locationId={location._id} />
+                {canEdit && <ActionsMenu locationId={location._id} />}
               </div>
               {/* Row 3: City, State, Zip | Default chip/link */}
               <div className="flex items-center justify-between">
@@ -183,14 +184,14 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
                   <span className="text-[11px] font-medium text-[#0d9488] bg-[#f0fdfa] rounded-full px-2 py-0.5">
                     Default
                   </span>
-                ) : (
+                ) : canEdit ? (
                   <button
                     onClick={() => setDefaultCandidate(location)}
                     className="text-[11px] font-medium text-[#0d9488] hover:underline"
                   >
                     Set as default
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           ))
@@ -221,8 +222,8 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
                     icon={<MapPin className="h-6 w-6 text-[#0d9488]" />}
                     title="No locations yet"
                     description="Add your first location with address and GST details."
-                    actionLabel="Add Location"
-                    onAction={() => router.push("/locations/create")}
+                    actionLabel={canEdit ? "Add Location" : undefined}
+                    onAction={canEdit ? () => router.push("/locations/create") : undefined}
                   />
                 </TableCell>
               </TableRow>
@@ -234,12 +235,22 @@ export function LocationsTable({ locations, isLoading, onRefresh }: LocationsTab
                 >
                   {/* Default radio */}
                   <TableCell className="pl-3 pr-0 w-[40px] text-center">
-                    <DefaultToggle location={location} onSetDefault={setDefaultCandidate} />
+                    {canEdit ? (
+                      <DefaultToggle location={location} onSetDefault={setDefaultCandidate} />
+                    ) : location.isDefault ? (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0d9488] mx-auto">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M1.5 5.5L3.5 7.5L8.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                    ) : (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-gray-200 mx-auto" />
+                    )}
                   </TableCell>
 
                   {/* Actions */}
                   <TableCell className="pl-2 pr-0 w-[40px]">
-                    <ActionsMenu locationId={location._id} />
+                    {canEdit && <ActionsMenu locationId={location._id} />}
                   </TableCell>
 
                   <TableCell className="px-3">

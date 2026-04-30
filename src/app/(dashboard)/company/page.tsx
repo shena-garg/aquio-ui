@@ -10,7 +10,6 @@ import { organizationService } from "@/services/organization";
 
 interface FormErrors {
   name?: string;
-  email?: string;
   phoneNumber?: string;
 }
 
@@ -78,9 +77,6 @@ function CompanyForm({ org }: { org: OrgData | undefined }) {
   async function handleSave() {
     const errs: FormErrors = {};
     if (!name.trim()) errs.name = "Company name is required";
-    if (!email.trim()) errs.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-      errs.email = "Enter a valid email address";
     if (!phoneNumber.trim()) errs.phoneNumber = "Contact number is required";
     else if (!/^\d{10}$/.test(phoneNumber.trim()))
       errs.phoneNumber = "Enter a valid 10-digit contact number";
@@ -94,7 +90,6 @@ function CompanyForm({ org }: { org: OrgData | undefined }) {
     try {
       await organizationService.update({
         name: name.trim(),
-        email: email.trim(),
         taxNumber: taxNumber.trim(),
         phoneNumber: phoneNumber.trim(),
         countryCode: "91",
@@ -132,23 +127,18 @@ function CompanyForm({ org }: { org: OrgData | undefined }) {
           )}
         </div>
 
-        {/* Email */}
+        {/* Email — read-only, contact support to change */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Email <span className="text-red-500">*</span>
+            Email
           </label>
           <input
             type="email"
-            placeholder="Enter company email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={`w-full border ${
-              errors.email ? "border-[#dc2626]" : "border-gray-300"
-            } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
+            readOnly
+            className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
           />
-          {errors.email && (
-            <p className="text-[12px] text-[#dc2626] mt-1">{errors.email}</p>
-          )}
+          <p className="text-[11px] text-gray-400 mt-1">Contact support to update your organisation email.</p>
         </div>
 
         {/* Tax Number */}

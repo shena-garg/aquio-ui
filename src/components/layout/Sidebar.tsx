@@ -74,10 +74,10 @@ const navSections: NavSection[] = [
     label: "Organization",
     items: [
       { label: "Locations", href: "/locations", icon: MapPin },
-      { label: "Users", href: "/users", icon: Users },
-      { label: "Roles", href: "/roles", icon: ShieldCheck },
-      { label: "Settings", href: "/settings", icon: Settings },
-      { label: "Company", href: "/company", icon: Building2 },
+      { label: "Users", href: "/users", icon: Users, permission: "user.view" },
+      { label: "Roles", href: "/roles", icon: ShieldCheck, permission: "role.view" },
+      { label: "Settings", href: "/settings", icon: Settings, permission: "settings.view" },
+      { label: "Company", href: "/company", icon: Building2, permission: "organization.view" },
     ],
   },
 ];

@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LocationsTable } from "@/components/locations/LocationsTable";
 import { locationsService } from "@/services/locations";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LocationsPage() {
   const router = useRouter();
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission("location.edit");
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -33,7 +36,7 @@ export default function LocationsPage() {
     setPage(1);
   }
 
-  const actions = (
+  const actions = canEdit ? (
     <Button
       size="icon"
       onClick={() => router.push("/locations/create")}
@@ -42,7 +45,7 @@ export default function LocationsPage() {
       <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
       <span className="hidden sm:inline">Add Location</span>
     </Button>
-  );
+  ) : null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -60,6 +63,7 @@ export default function LocationsPage() {
         <LocationsTable
           locations={data?.locations ?? []}
           isLoading={isLoading}
+          canEdit={canEdit}
           onRefresh={refetch}
         />
       </div>

@@ -33,6 +33,13 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Sourcing
   { path: "/buy", permissions: ["auction-buy.view"] },
   { path: "/sell", permissions: ["auction-sale.view"] },
+
+  // Organization management (system roles only)
+  { path: "/locations/create", permissions: ["location.edit"] },
+  { path: "/users", permissions: ["user.view"] },
+  { path: "/roles", permissions: ["role.view"] },
+  { path: "/settings", permissions: ["settings.view"] },
+  { path: "/company", permissions: ["organization.view"] },
 ];
 
 /**

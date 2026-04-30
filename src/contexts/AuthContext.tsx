@@ -39,6 +39,11 @@ const ALL_PERMISSIONS_BY_ENTITY: Record<string, string[]> = {
     "sales-order.force-close", "sales-order.undo-force-close",
     "sales-order.audit-log", "sales-order.download-csv",
   ],
+  user: ["user.view", "user.add", "user.edit"],
+  role: ["role.view", "role.add", "role.edit"],
+  location: ["location.view", "location.edit"],
+  settings: ["settings.view", "settings.edit"],
+  organization: ["organization.view", "organization.edit"],
   "auction-buy": [
     "auction-buy.view", "auction-buy.add", "auction-buy.edit",
     "auction-buy.view-bids", "auction-buy.reject-bid",
@@ -55,6 +60,15 @@ const ALL_PERMISSIONS_BY_ENTITY: Record<string, string[]> = {
 };
 
 function flattenPermissions(role: Role): Set<string> {
+  // System roles (organizationId === null) bypass all permission checks
+  if (role.organizationId === null) {
+    const all = new Set<string>();
+    for (const perms of Object.values(ALL_PERMISSIONS_BY_ENTITY)) {
+      for (const p of perms) all.add(p);
+    }
+    return all;
+  }
+
   const perms = new Set<string>();
   for (const entity of role.permissionsPerEntity) {
     if (entity.access === "none") continue;
