@@ -125,7 +125,7 @@ export function SOSearchBar({
 }: SOSearchBarProps) {
   const [selectedField, setSelectedField] = useState<FieldKey>("poNumber");
 
-  const visibleFields = activeStatus === "completed"
+  const visibleFields = (activeStatus === "completed" || activeStatus === "draft" || activeStatus === "cancelled")
     ? FIELDS.filter((f) => f.key !== "status")
     : FIELDS;
 
