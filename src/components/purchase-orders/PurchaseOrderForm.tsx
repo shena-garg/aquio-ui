@@ -1054,38 +1054,6 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     // Reference ID, Supplier Reference ID, Internal Notes
   }
 
-  // ── Validate product availability after duplicate populate ───────────────
-  // Runs once — but only after productRows is actually populated (not empty on mount).
-  // The ref prevents re-running after setProductRows updates the rows below.
-  useEffect(() => {
-    if (!isDuplicateMode || duplicateValidationRan.current) return;
-    const rowsWithProduct = productRows.filter((r) => r.product?._id);
-    if (rowsWithProduct.length === 0) return; // Not populated yet — wait for next render
-
-    duplicateValidationRan.current = true;
-
-    Promise.all(
-      rowsWithProduct.map(async (row) => {
-        try {
-          const product = await productsService.getById(row.product!._id);
-          const variantExists = product.variants.some((v) => v._id === row.variant?._id);
-          const unavailable = product.status !== "active" || !variantExists;
-          return { id: row.id, unavailable };
-        } catch {
-          return { id: row.id, unavailable: true };
-        }
-      }),
-    ).then((results) => {
-      setProductRows((prev) =>
-        prev.map((r) => {
-          const result = results.find((res) => res.id === r.id);
-          return result ? { ...r, isUnavailable: result.unavailable } : r;
-        }),
-      );
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDuplicateMode, productRows]);
-
   // ── Order details state ─────────────────────────────────────────────────
   const [poNumber, setPoNumber] = useState("");
   const [referenceId, setReferenceId] = useState("");
@@ -1145,6 +1113,37 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
   // ── Product rows ─────────────────────────────────────────────────────────
   const [productRows, setProductRows] = useState<ProductRow[]>([emptyRow()]);
+
+  // ── Validate product availability after duplicate populate ───────────────
+  // Runs once — but only after productRows is actually populated (not empty on mount).
+  // The ref prevents re-running after setProductRows updates the rows below.
+  useEffect(() => {
+    if (!isDuplicateMode || duplicateValidationRan.current) return;
+    const rowsWithProduct = productRows.filter((r) => r.product?._id);
+    if (rowsWithProduct.length === 0) return; // Not populated yet — wait for next render
+
+    duplicateValidationRan.current = true;
+
+    Promise.all(
+      rowsWithProduct.map(async (row) => {
+        try {
+          const product = await productsService.getById(row.product!._id);
+          const variantExists = product.variants.some((v) => v._id === row.variant?._id);
+          const unavailable = product.status !== "active" || !variantExists;
+          return { id: row.id, unavailable };
+        } catch {
+          return { id: row.id, unavailable: true };
+        }
+      }),
+    ).then((results) => {
+      setProductRows((prev) =>
+        prev.map((r) => {
+          const result = results.find((res) => res.id === r.id);
+          return result ? { ...r, isUnavailable: result.unavailable } : r;
+        }),
+      );
+    });
+  }, [isDuplicateMode, productRows]); // eslint-disable-line react-hooks/exhaustive-deps
   const [attempted, setAttempted] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
