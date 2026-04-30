@@ -125,9 +125,14 @@ export function SOSearchBar({
 }: SOSearchBarProps) {
   const [selectedField, setSelectedField] = useState<FieldKey>("poNumber");
 
-  const visibleFields = (activeStatus === "completed" || activeStatus === "draft" || activeStatus === "cancelled")
-    ? FIELDS.filter((f) => f.key !== "status")
-    : FIELDS;
+  const hiddenKeys = new Set<FieldKey>();
+  if (activeStatus === "completed" || activeStatus === "draft" || activeStatus === "cancelled") {
+    hiddenKeys.add("status");
+  }
+  if (activeStatus === "draft" || activeStatus === "cancelled") {
+    hiddenKeys.add("receiptStatus");
+  }
+  const visibleFields = hiddenKeys.size > 0 ? FIELDS.filter((f) => !hiddenKeys.has(f.key)) : FIELDS;
 
   // If the active tab changes and the selected field is no longer visible, reset to default
   useEffect(() => {
