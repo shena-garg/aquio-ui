@@ -132,7 +132,17 @@ export function SOSearchBar({
   if (activeStatus === "draft" || activeStatus === "cancelled") {
     hiddenKeys.add("receiptStatus");
   }
-  const visibleFields = hiddenKeys.size > 0 ? FIELDS.filter((f) => !hiddenKeys.has(f.key)) : FIELDS;
+  const visibleFields = FIELDS
+    .filter((f) => !hiddenKeys.has(f.key))
+    .map((f) => {
+      if (f.key === "status" && activeStatus === "in_progress" && f.type === "select") {
+        return { ...f, options: [
+          { value: "issued",    label: "Issued"    },
+          { value: "confirmed", label: "Confirmed" },
+        ]};
+      }
+      return f;
+    });
 
   // If the active tab changes and the selected field is no longer visible, reset to default
   useEffect(() => {
