@@ -148,6 +148,19 @@ export function SOSearchBar({
           { value: "completed", label: "Completed" },
         ]};
       }
+      if (f.key === "receiptStatus" && activeStatus === "in_progress" && f.type === "select") {
+        return { ...f, options: [
+          { value: "pending", label: "Pending" },
+          { value: "partial", label: "Partial" },
+        ]};
+      }
+      if (f.key === "receiptStatus" && activeStatus === "completed" && f.type === "select") {
+        return { ...f, options: [
+          { value: "completed",        label: "Completed"        },
+          { value: "force closed",     label: "Force Closed"     },
+          { value: "excess delivered", label: "Excess Delivered" },
+        ]};
+      }
       return f;
     });
 
