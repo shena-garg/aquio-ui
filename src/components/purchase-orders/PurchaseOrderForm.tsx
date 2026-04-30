@@ -13,6 +13,7 @@ import {
   Search,
   CalendarDays,
   AlertTriangle,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadFile } from "@/lib/api-client";
@@ -609,6 +610,161 @@ interface PurchaseOrderFormProps {
   orderType?: "purchase" | "sales";
 }
 
+// ── PO/SO Number Settings Dialog ──────────────────────────────────────────────
+
+function PONumberSettingsDialog({
+  open,
+  onClose,
+  orderType,
+  settings,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  orderType: "purchase" | "sales";
+  settings: POFormSettings;
+  onSave: (updated: Partial<POFormSettings>) => Promise<void>;
+}) {
+  const isPO = orderType === "purchase";
+  const [autoGenerate, setAutoGenerate] = useState(
+    isPO ? settings.generatePOAutomatically : settings.generateSOAutomatically
+  );
+  const [prefix, setPrefix] = useState(isPO ? settings.poPrefix : settings.soPrefix);
+  const [separator, setSeparator] = useState(isPO ? settings.poSeparator : settings.soSeparator);
+  const [nextNumber, setNextNumber] = useState(isPO ? settings.nextPONumber : settings.nextSONumber);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      if (isPO) {
+        await onSave({
+          generatePOAutomatically: autoGenerate,
+          poPrefix: prefix,
+          poSeparator: separator,
+          nextPONumber: nextNumber,
+        });
+      } else {
+        await onSave({
+          generateSOAutomatically: autoGenerate,
+          soPrefix: prefix,
+          soSeparator: separator,
+          nextSONumber: nextNumber,
+        });
+      }
+      onClose();
+    } catch {
+      setSaveError(`Failed to save ${isPO ? "PO" : "SO"} number settings`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) return null;
+
+  const label = isPO ? "PO" : "SO";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-[10px] shadow-xl w-full max-w-[440px] mx-4 sm:mx-auto p-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb]">
+          <h3 className="text-[15px] font-semibold text-[#111827]">
+            {label} Number Settings
+          </h3>
+          <button onClick={onClose} className="text-[#9ca3af] hover:text-[#6b7280] transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="px-5 py-4">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700">
+                Auto-generate {label} Number
+              </p>
+              <p className="text-[12px] text-gray-400 mt-0.5">
+                Automatically assign a sequential number
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAutoGenerate(!autoGenerate)}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${
+                autoGenerate ? "bg-[#0d9488]" : "bg-gray-200"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  autoGenerate ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {autoGenerate && (
+            <div className="rounded-lg bg-[#f9fafb] p-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[12px] font-medium text-gray-500 mb-1">Prefix</label>
+                  <input
+                    type="text"
+                    value={prefix}
+                    onChange={(e) => setPrefix(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-gray-500 mb-1">Separator</label>
+                  <input
+                    type="text"
+                    value={separator}
+                    onChange={(e) => setSeparator(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-gray-500 mb-1">Next Number</label>
+                  <input
+                    type="number"
+                    value={nextNumber}
+                    onChange={(e) => setNextNumber(Number(e.target.value))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
+                  />
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-[12px] text-gray-400">Preview:</span>
+                <span className="text-[13px] font-medium text-[#111827]">
+                  {prefix}{separator}{nextNumber}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {saveError && (
+          <p className="px-5 pb-2 text-[13px] text-[#dc2626]">{saveError}</p>
+        )}
+        <div className="flex justify-end gap-2 px-5 py-4 border-t border-[#e5e7eb]">
+          <Button variant="outline" size="sm" onClick={() => { onClose(); setSaveError(""); }} className="h-8 text-[13px]">
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving}
+            className="h-8 text-[13px] bg-[#0d9488] hover:bg-[#0f766e] text-white"
+          >
+            {saving && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purchase" }: PurchaseOrderFormProps) {
   const isEditMode = !!editId;
   const isDuplicateMode = !!duplicateFromId;
@@ -620,6 +776,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const [vendors, setVendors] = useState<VendorCompany[]>([]);
   const [ownOrg, setOwnOrg] = useState<Organization | null>(null);
   const [settings, setSettings] = useState<POFormSettings | null>(null);
+  const [poNumberSettingsOpen, setPoNumberSettingsOpen] = useState(false);
 
   useEffect(() => {
     const fetchId = editId || duplicateFromId;
@@ -1099,6 +1256,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     ? (settings?.soPaymentTerms ?? [])
     : (settings?.paymentTerms ?? []);
 
+  async function handlePONumberSettingsSave(updated: Partial<POFormSettings>) {
+    await organizationSettingsService.update(updated as Parameters<typeof organizationSettingsService.update>[0]);
+    const refreshed = await getPOFormSettings();
+    setSettings(refreshed);
+    toast.success(`${orderType === "sales" ? "SO" : "PO"} number settings updated`);
+  }
+
   async function handleAddPaymentTerm() {
     const term = newPaymentTerm.trim();
     if (!term || addingPaymentTerm) return;
@@ -1394,20 +1558,48 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                     disabled
                     className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 bg-[#f9fafb] text-[13px] text-[#6b7280] cursor-not-allowed"
                   />
-                ) : settings?.generatePOAutomatically ? (
-                  <div className="flex items-center gap-2 w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 bg-[#f9fafb] text-[13px] text-[#9ca3af]">
-                    <Lock className="h-3.5 w-3.5" />
-                    Auto-generated
-                  </div>
-                ) : (
-                  <input
-                    type="text"
-                    value={poNumber}
-                    onChange={(e) => setPoNumber(e.target.value)}
-                    placeholder="Enter PO number"
-                    className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
-                  />
-                )}
+                ) : (() => {
+                  const autoOn = orderType === "sales"
+                    ? settings?.generateSOAutomatically
+                    : settings?.generatePOAutomatically;
+                  const prefix = orderType === "sales" ? settings?.soPrefix : settings?.poPrefix;
+                  const sep = orderType === "sales" ? settings?.soSeparator : settings?.poSeparator;
+                  const next = orderType === "sales" ? settings?.nextSONumber : settings?.nextPONumber;
+                  return autoOn ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-1 h-9 border border-[#e5e7eb] rounded-[6px] px-3 bg-[#f9fafb] text-[13px] text-[#9ca3af]">
+                        <Lock className="h-3.5 w-3.5" />
+                        {prefix}{sep}{next}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPoNumberSettingsOpen(true)}
+                        className="flex-shrink-0 p-2 text-[#9ca3af] hover:text-[#0d9488] transition-colors rounded hover:bg-[#f0fdfa]"
+                        title={`${orderType === "sales" ? "SO" : "PO"} Number Settings`}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={poNumber}
+                        onChange={(e) => setPoNumber(e.target.value)}
+                        placeholder={`Enter ${orderType === "sales" ? "SO" : "PO"} number`}
+                        className="flex-1 h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPoNumberSettingsOpen(true)}
+                        className="flex-shrink-0 p-2 text-[#9ca3af] hover:text-[#0d9488] transition-colors rounded hover:bg-[#f0fdfa]"
+                        title={`${orderType === "sales" ? "SO" : "PO"} Number Settings`}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Reference ID */}
@@ -2143,6 +2335,16 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         onCreated={handleProductCreated}
         initialName={createProductInitialName}
       />
+
+      {settings && (
+        <PONumberSettingsDialog
+          open={poNumberSettingsOpen}
+          onClose={() => setPoNumberSettingsOpen(false)}
+          orderType={orderType}
+          settings={settings}
+          onSave={handlePONumberSettingsSave}
+        />
+      )}
     </div>
   );
 }
