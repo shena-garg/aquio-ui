@@ -665,10 +665,10 @@ export function SOTable({
 
       {/* ── Desktop table ── */}
       <div className={`hidden lg:block transition-all duration-300 ${flash ? "ring-2 ring-[#0d9488]/40 rounded-md" : ""}`}>
-        <div className="w-full overflow-x-auto bg-white">
-          <Table className="min-w-[1600px]">
+        <div className="w-full overflow-x-auto bg-white [&_th]:border-b [&_th]:border-gray-200 [&_td]:border-b [&_td]:border-gray-100 [&_tbody_tr:last-child_td]:border-b-0">
+          <Table className="min-w-[1600px] border-separate border-spacing-0">
             <TableHeader>
-              <TableRow className="border-b border-gray-200 bg-gray-50 hover:bg-gray-50">
+              <TableRow className="bg-gray-50 hover:bg-gray-50 border-b-0">
                 {/* Actions — always sticky at left: 0 */}
                 <TableHead
                   className="w-[68px] px-4 sticky z-20 bg-gray-50"
@@ -703,7 +703,7 @@ export function SOTable({
                 orders.map((order) => (
                   <TableRow
                     key={order.id}
-                    className="group border-b border-gray-100 hover:bg-gray-50"
+                    className="group hover:bg-gray-50 border-b-0"
                   >
                     {/* Actions — always sticky at left: 0 */}
                     <TableCell
