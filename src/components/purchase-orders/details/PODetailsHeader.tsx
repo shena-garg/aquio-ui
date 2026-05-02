@@ -140,7 +140,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
           <DropdownMenuItem
             onClick={() =>
               router.push(
-                `/purchase-orders/create?duplicateFrom=${order.id}`,
+                `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
               )
             }
           >
@@ -150,7 +150,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
           <>
             <DropdownMenuItem
               onClick={() =>
-                router.push(`/purchase-orders/${order.id}/edit`)
+                router.push(`/purchase-orders/${order._id ?? order.id}/edit`)
               }
             >
               Edit Order
@@ -158,7 +158,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
             <DropdownMenuItem
               onClick={() =>
                 router.push(
-                  `/purchase-orders/create?duplicateFrom=${order.id}`,
+                  `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
                 )
               }
             >
@@ -177,7 +177,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
             {order.receiptStatus === "pending" && (
               <DropdownMenuItem
                 onClick={() =>
-                  router.push(`/purchase-orders/${order.id}/edit`)
+                  router.push(`/purchase-orders/${order._id ?? order.id}/edit`)
                 }
               >
                 Edit Order
@@ -186,7 +186,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
             <DropdownMenuItem
               onClick={() =>
                 router.push(
-                  `/purchase-orders/create?duplicateFrom=${order.id}`,
+                  `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
                 )
               }
             >
@@ -216,7 +216,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
             {order.receiptStatus === "pending" && (
               <DropdownMenuItem
                 onClick={() =>
-                  router.push(`/purchase-orders/${order.id}/edit`)
+                  router.push(`/purchase-orders/${order._id ?? order.id}/edit`)
                 }
               >
                 Edit Order
@@ -225,7 +225,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
             <DropdownMenuItem
               onClick={() =>
                 router.push(
-                  `/purchase-orders/create?duplicateFrom=${order.id}`,
+                  `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
                 )
               }
             >
