@@ -66,6 +66,14 @@ function emptyRow(): ProductRow {
 // Helpers
 // ---------------------------------------------------------------------------
 
+function formatNumericInput(raw: string): string {
+  if (!raw) return raw;
+  const [intPart, ...decParts] = raw.split(".");
+  const intNum = parseInt(intPart, 10);
+  const formattedInt = intPart === "" ? "" : isNaN(intNum) ? intPart : intNum.toLocaleString("en-IN");
+  return decParts.length > 0 ? `${formattedInt}.${decParts.join("")}` : formattedInt;
+}
+
 function todayString(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -963,8 +971,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           variant,
           quantity: qty,
           price,
-          quantityStr: qty > 0 ? String(qty) : "",
-          priceStr: price > 0 ? String(price) : "",
+          quantityStr: qty > 0 ? formatNumericInput(String(qty)) : "",
+          priceStr: price > 0 ? formatNumericInput(String(price)) : "",
         };
       });
       setProductRows(rows);
@@ -1043,8 +1051,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           variant,
           quantity: qty,
           price,
-          quantityStr: qty > 0 ? String(qty) : "",
-          priceStr: price > 0 ? String(price) : "",
+          quantityStr: qty > 0 ? formatNumericInput(String(qty)) : "",
+          priceStr: price > 0 ? formatNumericInput(String(price)) : "",
         };
       });
       setProductRows(rows);
@@ -1877,7 +1885,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             onChange={(e) => {
                               const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                               updateRow(row.id, {
-                                quantityStr: raw,
+                                quantityStr: formatNumericInput(raw),
                                 quantity: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.quantity,
                               });
                             }}
@@ -1897,7 +1905,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                               onChange={(e) => {
                                 const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                 updateRow(row.id, {
-                                  priceStr: raw,
+                                  priceStr: formatNumericInput(raw),
                                   price: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.price,
                                 });
                               }}
