@@ -117,11 +117,31 @@ export function ActivityTimeline({
               />
             );
           case "forcefully_close_item":
+          case "undo_forcefully_close_item":
             return (
               <ForceCloseEventCard
                 key={p.event._id}
                 parsed={p}
                 poProducts={poProducts}
+                isExpanded={isExpanded}
+                onToggle={toggle}
+              />
+            );
+          case "receipt_update":
+            return (
+              <ReceiptEventCard
+                key={p.event._id}
+                parsed={p}
+                poProducts={poProducts}
+                isExpanded={isExpanded}
+                onToggle={toggle}
+              />
+            );
+          case "confirm":
+            return (
+              <CancelEventCard
+                key={p.event._id}
+                parsed={p}
                 isExpanded={isExpanded}
                 onToggle={toggle}
               />
