@@ -1136,7 +1136,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       rowsWithProduct.map(async (row) => {
         try {
           const product = await productsService.getById(row.product!._id);
-          const variantExists = product.variants.some((v) => v._id === row.variant?._id);
+          const variantExists = product.variants.some((v) => String(v._id) === String(row.variant?._id));
           const unavailable = product.status !== "active" || !variantExists;
           return { id: row.id, unavailable };
         } catch {
