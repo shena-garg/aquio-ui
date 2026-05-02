@@ -318,9 +318,9 @@ function ProductTypeahead({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync display when value is cleared externally
+  // Sync display when value is set or cleared externally
   useEffect(() => {
-    if (!value) setQuery("");
+    setQuery(value?.name ?? "");
   }, [value]);
 
   function updateDropdownPosition() {
@@ -1213,13 +1213,15 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const [createProductInitialName, setCreateProductInitialName] = useState("");
 
   async function handleProductCreated(created: { _id: string; name: string }) {
+    const rowId = createProductForRowId;
     setCreateProductForRowId(null);
+    if (!rowId) return;
     // Fetch full product so we have variants + gst + unitOfMeasurement
     try {
       const res = await searchProducts(created.name);
       const found = res.find((p) => p._id === created._id) ?? res[0] ?? null;
-      if (found && createProductForRowId) {
-        handleProductSelect(createProductForRowId, found);
+      if (found) {
+        handleProductSelect(rowId, found);
       }
     } catch {
       // Silently ignore — user can manually select from the dropdown
