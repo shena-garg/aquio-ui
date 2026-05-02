@@ -1143,7 +1143,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         }),
       );
     });
-  }, [isDuplicateMode, productRows]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDuplicateMode, productRows]);
   const [attempted, setAttempted] = useState(false);
   const [submitError, setSubmitError] = useState("");
 

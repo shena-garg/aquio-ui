@@ -137,15 +137,6 @@ export function ActivityTimeline({
                 onToggle={toggle}
               />
             );
-          case "confirm":
-            return (
-              <CancelEventCard
-                key={p.event._id}
-                parsed={p}
-                isExpanded={isExpanded}
-                onToggle={toggle}
-              />
-            );
           default:
             return null;
         }
