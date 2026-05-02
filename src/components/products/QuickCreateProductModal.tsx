@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { categoriesService, type Category } from "@/services/categories";
@@ -247,9 +247,16 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     SKU {autoSku ? <span className="text-[11px] text-gray-400 font-normal">(auto)</span> : <span className="text-red-500">*</span>}
                   </label>
-                  <input type="text" placeholder={autoSku ? "Auto-generated" : "e.g. STL-001"} value={sku}
-                    disabled={autoSku} onChange={(e) => setSku(e.target.value)}
-                    className={`${inputClass(errors.sku)} ${autoSku ? "opacity-50 cursor-not-allowed" : ""}`} />
+                  {autoSku ? (
+                    <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-50 text-gray-400 flex items-center gap-1.5">
+                      <Lock size={12} className="flex-shrink-0" />
+                      {settings?.skuPrefix}{settings?.skuSeparator}{settings?.nextSKUNumber}
+                    </div>
+                  ) : (
+                    <input type="text" placeholder="e.g. STL-001" value={sku}
+                      onChange={(e) => setSku(e.target.value)}
+                      className={inputClass(errors.sku)} />
+                  )}
                   {errors.sku && <p className="text-[12px] text-[#dc2626] mt-1">{errors.sku}</p>}
                 </div>
                 <div>
