@@ -2066,7 +2066,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                     updateRow(row.id, {
-                                      quantityStr: raw,
+                                      quantityStr: formatNumericInput(raw),
                                       quantity: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.quantity,
                                     });
                                   }}
@@ -2093,7 +2093,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                                   onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
                                     updateRow(row.id, {
-                                      priceStr: raw,
+                                      priceStr: formatNumericInput(raw),
                                       price: raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : row.price,
                                     });
                                   }}
