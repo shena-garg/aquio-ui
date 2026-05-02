@@ -389,7 +389,7 @@ function ReceiptSummaryCard({
   const productList = Array.from(productKeys.values());
 
   const { hasPermission } = useAuth();
-  const canForceClose = hasPermission("purchase-order.force-close") && order.status !== "cancelled";
+  const canForceClose = hasPermission("purchase-order.force-close") && (order.status === "issued" || order.status === "confirmed");
 
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
   const [forceCloseError, setForceCloseError] = useState("");
@@ -1101,7 +1101,7 @@ function ProductsTable({
   received: number;
 }) {
   const { hasPermission } = useAuth();
-  const canForceClose = hasPermission("purchase-order.force-close") && order.status !== "cancelled";
+  const canForceClose = hasPermission("purchase-order.force-close") && (order.status === "issued" || order.status === "confirmed");
 
   const remainingItems = useMemo(() => order.remainingItems ?? [], [order.remainingItems]);
 

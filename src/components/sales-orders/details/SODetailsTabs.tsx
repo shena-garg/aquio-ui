@@ -384,7 +384,7 @@ function ShipmentSummaryCard({
   const productList = Array.from(productKeys.values());
 
   const { hasPermission } = useAuth();
-  const canForceClose = hasPermission("sales-order.force-close") && order.status !== "cancelled";
+  const canForceClose = hasPermission("sales-order.force-close") && (order.status === "issued" || order.status === "confirmed");
 
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
   const [forceCloseError, setForceCloseError] = useState("");
@@ -1100,7 +1100,7 @@ function ProductsTable({
   const remainingItems = useMemo(() => order.remainingItems ?? [], [order.remainingItems]);
 
   const { hasPermission } = useAuth();
-  const canForceClose = hasPermission("sales-order.force-close") && order.status !== "cancelled";
+  const canForceClose = hasPermission("sales-order.force-close") && (order.status === "issued" || order.status === "confirmed");
 
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
   const [forceCloseError, setForceCloseError] = useState("");
