@@ -49,6 +49,7 @@ export interface CreateProductPayload {
   termsOfConditions?: string[];
   files?: { id: string; name: string }[];
   variants: {
+    _id?: string;
     name: string;
     customAttributes: { label: string; unit: string; value?: string }[];
   }[];

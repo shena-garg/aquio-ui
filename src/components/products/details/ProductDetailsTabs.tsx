@@ -378,6 +378,7 @@ function VariantsTab({ product }: { product: Product }) {
   // Build the full payload from product + optional variant changes
   function buildPayload(
     updatedVariants: {
+      _id?: string;
       name: string;
       customAttributes: { label: string; unit: string; value?: string }[];
     }[],
@@ -400,10 +401,11 @@ function VariantsTab({ product }: { product: Product }) {
     setIsSaving(true);
     try {
       const updatedVariants = editingVariantId
-        ? // Edit existing
+        ? // Edit existing — preserve _id on all variants so Mongoose doesn't regenerate them
           variants.map((v) =>
             v._id === editingVariantId
               ? {
+                  _id: v._id,
                   name: data.name,
                   customAttributes: data.customAttributes.map((a) => ({
                     label: a.label,
@@ -412,6 +414,7 @@ function VariantsTab({ product }: { product: Product }) {
                   })),
                 }
               : {
+                  _id: v._id,
                   name: v.name,
                   customAttributes: v.customAttributes.map((a) => ({
                     label: a.label,
@@ -420,9 +423,10 @@ function VariantsTab({ product }: { product: Product }) {
                   })),
                 },
           )
-        : // Add new
+        : // Add new — preserve _id on existing variants, new variant gets none
           [
             ...variants.map((v) => ({
+              _id: v._id,
               name: v.name,
               customAttributes: v.customAttributes.map((a) => ({
                 label: a.label,
@@ -467,6 +471,7 @@ function VariantsTab({ product }: { product: Product }) {
       const updatedVariants = variants
         .filter((v) => v._id !== variantId)
         .map((v) => ({
+          _id: v._id,
           name: v.name,
           customAttributes: v.customAttributes.map((a) => ({
             label: a.label,
