@@ -177,7 +177,7 @@ const DATE_FIELDS = new Set(["issueDate", "deliveryDate"]);
 interface RawProductLine {
   product: { _id: string; value?: string };
   variant: { _id: string; value?: string };
-  price: { value: { $numberDecimal: string } };
+  price: { value: { $numberDecimal: string } | number };
   quantity: { value: number; postfix: string };
   gst: { value: number };
 }
@@ -187,7 +187,11 @@ function productKey(line: RawProductLine): string {
 }
 
 function readPrice(line: RawProductLine): number {
-  return parseFloat(line.price.value.$numberDecimal);
+  const v = line.price?.value;
+  if (v == null) return 0;
+  if (typeof v === 'number') return v;
+  if (typeof v === 'object' && '$numberDecimal' in v) return parseFloat(v.$numberDecimal);
+  return parseFloat(String(v));
 }
 
 function diffProducts(

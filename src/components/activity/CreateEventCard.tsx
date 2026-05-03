@@ -115,7 +115,11 @@ export function CreateEventCard({
                 <p className="text-xs text-[#6b7280] mt-0.5">
                   {(p.quantity?.value ?? 0).toLocaleString("en-IN")}{" "}
                   {p.quantity?.postfix ?? ""} · ₹
-                  {parseFloat(p.price?.value?.$numberDecimal ?? "0")} / unit ·
+                  {(() => {
+                    const v = p.price?.value;
+                    const n = typeof v === 'number' ? v : parseFloat(v?.$numberDecimal ?? "0");
+                    return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  })()} / unit ·
                   GST {p.gst?.value ?? 0}%
                 </p>
               </div>

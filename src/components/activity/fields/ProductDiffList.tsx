@@ -16,13 +16,17 @@ interface ProductDiffListProps {
   diffs: ProductDiff[];
 }
 
+function fmt(price: number): string {
+  return price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function formatDetail(diff: ProductDiff): string {
   if (diff.type === "removed") return "Removed from order";
 
   if (diff.type === "added") {
     const parts: string[] = [];
     if (diff.quantity != null) parts.push(`Qty ${diff.quantity} ${diff.uom ?? ""}`);
-    if (diff.price != null) parts.push(`₹${diff.price}`);
+    if (diff.price != null) parts.push(`₹${fmt(diff.price)}`);
     if (diff.gst != null) parts.push(`GST ${diff.gst}%`);
     return parts.join(" · ");
   }
@@ -30,7 +34,7 @@ function formatDetail(diff: ProductDiff): string {
   // updated — show only what changed
   const changes: string[] = [];
   if (diff.oldPrice != null && diff.price != null && diff.oldPrice !== diff.price) {
-    changes.push(`Price ₹${diff.oldPrice} → ₹${diff.price}`);
+    changes.push(`Price ₹${fmt(diff.oldPrice)} → ₹${fmt(diff.price)}`);
   }
   if (diff.oldQuantity != null && diff.quantity != null && diff.oldQuantity !== diff.quantity) {
     changes.push(`Qty ${diff.oldQuantity} → ${diff.quantity}`);
