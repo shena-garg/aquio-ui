@@ -176,7 +176,7 @@ export default function ProductDetailPage() {
         subCategoryId: editState.subCategoryId,
         hsnCode: editState.hsnCode.trim(),
         gst: editState.gst,
-        description: editState.description.trim() || undefined,
+        description: editState.description.trim(),
         termsOfConditions: editState.termsOfConditions.filter((t) => t.trim()),
         files: editState.files.map(({ id, name }) => ({ id, name })),
         variants: product.variants.map((v) => ({

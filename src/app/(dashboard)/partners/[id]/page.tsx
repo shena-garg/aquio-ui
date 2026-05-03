@@ -117,7 +117,7 @@ export default function PartnerDetailPage() {
         name: editState.name.trim(),
         countryCode: editState.countryCode.trim(),
         contactNumber: editState.contactNumber.trim(),
-        taxNumber: editState.taxNumber.trim() || undefined,
+        taxNumber: editState.taxNumber.trim(),
         poReminder: editState.poReminder,
       });
       toast.success("Partner updated successfully.");
