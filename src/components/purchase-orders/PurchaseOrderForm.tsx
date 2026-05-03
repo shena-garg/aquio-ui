@@ -1343,7 +1343,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       errors.buyer = "Please select a buyer and location.";
     }
     if (!isEditMode && !settings?.generatePOAutomatically && !poNumber.trim()) {
-      errors.poNumber = "PO Number is required.";
+      errors.poNumber = `${orderType === "sales" ? "SO" : "PO"} Number is required.`;
     }
     if (!paymentTerms) {
       errors.paymentTerms = "Payment terms is required.";
@@ -1570,10 +1570,10 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           {/* ── Order Details card (full width) ─────────────────────── */}
           <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 pt-[10px] pb-4 mb-3">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* PO Number */}
+              {/* PO/SO Number */}
               <div>
                 <label className="block text-[13px] font-medium text-[#111827] mb-1.5">
-                  PO Number{" "}
+                  {orderType === "sales" ? "SO Number" : "PO Number"}{" "}
                   {!settings?.generatePOAutomatically && (
                     <span className="text-[#dc2626]">*</span>
                   )}
