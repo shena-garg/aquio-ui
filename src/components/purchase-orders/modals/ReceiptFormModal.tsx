@@ -388,7 +388,7 @@ export function ReceiptFormModal({
 
                         {/* Price */}
                         <td className="py-2.5 px-2 text-right text-[13px] text-[#6b7280] whitespace-nowrap">
-                          ₹ {parseFloat(row.unitPrice).toLocaleString("en-IN")} @ {row.taxRate}%
+                          ₹ {parseFloat(row.unitPrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} @ {row.taxRate}%
                         </td>
 
                         {/* Order */}

@@ -1204,7 +1204,7 @@ function ProcurementContent({
     {
       label: "Total Spend",
       value: summary
-        ? `₹${summary.totalSpend.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+        ? `₹${summary.totalSpend.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : "—",
     },
     {
@@ -1286,7 +1286,7 @@ function ProcurementContent({
                           : name === "minPrice"
                             ? "Min Price"
                             : "Max Price";
-                      return [`₹${value.toLocaleString("en-IN")}`, label];
+                      return [`₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, label];
                     }) as any}
                   />
                   <Line
@@ -1446,10 +1446,10 @@ function computeSmartAlerts(data: any): SmartAlert[] {
     .filter((s) => s.priceTrend === "up" && (s.priceTrendPct ?? 0) > 3)
     .forEach((s) => {
       const recentFmt = s.recentAvgPrice != null
-        ? `₹${s.recentAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+        ? `₹${s.recentAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : "—";
       const historicFmt = s.historicAvgPrice != null
-        ? `₹${s.historicAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+        ? `₹${s.historicAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : "—";
       alerts.push({
         level: "warning",
@@ -1682,7 +1682,7 @@ function PriceIntelligenceCard({ summary }: { summary: any }) {
         </div>
         <div className="text-2xl font-semibold text-[#059669] mt-1">
           {summary.bestPrice != null
-            ? `₹${summary.bestPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            ? `₹${summary.bestPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "—"}
         </div>
         {summary.bestPriceMonth && (
@@ -1697,7 +1697,7 @@ function PriceIntelligenceCard({ summary }: { summary: any }) {
         </div>
         <div className="text-2xl font-semibold text-[#dc2626] mt-1">
           {summary.worstPrice != null
-            ? `₹${summary.worstPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            ? `₹${summary.worstPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "—"}
         </div>
         {summary.worstPriceMonth && (
@@ -1811,7 +1811,7 @@ function SalesContent({
     {
       label: "Total Revenue",
       value: summary
-        ? `₹${summary.totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+        ? `₹${summary.totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : "—",
     },
     {
@@ -1893,7 +1893,7 @@ function SalesContent({
                           : name === "minPrice"
                             ? "Min Price"
                             : "Max Price";
-                      return [`₹${value.toLocaleString("en-IN")}`, label];
+                      return [`₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, label];
                     }) as any}
                   />
                   <Line
@@ -2023,7 +2023,7 @@ function SalesPriceIntelligenceCard({ summary }: { summary: any }) {
         </div>
         <div className="text-2xl font-semibold text-[#059669] mt-1">
           {summary.bestPrice != null
-            ? `₹${summary.bestPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            ? `₹${summary.bestPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "—"}
         </div>
         {summary.bestPriceMonth && (
@@ -2038,7 +2038,7 @@ function SalesPriceIntelligenceCard({ summary }: { summary: any }) {
         </div>
         <div className="text-2xl font-semibold text-[#dc2626] mt-1">
           {summary.worstPrice != null
-            ? `₹${summary.worstPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+            ? `₹${summary.worstPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             : "—"}
         </div>
         {summary.worstPriceMonth && (
@@ -2121,10 +2121,10 @@ function computeSalesSmartAlerts(data: any): SmartAlert[] {
     .filter((b) => b.priceTrend === "down" && (b.priceTrendPct ?? 0) < -3)
     .forEach((b) => {
       const recentFmt = b.recentAvgPrice != null
-        ? `₹${b.recentAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+        ? `₹${b.recentAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : "—";
       const historicFmt = b.historicAvgPrice != null
-        ? `₹${b.historicAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+        ? `₹${b.historicAvgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : "—";
       alerts.push({
         level: "warning",
@@ -2336,7 +2336,7 @@ function buyerPriceTrendBadge(b: BuyerRow): {
   }
 
   const fmtPrice = (v: number | null | undefined) =>
-    v != null ? `₹${v.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—";
+    v != null ? `₹${v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—";
 
   // For sales: up = good (green), down = bad (red)
   if (trend === "up") {
@@ -2459,10 +2459,10 @@ function BuyerIntelligenceTable({ buyers }: { buyers: BuyerRow[] }) {
                     <td className={cn(tdCls, "font-medium")}>{b.buyerName}</td>
                     <td className={tdCls}>{b.units}</td>
                     <td className={tdCls}>
-                      ₹{b.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      ₹{b.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>
-                      ₹{b.minPrice.toLocaleString("en-IN")} – ₹{b.maxPrice.toLocaleString("en-IN")}
+                      ₹{b.minPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} – ₹{b.maxPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>{b.soCount}</td>
                     <td className={tdCls}>
@@ -2481,7 +2481,7 @@ function BuyerIntelligenceTable({ buyers }: { buyers: BuyerRow[] }) {
                       {lastOrder.text}
                     </td>
                     <td className={tdCls}>
-                      ₹{b.totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      ₹{b.totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 );
@@ -2552,7 +2552,7 @@ function RecentSalesOrdersTable({ recentOrders }: { recentOrders: RecentSO[] }) 
                     <td className={tdCls}>{formatShortDate(so.issueDate)}</td>
                     <td className={tdCls}>{formatShortDate(so.deliveryDate)}</td>
                     <td className={tdCls}>
-                      ₹{so.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      ₹{so.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>{so.unitsSold}</td>
                     <td className={cn(tdCls, getReceivedColor(so.unitsDelivered, so.unitsSold))}>{so.unitsDelivered}</td>
@@ -2785,7 +2785,7 @@ function MarginContent({
             Avg Buy Price
           </div>
           <div className="text-[20px] font-semibold text-[#111827] mt-1">
-            ₹{avgBuyPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            ₹{avgBuyPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
         <div className="border border-[#e5e7eb] rounded-lg bg-white px-4 py-3">
@@ -2793,7 +2793,7 @@ function MarginContent({
             Avg Sell Price
           </div>
           <div className="text-[20px] font-semibold text-[#111827] mt-1">
-            ₹{avgSellPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            ₹{avgSellPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
         <div className="border border-[#e5e7eb] rounded-lg bg-white px-4 py-3">
@@ -3001,14 +3001,14 @@ function MarginContent({
         <div className="border-t border-[#e5e7eb] mt-4 pt-3">
           {gap < 0 ? (
             <p className="text-sm text-[#dc2626]">
-              ⚠️ At current buy price of ₹{beBuyPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}, you need
+              ⚠️ At current buy price of ₹{beBuyPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, you need
               to sell above ₹{minSellPrice.toFixed(2)} to maintain {beTargetMargin}%
-              margin. Current sell price of ₹{currentSellPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}{" "}
+              margin. Current sell price of ₹{currentSellPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
               falls short by ₹{Math.abs(gap).toFixed(2)}.
             </p>
           ) : (
             <p className="text-sm text-[#059669]">
-              ✅ Current sell price of ₹{currentSellPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })} exceeds
+              ✅ Current sell price of ₹{currentSellPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} exceeds
               the minimum of ₹{minSellPrice.toFixed(2)} needed for {beTargetMargin}%
               margin. You have ₹{gap.toFixed(2)} of headroom.
             </p>
@@ -3081,7 +3081,7 @@ function supplierPriceTrendBadge(s: SupplierRow): {
   }
 
   const fmtPrice = (v: number | null | undefined) =>
-    v != null ? `₹${v.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—";
+    v != null ? `₹${v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—";
 
   if (trend === "up") {
     return {
@@ -3209,10 +3209,10 @@ function SupplierIntelligenceTable({ suppliers }: { suppliers: SupplierRow[] }) 
                     <td className={cn(tdCls, "font-medium")}>{s.supplierName}</td>
                     <td className={tdCls}>{s.units}</td>
                     <td className={tdCls}>
-                      ₹{s.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      ₹{s.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>
-                      ₹{s.minPrice.toLocaleString("en-IN")} – ₹{s.maxPrice.toLocaleString("en-IN")}
+                      ₹{s.minPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} – ₹{s.maxPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>{s.poCount}</td>
                     <td className={tdCls}>
@@ -3231,7 +3231,7 @@ function SupplierIntelligenceTable({ suppliers }: { suppliers: SupplierRow[] }) 
                       {lastOrder.text}
                     </td>
                     <td className={tdCls}>
-                      ₹{s.totalSpend.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      ₹{s.totalSpend.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 );
@@ -3369,7 +3369,7 @@ function RecentPOsTable({ recentPOs }: { recentPOs: RecentPO[] }) {
                     <td className={tdCls}>{formatShortDate(po.issueDate)}</td>
                     <td className={tdCls}>{formatShortDate(po.deliveryDate)}</td>
                     <td className={tdCls}>
-                      ₹{po.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      ₹{po.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>{po.unitsOrdered}</td>
                     <td className={cn(tdCls, getReceivedColor(po.unitsReceived, po.unitsOrdered))}>{po.unitsReceived}</td>

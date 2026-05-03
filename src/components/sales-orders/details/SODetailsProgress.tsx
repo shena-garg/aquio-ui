@@ -25,7 +25,7 @@ export function SODetailsProgress({ order }: SODetailsProgressProps) {
       {(typeof order.totalAmount === "number"
         ? order.totalAmount
         : parseFloat(order.totalAmount.$numberDecimal)
-      ).toLocaleString("en-IN")}
+      ).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </span>
   );
 

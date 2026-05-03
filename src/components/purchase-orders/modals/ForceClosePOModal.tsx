@@ -252,7 +252,7 @@ export function ForceClosePOModal({
                           {/* Unit Price */}
                           <td className="py-3 pr-4 whitespace-nowrap">
                             <div className="text-gray-900">
-                              ₹{row.price.value.toLocaleString("en-IN")}
+                              ₹{row.price.value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="text-xs text-gray-400">
                               @ {row.gst.value}% GST
@@ -261,7 +261,7 @@ export function ForceClosePOModal({
 
                           {/* Line Total */}
                           <td className="py-3 text-right text-gray-900 whitespace-nowrap">
-                            ₹{row.totalAmount.toLocaleString("en-IN")}
+                            ₹{row.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
                       );
@@ -284,7 +284,7 @@ export function ForceClosePOModal({
                       </td>
                       <td className="py-3 pr-4" />
                       <td className="py-3 text-right font-semibold text-gray-900 whitespace-nowrap">
-                        ₹{totalLineAmount.toLocaleString("en-IN")}
+                        ₹{totalLineAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   </tfoot>

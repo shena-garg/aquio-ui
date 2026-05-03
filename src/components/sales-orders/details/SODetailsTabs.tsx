@@ -1209,7 +1209,7 @@ function ProductsTable({
                 </div>
                 <div className="flex flex-col items-end gap-[2px] flex-shrink-0">
                   <span className="text-[13px] font-semibold text-[#111827] whitespace-nowrap">
-                    ₹{parseDecimal(product.totalAmount).toLocaleString("en-IN")}
+                    ₹{parseDecimal(product.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-[11px] text-[#6b7280] whitespace-nowrap">
                     ₹{parseDecimal(product.price.value)} @ GST {product.gst.value}%
@@ -1310,7 +1310,7 @@ function ProductsTable({
             ₹{(typeof order.totalAmount === "number"
               ? order.totalAmount
               : parseFloat(order.totalAmount.$numberDecimal)
-            ).toLocaleString("en-IN")}
+            ).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
       </div>
@@ -1465,7 +1465,7 @@ function ProductsTable({
 
                   {/* Line Total */}
                   <td className="py-2.5 pr-5 pl-3 text-right text-[13px] font-semibold leading-[16.9px] text-[#111827] whitespace-nowrap">
-                    ₹ {parseDecimal(product.totalAmount).toLocaleString("en-IN")}
+                    ₹ {parseDecimal(product.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
               );
@@ -1504,7 +1504,7 @@ function ProductsTable({
                 ₹ {(typeof order.totalAmount === "number"
                   ? order.totalAmount
                   : parseFloat(order.totalAmount.$numberDecimal)
-                ).toLocaleString("en-IN")}
+                ).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
             </tr>
           </tfoot>
