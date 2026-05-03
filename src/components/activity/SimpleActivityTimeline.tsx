@@ -97,6 +97,22 @@ function serializeForComparison(key: string, val: unknown): string {
   return String(val ?? "");
 }
 
+function renderFileChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
+  if (!next?.files) return [];
+  const oldFiles = (Array.isArray(prev?.files) ? prev.files : []) as Array<{ id: string; name: string }>;
+  const newFiles = (Array.isArray(next.files) ? next.files : []) as Array<{ id: string; name: string }>;
+  const oldIds = new Set(oldFiles.map((f) => String(f.id)));
+  const newIds = new Set(newFiles.map((f) => String(f.id)));
+  const changes: FieldChange[] = [];
+  for (const f of newFiles) {
+    if (!oldIds.has(String(f.id))) changes.push({ field: "File", from: "", to: f.name, type: "added" });
+  }
+  for (const f of oldFiles) {
+    if (!newIds.has(String(f.id))) changes.push({ field: "File", from: f.name, to: "", type: "removed" });
+  }
+  return changes;
+}
+
 function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
   if (!next) return [];
   const changes: FieldChange[] = [];
@@ -154,7 +170,10 @@ export function SimpleActivityTimeline({ events, users, showEntityType = false }
           const cfg = ACTION_CONFIG[event.action] ?? ACTION_CONFIG["update"];
           const title = actionTitle(event.action, event.entityType, event.newValues ?? event.previousValues);
           const changes = event.action === "update"
-            ? renderChanges(event.previousValues, event.newValues)
+            ? [
+                ...renderChanges(event.previousValues, event.newValues),
+                ...renderFileChanges(event.previousValues, event.newValues),
+              ]
             : [];
 
           return (
