@@ -1212,7 +1212,7 @@ function ProductsTable({
                     ₹{parseDecimal(product.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-[11px] text-[#6b7280] whitespace-nowrap">
-                    ₹{parseDecimal(product.price.value)} @ GST {product.gst.value}%
+                    ₹{parseDecimal(product.price.value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} @ GST {product.gst.value}%
                   </span>
                 </div>
               </div>
@@ -1455,7 +1455,7 @@ function ProductsTable({
 
                   {/* Unit Price */}
                   <td className="py-2.5 px-3 text-right text-[13px] font-normal leading-[16.9px] text-[#111827] whitespace-nowrap">
-                    ₹ {parseDecimal(product.price.value)}
+                    ₹ {parseDecimal(product.price.value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
 
                   {/* Tax% */}
