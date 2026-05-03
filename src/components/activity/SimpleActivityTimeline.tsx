@@ -107,6 +107,7 @@ function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unk
     if (serializeForComparison(key, oldVal) === serializeForComparison(key, newVal)) continue;
     const wasEmpty = isEmptyValue(key, oldVal);
     const isNowEmpty = isEmptyValue(key, newVal);
+    if (wasEmpty && isNowEmpty) continue;
     const type: ChangeType = wasEmpty ? "added" : isNowEmpty ? "removed" : "changed";
     changes.push({ field: label, from: formatFieldValue(key, oldVal), to: formatFieldValue(key, newVal), type });
   }
