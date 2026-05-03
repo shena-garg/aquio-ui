@@ -32,6 +32,9 @@ const FIELD_LABELS: Record<string, string> = {
   sku: "SKU",
   unitOfMeasurement: "Unit",
   gst: "GST",
+  hsnCode: "HSN Code",
+  description: "Description",
+  termsOfConditions: "Terms",
   status: "Status",
   categoryName: "Category",
   subCategoryName: "Subcategory",
@@ -62,23 +65,50 @@ const STATUS_VALUE_LABELS: Record<string, string> = {
   archived: "Archived",
 };
 
+function isEmptyValue(key: string, val: unknown): boolean {
+  if (val === undefined || val === null || val === "") return true;
+  if (key === "termsOfConditions" && Array.isArray(val)) return val.length === 0;
+  return false;
+}
+
 function formatFieldValue(key: string, val: unknown): string {
-  if (val === undefined || val === null || val === "") return "—";
+  if (isEmptyValue(key, val)) return "";
   if (key === "status") return STATUS_VALUE_LABELS[String(val)] ?? String(val);
+  if (key === "termsOfConditions" && Array.isArray(val))
+    return `${val.length} term${val.length === 1 ? "" : "s"}`;
+  if (key === "description") {
+    const str = String(val);
+    return str.length > 80 ? str.slice(0, 80) + "…" : str;
+  }
   return String(val);
 }
 
-function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): { field: string; from: string; to: string }[] {
+type ChangeType = "added" | "changed" | "removed";
+
+interface FieldChange {
+  field: string;
+  from: string;
+  to: string;
+  type: ChangeType;
+}
+
+function serializeForComparison(key: string, val: unknown): string {
+  if (key === "termsOfConditions" && Array.isArray(val)) return JSON.stringify(val);
+  return String(val ?? "");
+}
+
+function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
   if (!next) return [];
-  const changes: { field: string; from: string; to: string }[] = [];
+  const changes: FieldChange[] = [];
   for (const [key, newVal] of Object.entries(next)) {
-    if (key === "name") continue; // shown in title
     const label = FIELD_LABELS[key];
     if (!label) continue;
     const oldVal = prev?.[key];
-    if (String(oldVal ?? "") !== String(newVal ?? "")) {
-      changes.push({ field: label, from: formatFieldValue(key, oldVal), to: formatFieldValue(key, newVal) });
-    }
+    if (serializeForComparison(key, oldVal) === serializeForComparison(key, newVal)) continue;
+    const wasEmpty = isEmptyValue(key, oldVal);
+    const isNowEmpty = isEmptyValue(key, newVal);
+    const type: ChangeType = wasEmpty ? "added" : isNowEmpty ? "removed" : "changed";
+    changes.push({ field: label, from: formatFieldValue(key, oldVal), to: formatFieldValue(key, newVal), type });
   }
   return changes;
 }
@@ -154,12 +184,22 @@ export function SimpleActivityTimeline({ events, users, showEntityType = false }
 
                 {changes.length > 0 && (
                   <div className="mt-2 space-y-1">
-                    {changes.map(({ field, from, to }) => (
+                    {changes.map(({ field, from, to, type }) => (
                       <div key={field} className="text-[12px] text-[#374151]">
                         <span className="font-medium">{field}:</span>{" "}
-                        <span className="line-through text-[#9ca3af]">{from}</span>
-                        {" → "}
-                        <span>{to}</span>
+                        {type === "added" && (
+                          <span className="text-[#059669]">Added: {to}</span>
+                        )}
+                        {type === "changed" && (
+                          <>
+                            <span className="line-through text-[#9ca3af]">{from}</span>
+                            {" → "}
+                            <span>{to}</span>
+                          </>
+                        )}
+                        {type === "removed" && (
+                          <span className="text-[#9ca3af]">Removed: <span className="line-through">{from}</span></span>
+                        )}
                       </div>
                     ))}
                   </div>
