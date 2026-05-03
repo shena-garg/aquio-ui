@@ -31,6 +31,12 @@ function rowKey(row: TableRow) {
   return `${row.remainingProductId}-${row.remainingVariantId}`;
 }
 
+function parseDecimal(val: { $numberDecimal: string } | number | unknown): number {
+  if (typeof val === 'number') return val;
+  if (val && typeof val === 'object' && '$numberDecimal' in val) return parseFloat((val as { $numberDecimal: string }).$numberDecimal);
+  return parseFloat(String(val ?? 0));
+}
+
 export function ForceClosePOModal({
   isOpen,
   onClose,
@@ -101,7 +107,7 @@ export function ForceClosePOModal({
   const totalOrderedQty = rows.reduce((sum, r) => sum + r.quantity.value, 0);
   const totalPendingQty = rows.reduce((sum, r) => sum + r.remainingQuantity, 0);
   const totalLineAmount = rows.reduce(
-    (sum, r) => sum + r.totalAmount,
+    (sum, r) => sum + parseDecimal(r.totalAmount),
     0
   );
 
@@ -252,7 +258,7 @@ export function ForceClosePOModal({
                           {/* Unit Price */}
                           <td className="py-3 pr-4 whitespace-nowrap">
                             <div className="text-gray-900">
-                              ₹{row.price.value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ₹{parseDecimal(row.price.value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className="text-xs text-gray-400">
                               @ {row.gst.value}% GST
@@ -261,7 +267,7 @@ export function ForceClosePOModal({
 
                           {/* Line Total */}
                           <td className="py-3 text-right text-gray-900 whitespace-nowrap">
-                            ₹{row.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₹{parseDecimal(row.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
                       );
