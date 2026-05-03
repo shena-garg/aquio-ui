@@ -33,6 +33,8 @@ const FIELD_LABELS: Record<string, string> = {
   unitOfMeasurement: "Unit",
   gst: "GST",
   status: "Status",
+  categoryName: "Category",
+  subCategoryName: "Subcategory",
   roleId: "Role",
   taxNumber: "Tax Number",
   contactNumber: "Contact",
