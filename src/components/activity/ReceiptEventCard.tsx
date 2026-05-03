@@ -8,6 +8,7 @@ import type { ParsedEvent } from "./types";
 interface ReceiptEventCardProps {
   parsed: ParsedEvent;
   poProducts: any[];
+  orderType?: "purchase" | "sales";
   isExpanded: boolean;
   onToggle: () => void;
 }
@@ -42,16 +43,18 @@ function resolveProductInfo(
 export function ReceiptEventCard({
   parsed,
   poProducts,
+  orderType,
   isExpanded,
   onToggle,
 }: ReceiptEventCardProps) {
+  const isSales = orderType === "sales";
   const nv = parsed.event.newValues ?? {};
   const meta = parsed.event.metadata ?? {};
   const deliveryDate = formatDate(nv.deliveryDate);
   const products: any[] = nv.products ?? [];
   const poStatus = meta.purchaseOrderStatus as string | undefined;
 
-  const titleParts = ["Receipt Recorded"];
+  const titleParts = [isSales ? "Shipment Recorded" : "Receipt Recorded"];
   if (nv.deliveryDate) titleParts.push(`· ${deliveryDate}`);
   const title = titleParts.join(" ");
 
@@ -76,7 +79,7 @@ export function ReceiptEventCard({
         {products.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-medium text-[#6b7280]">
-              Products Received
+              {isSales ? "Products Shipped" : "Products Received"}
             </p>
             {products.map((p: any, i: number) => {
               const { name, variantName, uom } = resolveProductInfo(

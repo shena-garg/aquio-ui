@@ -139,6 +139,7 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
                 events={activityEvents}
                 users={activityUsers}
                 poProducts={order.products ?? []}
+                orderType="sales"
               />
             )}
           </div>

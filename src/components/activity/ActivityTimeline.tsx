@@ -18,12 +18,14 @@ interface ActivityTimelineProps {
   events: AuditEvent[];
   users: User[];
   poProducts: any[];
+  orderType?: "purchase" | "sales";
 }
 
 export function ActivityTimeline({
   events,
   users,
   poProducts,
+  orderType,
 }: ActivityTimelineProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -112,6 +114,7 @@ export function ActivityTimeline({
                 key={p.event._id}
                 parsed={p}
                 poProducts={poProducts}
+                orderType={orderType}
                 isExpanded={isExpanded}
                 onToggle={toggle}
               />
@@ -133,6 +136,7 @@ export function ActivityTimeline({
                 key={p.event._id}
                 parsed={p}
                 poProducts={poProducts}
+                orderType={orderType}
                 isExpanded={isExpanded}
                 onToggle={toggle}
               />
