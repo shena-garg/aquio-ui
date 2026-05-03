@@ -1166,6 +1166,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     productsUnavailable?: string;
     productsEmpty?: string;
     productsIncomplete?: string;
+    productsDuplicate?: string;
   }
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const unavailableRows = productRows.filter((r) => r.isUnavailable);
@@ -1369,6 +1370,17 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     );
     if (hasIncomplete) {
       errors.productsIncomplete = "All product rows must have a product, variant, quantity, and price.";
+    }
+
+    // Check for duplicate product+variant combos
+    const seen = new Set<string>();
+    for (const r of completeRows) {
+      const key = `${r.product!._id}::${r.variant!._id}`;
+      if (seen.has(key)) {
+        errors.productsDuplicate = `"${r.product!.name} – ${r.variant!.name}" is added more than once. Combine the quantities into a single row.`;
+        break;
+      }
+      seen.add(key);
     }
 
     setFieldErrors(errors);
