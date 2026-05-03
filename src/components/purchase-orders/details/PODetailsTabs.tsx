@@ -311,7 +311,7 @@ function StatusBadge({ status }: { status: ProductReceiptStatus }) {
       ),
     },
     excess_received: {
-      label: "Excess Received",
+      label: "Excess Delivered",
       iconColor: "#0d9488",
       icon: (
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -390,6 +390,7 @@ function ReceiptSummaryCard({
 
   const { hasPermission } = useAuth();
   const canForceClose = hasPermission("purchase-order.force-close") && (order.status === "issued" || order.status === "confirmed");
+  const canUndoForceClose = hasPermission("purchase-order.force-close") && (order.status === "issued" || order.status === "confirmed" || order.status === "completed");
 
   const [closedByNames, setClosedByNames] = useState<Record<string, string>>({});
   const [forceCloseError, setForceCloseError] = useState("");
@@ -571,7 +572,7 @@ function ReceiptSummaryCard({
                                   <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                                     <div>{closedByNames[remainingItem.closedBy!] ? `Force Closed by ${closedByNames[remainingItem.closedBy!]}` : "Force Closed"}</div>
                                     {remainingItem.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remainingItem.closedAt)}</div>}
-                                    {canForceClose && (
+                                    {canUndoForceClose && (
                                       <button
                                         className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
                                         onClick={() => {
@@ -712,7 +713,7 @@ function ReceiptSummaryCard({
                                   <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                                     <div>{closedByNames[rightRemainingItem?.closedBy ?? ""] ? `Force Closed by ${closedByNames[rightRemainingItem?.closedBy ?? ""]}` : "Force Closed"}</div>
                                     {rightRemainingItem?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(rightRemainingItem.closedAt)}</div>}
-                                    {canForceClose && (
+                                    {canUndoForceClose && (
                                       <button
                                         className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
                                         onClick={() => {
@@ -820,7 +821,7 @@ function ReceiptSummaryCard({
                                 <PopoverContent align="start" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                                   <div>{closedByNames[mobileRemainingItem.closedBy!] ? `Force Closed by ${closedByNames[mobileRemainingItem.closedBy!]}` : "Force Closed"}</div>
                                   {mobileRemainingItem.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(mobileRemainingItem.closedAt)}</div>}
-                                  {canForceClose && (
+                                  {canUndoForceClose && (
                                     <button
                                       className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
                                       onClick={() => {
@@ -878,7 +879,7 @@ function ReceiptSummaryCard({
                               <QuantityCell value={remaining} uom={uom} />
                             </span>
                             <span className="text-[10px] font-medium text-[#ea580c]">Force Closed</span>
-                            {canForceClose && (
+                            {canUndoForceClose && (
                               <button
                                 className="text-[10px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-0.5"
                                 onClick={() => {
@@ -1102,6 +1103,7 @@ function ProductsTable({
 }) {
   const { hasPermission } = useAuth();
   const canForceClose = hasPermission("purchase-order.force-close") && (order.status === "issued" || order.status === "confirmed");
+  const canUndoForceClose = hasPermission("purchase-order.force-close") && (order.status === "issued" || order.status === "confirmed" || order.status === "completed");
 
   const remainingItems = useMemo(() => order.remainingItems ?? [], [order.remainingItems]);
 
@@ -1262,7 +1264,7 @@ function ProductsTable({
                           <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                             <div>{closedByNames[remainingItem?.closedBy ?? ""] ? `Force Closed by ${closedByNames[remainingItem?.closedBy ?? ""]}` : "Force Closed"}</div>
                             {remainingItem?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remainingItem.closedAt)}</div>}
-                            {canForceClose && (
+                            {canUndoForceClose && (
                               <button
                                 className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
                                 onClick={() => {
@@ -1420,7 +1422,7 @@ function ProductsTable({
                             <PopoverContent align="end" className="w-auto px-3 py-2 text-[12px] text-[#374151]">
                               <div>{closedByNames[remaining?.closedBy ?? ""] ? `Force Closed by ${closedByNames[remaining?.closedBy ?? ""]}` : "Force Closed"}</div>
                               {remaining?.closedAt && <div className="text-[11px] text-[#9ca3af] mt-0.5">{formatDate(remaining.closedAt)}</div>}
-                              {canForceClose && (
+                              {canUndoForceClose && (
                                 <button
                                   className="text-[11px] font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline mt-1"
                                   onClick={() => {
