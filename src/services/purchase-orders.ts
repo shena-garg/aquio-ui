@@ -184,7 +184,7 @@ export const purchaseOrdersService = {
     apiClient.patch(`/purchase-orders/${id}/forcefully-close-multiple`, { items }),
 
   downloadCSV: (id: string) =>
-    apiClient.patch<Blob>(`/purchase-orders/${id}/csv`, null, {
+    apiClient.patch<Blob>(`/purchase-orders/${id}/csv`, {}, {
       responseType: "blob",
     }).then((r) => r.data),
 

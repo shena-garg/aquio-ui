@@ -190,7 +190,7 @@ export const salesOrdersService = {
     apiClient.patch(`/purchase-orders/${id}/undo-forcefully-close`, { productId, variantId }),
 
   downloadCSV: (id: string) =>
-    apiClient.patch<Blob>(`/purchase-orders/${id}/csv`, null, {
+    apiClient.patch<Blob>(`/purchase-orders/${id}/csv`, {}, {
       responseType: "blob",
     }).then((r) => r.data),
 
