@@ -170,12 +170,14 @@ export function ReceiptFormModal({
   }
 
   function updateQuantity(index: number, raw: string) {
+    const [intPart, ...decParts] = raw.split(".");
+    const capped = decParts.length > 0 ? `${intPart}.${decParts.join("").slice(0, 3)}` : raw;
     setRows((prev) => {
       const next = [...prev];
-      const numeric = raw && !raw.endsWith(".") ? parseFloat(raw) || 0 : next[index].deliveredQuantity;
+      const numeric = capped && !capped.endsWith(".") ? parseFloat(capped) || 0 : next[index].deliveredQuantity;
       next[index] = {
         ...next[index],
-        deliveredQuantityStr: raw,
+        deliveredQuantityStr: capped,
         deliveredQuantity: Math.max(0, numeric),
       };
       return next;
