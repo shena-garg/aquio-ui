@@ -178,7 +178,7 @@ export default function ProductDetailPage() {
         gst: editState.gst,
         description: editState.description.trim() || undefined,
         termsOfConditions: editState.termsOfConditions.filter((t) => t.trim()),
-        files: editState.files.length > 0 ? editState.files.map(({ id, name }) => ({ id, name })) : undefined,
+        files: editState.files.map(({ id, name }) => ({ id, name })),
         variants: product.variants.map((v) => ({
           name: v.name,
           customAttributes: v.customAttributes.map((a) => ({
