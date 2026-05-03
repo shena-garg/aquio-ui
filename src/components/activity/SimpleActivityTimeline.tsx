@@ -54,6 +54,18 @@ function actionTitle(action: string, entityType: string, values?: Record<string,
   return `${label} ${entity}${name}`;
 }
 
+const STATUS_VALUE_LABELS: Record<string, string> = {
+  active: "Active",
+  inactive: "Archived",
+  archived: "Archived",
+};
+
+function formatFieldValue(key: string, val: unknown): string {
+  if (val === undefined || val === null || val === "") return "—";
+  if (key === "status") return STATUS_VALUE_LABELS[String(val)] ?? String(val);
+  return String(val);
+}
+
 function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): { field: string; from: string; to: string }[] {
   if (!next) return [];
   const changes: { field: string; from: string; to: string }[] = [];
@@ -63,7 +75,7 @@ function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unk
     if (!label) continue;
     const oldVal = prev?.[key];
     if (String(oldVal ?? "") !== String(newVal ?? "")) {
-      changes.push({ field: label, from: String(oldVal ?? "—"), to: String(newVal ?? "—") });
+      changes.push({ field: label, from: formatFieldValue(key, oldVal), to: formatFieldValue(key, newVal) });
     }
   }
   return changes;

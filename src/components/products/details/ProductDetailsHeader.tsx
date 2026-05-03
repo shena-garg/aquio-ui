@@ -19,13 +19,15 @@ import { productsService } from "@/services/products";
 
 const statusBadgeStyles: Record<string, string> = {
   active: "bg-[#d1fae5] text-[#065f46]",
-  inactive: "bg-[#f3f4f6] text-[#374151]",
+  inactive: "bg-[#fee2e2] text-[#b91c1c]",
   archived: "bg-[#fee2e2] text-[#b91c1c]",
 };
 
-function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
+const statusLabels: Record<string, string> = {
+  active: "Active",
+  inactive: "Archived",
+  archived: "Archived",
+};
 
 interface ProductDetailsHeaderProps {
   product: Product;
@@ -67,7 +69,7 @@ export function ProductDetailsHeader({
     <span
       className={`inline-flex items-center rounded-[6px] px-2 h-6 text-[12px] font-medium ${statusBadgeStyles[product.status] ?? ""}`}
     >
-      {capitalize(product.status)}
+      {statusLabels[product.status] ?? product.status}
     </span>
   );
 
