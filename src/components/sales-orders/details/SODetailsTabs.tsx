@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Download, Info, X as XIcon, Pencil, Paperclip, RefreshCw, Clock } from "lucide-react";
+import { Download, Info, X as XIcon, Pencil, Paperclip, RefreshCw, Clock, History } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ import {
   type User as ActivityUser,
 } from "@/services/activity";
 import { ActivityTimeline } from "@/components/activity";
+import { ReceiptActivityModal } from "@/components/activity/ReceiptActivityModal";
 import { usersService } from "@/services/users";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -179,6 +180,7 @@ function ShipmentsTab({ order }: { order: SalesOrder }) {
   const products = order.products ?? [];
   const queryClient = useQueryClient();
   const [editingReceipt, setEditingReceipt] = useState<SOReceipt | null>(null);
+  const [activityReceipt, setActivityReceipt] = useState<SOReceipt | null>(null);
   const orderId = order.id ?? order._id;
 
   if (receipts.length === 0) {
@@ -202,6 +204,7 @@ function ShipmentsTab({ order }: { order: SalesOrder }) {
               index={idx}
               products={products}
               onEdit={() => setEditingReceipt(receipt)}
+              onViewActivity={() => setActivityReceipt(receipt)}
             />
           </div>
         ))}
@@ -219,6 +222,15 @@ function ShipmentsTab({ order }: { order: SalesOrder }) {
             queryClient.invalidateQueries({ queryKey: ["sales-order", orderId] });
           }}
           orderType="sales"
+        />
+      )}
+      {activityReceipt && (
+        <ReceiptActivityModal
+          receiptId={activityReceipt._id}
+          receiptLabel={`Shipment #${receipts.indexOf(activityReceipt) + 1} · ${formatDate(activityReceipt.deliveryDate)}`}
+          poProducts={order.products ?? []}
+          orderType="sales"
+          onClose={() => setActivityReceipt(null)}
         />
       )}
     </>
@@ -964,11 +976,13 @@ function IndividualShipmentCard({
   index,
   products,
   onEdit,
+  onViewActivity,
 }: {
   receipt: SOReceipt;
   index: number;
   products: NonNullable<SalesOrder["products"]>;
   onEdit?: () => void;
+  onViewActivity?: () => void;
 }) {
   return (
     <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm py-3 sm:py-3.5 px-3 sm:px-5">
@@ -978,16 +992,28 @@ function IndividualShipmentCard({
           <span className="font-mono text-[13px] font-semibold leading-[16.9px] text-[#111827]">
             Shipment #{index + 1} · {formatDate(receipt.deliveryDate)}
           </span>
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              title="Edit shipment"
-              className="flex items-center gap-1 text-[12px] text-[#6b7280] hover:text-[#0d9488] transition-colors"
-            >
-              <Pencil size={13} />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {onViewActivity && (
+              <button
+                onClick={onViewActivity}
+                title="View shipment activity"
+                className="flex items-center gap-1 text-[12px] text-[#6b7280] hover:text-[#0d9488] transition-colors"
+              >
+                <History size={13} />
+                <span className="hidden sm:inline">Activity</span>
+              </button>
+            )}
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                title="Edit shipment"
+                className="flex items-center gap-1 text-[12px] text-[#6b7280] hover:text-[#0d9488] transition-colors"
+              >
+                <Pencil size={13} />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Notes & Documents */}

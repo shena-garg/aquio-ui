@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Download, Info, X as XIcon, Pencil, Paperclip, RefreshCw, Clock } from "lucide-react";
+import { Download, Info, X as XIcon, Pencil, Paperclip, RefreshCw, Clock, History } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ import {
   type User as ActivityUser,
 } from "@/services/activity";
 import { ActivityTimeline } from "@/components/activity";
+import { ReceiptActivityModal } from "@/components/activity/ReceiptActivityModal";
 import { usersService } from "@/services/users";
 import { ForceCloseProductModal } from "@/components/purchase-orders/modals/ForceCloseProductModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
@@ -178,6 +179,7 @@ function ReceiptsTab({ order }: { order: PurchaseOrder }) {
   const products = order.products ?? [];
   const queryClient = useQueryClient();
   const [editingReceipt, setEditingReceipt] = useState<POReceipt | null>(null);
+  const [activityReceipt, setActivityReceipt] = useState<POReceipt | null>(null);
   const orderId = order.id ?? order._id;
 
   if (receipts.length === 0) {
@@ -201,6 +203,7 @@ function ReceiptsTab({ order }: { order: PurchaseOrder }) {
               index={idx}
               products={products}
               onEdit={() => setEditingReceipt(receipt)}
+              onViewActivity={() => setActivityReceipt(receipt)}
             />
           </div>
         ))}
@@ -217,6 +220,15 @@ function ReceiptsTab({ order }: { order: PurchaseOrder }) {
             setEditingReceipt(null);
             queryClient.invalidateQueries({ queryKey: ["purchase-order", orderId] });
           }}
+        />
+      )}
+      {activityReceipt && (
+        <ReceiptActivityModal
+          receiptId={activityReceipt._id}
+          receiptLabel={`Receipt #${receipts.indexOf(activityReceipt) + 1} · ${formatDate(activityReceipt.deliveryDate)}`}
+          poProducts={order.products ?? []}
+          orderType="purchase"
+          onClose={() => setActivityReceipt(null)}
         />
       )}
     </>
@@ -966,11 +978,13 @@ function IndividualReceiptCard({
   index,
   products,
   onEdit,
+  onViewActivity,
 }: {
   receipt: POReceipt;
   index: number;
   products: NonNullable<PurchaseOrder["products"]>;
   onEdit?: () => void;
+  onViewActivity?: () => void;
 }) {
   return (
     <div className="bg-white border border-[#e5e7eb] rounded-[10px] shadow-sm py-3 sm:py-3.5 px-3 sm:px-5">
@@ -980,16 +994,28 @@ function IndividualReceiptCard({
           <span className="font-mono text-[13px] font-semibold leading-[16.9px] text-[#111827]">
             Receipt #{index + 1} · {formatDate(receipt.deliveryDate)}
           </span>
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              title="Edit receipt"
-              className="flex items-center gap-1 text-[12px] text-[#6b7280] hover:text-[#0d9488] transition-colors"
-            >
-              <Pencil size={13} />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {onViewActivity && (
+              <button
+                onClick={onViewActivity}
+                title="View receipt activity"
+                className="flex items-center gap-1 text-[12px] text-[#6b7280] hover:text-[#0d9488] transition-colors"
+              >
+                <History size={13} />
+                <span className="hidden sm:inline">Activity</span>
+              </button>
+            )}
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                title="Edit receipt"
+                className="flex items-center gap-1 text-[12px] text-[#6b7280] hover:text-[#0d9488] transition-colors"
+              >
+                <Pencil size={13} />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Notes & Documents */}

@@ -43,7 +43,7 @@ export function ForceCloseEventCard({
     nv.productId,
     nv.variantId
   );
-  const poStatus = meta.purchaseOrderStatus as string | undefined;
+  const poStatus = (meta.purchaseOrderStatus ?? meta.status) as string | undefined;
 
   return (
     <EventCardShell
