@@ -907,8 +907,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       if (address.state && l.state && l.state === address.state) score += 1;
       if (score > bestScore) { bestScore = score; bestId = l._id; }
     }
-    // Only accept a match if at least two fields agreed
-    if (bestScore >= 2) return bestId;
+    // Require at least gst+state(5), addressLine1+city(5), or gst+city(6) etc.
+    // A single field alone (gst=4, addressLine1=3, city=2) is never enough.
+    if (bestScore >= 5) return bestId;
     return locs[0]?._id ?? "";
   }
 
