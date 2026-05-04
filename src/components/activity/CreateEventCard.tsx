@@ -84,14 +84,16 @@ export function CreateEventCard({
   const visibleTerms = showAllTerms ? terms : terms.slice(0, 3);
   const hiddenCount = terms.length - 3;
 
-  const orderDetailRows = [
+  const row1 = [
     { label: "Order Number", value: nv.poNumber ?? "—" },
     { label: "Ref. ID", value: nv.referenceId ?? "—" },
     { label: isSales ? "Buyer Ref. ID" : "Supplier Ref. ID", value: nv.supplierReferenceId ?? "—" },
+  ];
+
+  const row2 = [
     { label: "Issue Date", value: formatDate(nv.issueDate) },
     { label: "Delivery Date", value: formatDate(nv.deliveryDate) },
     { label: "Payment Terms", value: nv.paymentTerms ?? "—" },
-    ...(nv.notes ? [{ label: "Notes", value: nv.notes }] : []),
   ];
 
   return (
@@ -105,22 +107,40 @@ export function CreateEventCard({
       onToggle={onToggle}
     >
       <div className="space-y-5">
-        {/* Order details grid */}
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-          {orderDetailRows.map((row) => (
-            <div key={row.label}>
-              <p className="text-xs font-medium text-[#6b7280]">{row.label}</p>
-              <p className="text-sm text-[#111827] break-words">{row.value}</p>
+        {/* Row 1: Order Number, Ref. ID, Supplier/Buyer Ref. ID */}
+        <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+          {row1.map((cell) => (
+            <div key={cell.label}>
+              <p className="text-xs font-medium text-[#6b7280]">{cell.label}</p>
+              <p className="text-sm text-[#111827] break-words">{cell.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Partners */}
-        <div className="space-y-3">
-          <PartnerCard label="Supplier" partner={nv.supplier} />
+        {/* Row 2: Issue Date, Delivery Date, Payment Terms */}
+        <div className="grid grid-cols-3 gap-x-4 gap-y-2">
+          {row2.map((cell) => (
+            <div key={cell.label}>
+              <p className="text-xs font-medium text-[#6b7280]">{cell.label}</p>
+              <p className="text-sm text-[#111827] break-words">{cell.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Row 3: Supplier, Consignee, Buyer side-by-side */}
+        <div className="grid grid-cols-3 gap-x-4">
+          <PartnerCard label={isSales ? "Seller" : "Supplier"} partner={nv.supplier} />
           <PartnerCard label="Consignee (Ship To)" partner={nv.consignee} />
           <PartnerCard label="Buyer (Bill To)" partner={nv.buyer} />
         </div>
+
+        {/* Notes */}
+        {nv.notes && (
+          <div>
+            <p className="text-xs font-medium text-[#6b7280]">Notes</p>
+            <p className="text-sm text-[#111827] whitespace-pre-wrap">{nv.notes}</p>
+          </div>
+        )}
 
         {/* Products */}
         {products.length > 0 && (
