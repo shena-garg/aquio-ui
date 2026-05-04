@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, MapPin } from "lucide-react";
+import { Plus, MapPin, Clock } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
@@ -217,7 +217,7 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
   const { data: activityEvents = [], isLoading: loadingActivity } = useQuery({
     queryKey: ["activity", "partner", partner._id],
     queryFn: () => getEntityActivityLog("partner", partner._id),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
     enabled: activeTab === "activity",
   });
   const { data: activityUsers = [], isLoading: loadingUsers } = useQuery({
@@ -308,7 +308,13 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
               <Loader2 className="animate-spin text-gray-400" size={20} />
             </div>
           ) : (
-            <SimpleActivityTimeline events={activityEvents} users={activityUsers} />
+            <div>
+              <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af] mb-4">
+                <Clock size={12} />
+                <span>Activity may take a moment to appear after changes</span>
+              </div>
+              <SimpleActivityTimeline events={activityEvents} users={activityUsers} />
+            </div>
           )
         )}
       </div>

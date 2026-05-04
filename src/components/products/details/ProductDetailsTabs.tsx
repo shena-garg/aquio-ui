@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, X, Clock } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -953,7 +953,7 @@ function ActivityTab({ productId }: { productId: string }) {
   const { data: events = [], isLoading: loadingEvents } = useQuery({
     queryKey: ["activity", "product", productId],
     queryFn: () => getEntityActivityLog("product", productId),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
   const { data: users = [], isLoading: loadingUsers } = useQuery({
     queryKey: ["audit-users"],
@@ -967,6 +967,10 @@ function ActivityTab({ productId }: { productId: string }) {
 
   return (
     <div className="px-4 sm:px-6 py-5">
+      <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af] mb-4">
+        <Clock size={12} />
+        <span>Activity may take a moment to appear after changes</span>
+      </div>
       <SimpleActivityTimeline events={events} users={users} />
     </div>
   );

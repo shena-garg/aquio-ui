@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Download, Info, X as XIcon, Pencil, Paperclip } from "lucide-react";
+import { Download, Info, X as XIcon, Pencil, Paperclip, RefreshCw, Clock } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReceiptFormModal } from "@/components/purchase-orders/modals/ReceiptFormModal";
 import { toast } from "sonner";
@@ -41,6 +41,10 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
   const [activityUsers, setActivityUsers] = useState<ActivityUser[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityFetched, setActivityFetched] = useState(false);
+
+  function handleRefreshActivity() {
+    setActivityFetched(false);
+  }
 
   useEffect(() => {
     if (activeTab !== "activity" || activityFetched) return;
@@ -116,6 +120,21 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
           <ShipmentsTab order={order} />
         ) : activeTab === "activity" ? (
           <div className="px-4 sm:px-8 py-4 sm:py-6">
+            {/* Activity header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af]">
+                <Clock size={12} />
+                <span>Activity may take a moment to appear after changes</span>
+              </div>
+              <button
+                onClick={handleRefreshActivity}
+                disabled={activityLoading}
+                className="flex items-center gap-1.5 text-[12px] text-[#6b7280] hover:text-[#111827] disabled:opacity-40 transition-colors"
+              >
+                <RefreshCw size={12} className={activityLoading ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
             {activityLoading ? (
               <div className="space-y-0">
                 {Array.from({ length: 3 }).map((_, i) => (
