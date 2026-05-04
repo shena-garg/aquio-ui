@@ -12,6 +12,7 @@ export type AuditAction =
   | "invite"
   | "activate"
   | "cancel"
+  | "confirm"
   | "receipt_create"
   | "receipt_update"
   | "forcefully_close_item"

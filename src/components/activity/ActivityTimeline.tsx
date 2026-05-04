@@ -11,6 +11,7 @@ import type { ParsedEvent } from "./types";
 import { CreateEventCard } from "./CreateEventCard";
 import { UpdateEventCard } from "./UpdateEventCard";
 import { CancelEventCard } from "./CancelEventCard";
+import { ConfirmEventCard } from "./ConfirmEventCard";
 import { ReceiptEventCard } from "./ReceiptEventCard";
 import { ForceCloseEventCard } from "./ForceCloseEventCard";
 
@@ -98,6 +99,16 @@ export function ActivityTimeline({
                     summary: "No changes",
                   }
                 }
+                isExpanded={isExpanded}
+                onToggle={toggle}
+                orderType={orderType}
+              />
+            );
+          case "confirm":
+            return (
+              <ConfirmEventCard
+                key={p.event._id}
+                parsed={p}
                 isExpanded={isExpanded}
                 onToggle={toggle}
                 orderType={orderType}
