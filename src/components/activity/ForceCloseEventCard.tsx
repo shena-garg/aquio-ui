@@ -1,6 +1,6 @@
 "use client";
 
-import { EventBadge } from "./EventBadge";
+import { OrderStatusLabel } from "./EventBadge";
 import { EventCardShell } from "./EventCardShell";
 import type { ParsedEvent } from "./types";
 
@@ -49,32 +49,22 @@ export function ForceCloseEventCard({
     <EventCardShell
       dotColor={isUndo ? "bg-[#0d9488]" : "bg-[#f97316]"}
       title={isUndo ? "Force Close Undone" : "Item Force Closed"}
+      badge={poStatus ? <OrderStatusLabel status={poStatus} /> : undefined}
       userName={parsed.userName}
       formattedDate={parsed.formattedDate}
       isExpanded={isExpanded}
       onToggle={onToggle}
     >
-      <div className="space-y-3">
-        <div>
-          <p className="text-xs font-medium text-[#6b7280]">
-            {isUndo ? "Product Reopened" : "Product Closed"}
-          </p>
-          <p className="text-sm text-[#111827]">
-            {name}
-            {variantName && (
-              <span className="text-[#6b7280]"> · {variantName}</span>
-            )}
-          </p>
-        </div>
-
-        {poStatus && (
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-medium text-[#6b7280]">
-              Order Status changed to
-            </p>
-            <EventBadge status={poStatus} />
-          </div>
-        )}
+      <div>
+        <p className="text-xs font-medium text-[#6b7280]">
+          {isUndo ? "Product Reopened" : "Product Closed"}
+        </p>
+        <p className="text-sm text-[#111827]">
+          {name}
+          {variantName && (
+            <span className="text-[#6b7280]"> · {variantName}</span>
+          )}
+        </p>
       </div>
     </EventCardShell>
   );

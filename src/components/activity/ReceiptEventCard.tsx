@@ -1,6 +1,6 @@
 "use client";
 
-import { EventBadge } from "./EventBadge";
+import { OrderStatusLabel } from "./EventBadge";
 import { EventCardShell } from "./EventCardShell";
 import { FieldGrid } from "./fields/FieldGrid";
 import type { ParsedEvent } from "./types";
@@ -95,7 +95,7 @@ export function ReceiptEventCard({
       <EventCardShell
         dotColor="bg-[#8b5cf6]"
         title={title}
-        badge={poStatus ? <EventBadge status={poStatus} /> : undefined}
+        badge={poStatus ? <OrderStatusLabel status={poStatus} /> : undefined}
         userName={parsed.userName}
         formattedDate={parsed.formattedDate}
         isExpanded={isExpanded}
@@ -203,7 +203,7 @@ export function ReceiptEventCard({
     <EventCardShell
       dotColor="bg-[#8b5cf6]"
       title={title}
-      badge={poStatus ? <EventBadge status={poStatus} /> : undefined}
+      badge={poStatus ? <OrderStatusLabel status={poStatus} /> : undefined}
       userName={parsed.userName}
       formattedDate={parsed.formattedDate}
       isExpanded={isExpanded}

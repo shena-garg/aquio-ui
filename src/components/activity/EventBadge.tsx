@@ -1,5 +1,6 @@
 const STATUS_COLORS: Record<string, string> = {
   issued: "bg-[#dbeafe] text-[#1d4ed8]",
+  confirmed: "bg-[#d1fae5] text-[#065f46]",
   completed: "bg-[#d1fae5] text-[#065f46]",
   cancelled: "bg-[#fee2e2] text-[#b91c1c]",
   partial: "bg-[#fef9c3] text-[#a16207]",
@@ -24,5 +25,14 @@ export function EventBadge({ status }: EventBadgeProps) {
     >
       {label}
     </span>
+  );
+}
+
+export function OrderStatusLabel({ status }: { status: string }) {
+  return (
+    <div className="flex items-center gap-1.5 mt-1">
+      <span className="text-xs text-[#6b7280]">Order Status changed to</span>
+      <EventBadge status={status} />
+    </div>
   );
 }
