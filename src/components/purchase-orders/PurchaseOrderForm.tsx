@@ -883,17 +883,45 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const originalStatus = useRef<string>("");
   const duplicateValidationRan = useRef(false);
 
+  // Match a stored address back to a location ID using gstNumber → addressLine1+city → first
+  function resolveLocationId(
+    allCompanies: CompanyOption[],
+    companyId: string,
+    address: any
+  ): string {
+    if (!address) return "";
+    if (address.locationId) return String(address.locationId);
+    if (address._id) return String(address._id);
+    const company = allCompanies.find((c) => c._id === companyId);
+    if (!company) return "";
+    const locs = company.locations;
+    if (address.gstNumber) {
+      const m = locs.find((l) => l.gstNumber && l.gstNumber === address.gstNumber);
+      if (m) return m._id;
+    }
+    if (address.addressLine1) {
+      const m = locs.find((l) => l.addressLine1 === address.addressLine1 && (!address.city || l.city === address.city));
+      if (m) return m._id;
+    }
+    return locs[0]?._id ?? "";
+  }
+
   // ── Populate form from existing order (edit mode) ──────────────────────
   function populateFromOrder(
     order: any,
     _vendorList: VendorCompany[],
     _org: Organization
   ) {
+    // Build unified company list from the just-loaded data for address matching
+    const allCompanies: CompanyOption[] = _org
+      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._vendorList.map((v) => ({ ...v, _type: "vendor" as const }))]
+      : _vendorList.map((v) => ({ ...v, _type: "vendor" as const }));
+
     // Partners
     if (order.supplier?.id) {
       setSupplierCompanyId(order.supplier.id);
-      const supLocId = order.supplier.address?.locationId ?? order.supplier.address?._id;
-      if (supLocId) setSupplierLocationId(String(supLocId));
+      const supLocId = resolveLocationId(allCompanies, order.supplier.id, order.supplier.address);
+      if (supLocId) setSupplierLocationId(supLocId);
     }
 
     // Map buyer → consignee, biller → buyer in UI
@@ -901,19 +929,19 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     const billerData = order.biller ?? order.buyer;
     if (buyerData?.id) {
       setConsigneeCompanyId(buyerData.id);
-      const conLocId = buyerData.address?.locationId ?? buyerData.address?._id;
-      if (conLocId) setConsigneeLocationId(String(conLocId));
+      const conLocId = resolveLocationId(allCompanies, buyerData.id, buyerData.address);
+      if (conLocId) setConsigneeLocationId(conLocId);
     }
     if (billerData?.id) {
       setBuyerCompanyId(billerData.id);
-      const buyLocId = billerData.address?.locationId ?? billerData.address?._id;
-      if (buyLocId) setBuyerLocationId(String(buyLocId));
+      const buyLocId = resolveLocationId(allCompanies, billerData.id, billerData.address);
+      if (buyLocId) setBuyerLocationId(buyLocId);
     }
 
     // Check if buyer and biller are the same
     const buyerSame =
       buyerData?.id === billerData?.id &&
-      buyerData?.address?._id === billerData?.address?._id;
+      buyerData?.address?.locationId === billerData?.address?.locationId;
     setSameAsConsignee(buyerSame);
     didPreselect.current = true;
 
@@ -992,27 +1020,31 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     _vendorList: VendorCompany[],
     _org: Organization
   ) {
+    const allCompanies: CompanyOption[] = _org
+      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._vendorList.map((v) => ({ ...v, _type: "vendor" as const }))]
+      : _vendorList.map((v) => ({ ...v, _type: "vendor" as const }));
+
     // Partners
     if (order.supplier?.id) {
       setSupplierCompanyId(order.supplier.id);
-      const supLocId = order.supplier.address?.locationId ?? order.supplier.address?._id;
-      if (supLocId) setSupplierLocationId(String(supLocId));
+      const supLocId = resolveLocationId(allCompanies, order.supplier.id, order.supplier.address);
+      if (supLocId) setSupplierLocationId(supLocId);
     }
     const buyerData = order.buyer ?? order.biller;
     const billerData = order.biller ?? order.buyer;
     if (buyerData?.id) {
       setConsigneeCompanyId(buyerData.id);
-      const conLocId = buyerData.address?.locationId ?? buyerData.address?._id;
-      if (conLocId) setConsigneeLocationId(String(conLocId));
+      const conLocId = resolveLocationId(allCompanies, buyerData.id, buyerData.address);
+      if (conLocId) setConsigneeLocationId(conLocId);
     }
     if (billerData?.id) {
       setBuyerCompanyId(billerData.id);
-      const buyLocId = billerData.address?.locationId ?? billerData.address?._id;
-      if (buyLocId) setBuyerLocationId(String(buyLocId));
+      const buyLocId = resolveLocationId(allCompanies, billerData.id, billerData.address);
+      if (buyLocId) setBuyerLocationId(buyLocId);
     }
     const buyerSame =
       buyerData?.id === billerData?.id &&
-      buyerData?.address?._id === billerData?.address?._id;
+      buyerData?.address?.locationId === billerData?.address?.locationId;
     setSameAsConsignee(buyerSame);
     didPreselect.current = true;
 
