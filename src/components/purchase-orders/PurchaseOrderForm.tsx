@@ -883,7 +883,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const originalStatus = useRef<string>("");
   const duplicateValidationRan = useRef(false);
 
-  // Match a stored address back to a location ID using gstNumber → addressLine1+city → first
+  // Match a stored address back to a location ID
   function resolveLocationId(
     allCompanies: CompanyOption[],
     companyId: string,
@@ -895,14 +895,20 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     const company = allCompanies.find((c) => c._id === companyId);
     if (!company) return "";
     const locs = company.locations;
-    if (address.gstNumber) {
-      const m = locs.find((l) => l.gstNumber && l.gstNumber === address.gstNumber);
-      if (m) return m._id;
+
+    // Score each location by how many fields match, pick the highest
+    let bestId = "";
+    let bestScore = 0;
+    for (const l of locs) {
+      let score = 0;
+      if (address.gstNumber && l.gstNumber && l.gstNumber === address.gstNumber) score += 4;
+      if (address.addressLine1 && l.addressLine1 && l.addressLine1 === address.addressLine1) score += 3;
+      if (address.city && l.city && l.city === address.city) score += 2;
+      if (address.state && l.state && l.state === address.state) score += 1;
+      if (score > bestScore) { bestScore = score; bestId = l._id; }
     }
-    if (address.addressLine1) {
-      const m = locs.find((l) => l.addressLine1 === address.addressLine1 && (!address.city || l.city === address.city));
-      if (m) return m._id;
-    }
+    // Only accept a match if at least two fields agreed
+    if (bestScore >= 2) return bestId;
     return locs[0]?._id ?? "";
   }
 
