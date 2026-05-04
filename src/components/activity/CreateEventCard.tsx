@@ -129,9 +129,9 @@ export function CreateEventCard({
 
         {/* Row 3: Supplier, Consignee, Buyer side-by-side */}
         <div className="grid grid-cols-3 gap-x-4">
-          <PartnerCard label={isSales ? "Seller" : "Supplier"} partner={nv.supplier} />
-          <PartnerCard label="Consignee (Ship To)" partner={nv.consignee} />
-          <PartnerCard label="Buyer (Bill To)" partner={nv.buyer} />
+          <PartnerCard label="Supplier" partner={nv.supplier} />
+          <PartnerCard label="Consignee (Ship To)" partner={nv.buyer} />
+          <PartnerCard label="Buyer (Bill To)" partner={nv.biller} />
         </div>
 
         {/* Notes */}

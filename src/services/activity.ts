@@ -375,9 +375,8 @@ export function computeDiff(
   // Partner fields — diff full representation (company, tax, address)
   const PARTNER_LABELS: Record<string, string> = {
     supplier: "Supplier",
-    consignee: "Consignee (Ship To)",
-    buyer: "Buyer (Bill To)",
-    biller: "Biller",
+    buyer: "Consignee (Ship To)",
+    biller: "Buyer (Bill To)",
   };
 
   for (const [field, label] of Object.entries(PARTNER_LABELS)) {
