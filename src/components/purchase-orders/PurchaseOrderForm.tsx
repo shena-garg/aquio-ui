@@ -892,7 +892,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     // Partners
     if (order.supplier?.id) {
       setSupplierCompanyId(order.supplier.id);
-      if (order.supplier.address?._id) setSupplierLocationId(order.supplier.address._id);
+      const supLocId = order.supplier.address?.locationId ?? order.supplier.address?._id;
+      if (supLocId) setSupplierLocationId(String(supLocId));
     }
 
     // Map buyer → consignee, biller → buyer in UI
@@ -900,11 +901,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     const billerData = order.biller ?? order.buyer;
     if (buyerData?.id) {
       setConsigneeCompanyId(buyerData.id);
-      if (buyerData.address?._id) setConsigneeLocationId(buyerData.address._id);
+      const conLocId = buyerData.address?.locationId ?? buyerData.address?._id;
+      if (conLocId) setConsigneeLocationId(String(conLocId));
     }
     if (billerData?.id) {
       setBuyerCompanyId(billerData.id);
-      if (billerData.address?._id) setBuyerLocationId(billerData.address._id);
+      const buyLocId = billerData.address?.locationId ?? billerData.address?._id;
+      if (buyLocId) setBuyerLocationId(String(buyLocId));
     }
 
     // Check if buyer and biller are the same
@@ -992,17 +995,20 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     // Partners
     if (order.supplier?.id) {
       setSupplierCompanyId(order.supplier.id);
-      if (order.supplier.address?._id) setSupplierLocationId(order.supplier.address._id);
+      const supLocId = order.supplier.address?.locationId ?? order.supplier.address?._id;
+      if (supLocId) setSupplierLocationId(String(supLocId));
     }
     const buyerData = order.buyer ?? order.biller;
     const billerData = order.biller ?? order.buyer;
     if (buyerData?.id) {
       setConsigneeCompanyId(buyerData.id);
-      if (buyerData.address?._id) setConsigneeLocationId(buyerData.address._id);
+      const conLocId = buyerData.address?.locationId ?? buyerData.address?._id;
+      if (conLocId) setConsigneeLocationId(String(conLocId));
     }
     if (billerData?.id) {
       setBuyerCompanyId(billerData.id);
-      if (billerData.address?._id) setBuyerLocationId(billerData.address._id);
+      const buyLocId = billerData.address?.locationId ?? billerData.address?._id;
+      if (buyLocId) setBuyerLocationId(String(buyLocId));
     }
     const buyerSame =
       buyerData?.id === billerData?.id &&

@@ -238,7 +238,7 @@ export function buildPartnerPayload(
     ...(company.taxNumber ? { taxNumber: company.taxNumber } : {}),
     contactNumber: company.phoneNumber ?? company.contactNumber ?? location.contactNumber ?? "",
     address: {
-      _id: location._id,
+      locationId: location._id,
       addressLine1: location.addressLine1,
       addressLine2: location.addressLine2,
       city: location.city,
