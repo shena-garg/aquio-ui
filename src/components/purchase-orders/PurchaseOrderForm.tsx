@@ -1646,13 +1646,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
               {/* Supplier Ref ID */}
               <div>
                 <label className="block text-[13px] font-medium text-[#111827] mb-1.5">
-                  Supplier Reference ID
+                  {orderType === "sales" ? "Buyer Reference ID" : "Supplier Reference ID"}
                 </label>
                 <input
                   type="text"
                   value={supplierRefId}
                   onChange={(e) => setSupplierRefId(e.target.value)}
-                  placeholder="Enter supplier ref ID"
+                  placeholder={orderType === "sales" ? "Enter buyer ref ID" : "Enter supplier ref ID"}
                   className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
                 />
               </div>
