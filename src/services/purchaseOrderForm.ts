@@ -107,7 +107,7 @@ export interface ProductSearchResponse {
 // ---------------------------------------------------------------------------
 
 export interface PartnerAddressPayload {
-  _id: string;
+  locationId?: string;
   addressLine1?: string;
   addressLine2?: string;
   city?: string;
