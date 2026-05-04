@@ -150,6 +150,8 @@ function formatDateValue(value: string): string {
 const IGNORED_FIELDS = new Set([
   "_id",
   "__v",
+  "createdBy",
+  "updatedBy",
   "createdAt",
   "updatedAt",
   "remainingItems",
