@@ -37,6 +37,7 @@ interface ProductRow {
   remaining: number;
   deliveredQuantity: number;
   deliveredQuantityStr: string;
+  allowExcess: boolean;
 }
 
 interface UploadedFile {
@@ -88,12 +89,14 @@ export function ReceiptFormModal({
       const remaining = Math.max(0, ordered - alreadyReceived);
 
       let deliveredQuantity = 0;
+      let allowExcess = false;
       if (mode === "edit" && receipt) {
         const rp = receipt.products.find(
           (rp) =>
             rp.productId === p.product._id && rp.variantId === p.variant._id,
         );
         deliveredQuantity = rp?.deliveredQuantity ?? 0;
+        allowExcess = (rp as any)?.allowExcess ?? false;
       }
 
       return {
@@ -113,6 +116,7 @@ export function ReceiptFormModal({
         remaining,
         deliveredQuantity,
         deliveredQuantityStr: deliveredQuantity > 0 ? String(deliveredQuantity) : "",
+        allowExcess,
       };
     });
   }
@@ -175,10 +179,13 @@ export function ReceiptFormModal({
     setRows((prev) => {
       const next = [...prev];
       const numeric = capped && !capped.endsWith(".") ? parseFloat(capped) || 0 : next[index].deliveredQuantity;
+      const qty = Math.max(0, numeric);
       next[index] = {
         ...next[index],
         deliveredQuantityStr: capped,
-        deliveredQuantity: Math.max(0, numeric),
+        deliveredQuantity: qty,
+        // Reset excess consent if quantity drops back within the remaining limit
+        allowExcess: qty > next[index].remaining ? next[index].allowExcess : false,
       };
       return next;
     });
@@ -187,7 +194,15 @@ export function ReceiptFormModal({
   function resetQuantity(index: number) {
     setRows((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], deliveredQuantity: 0, deliveredQuantityStr: "" };
+      next[index] = { ...next[index], deliveredQuantity: 0, deliveredQuantityStr: "", allowExcess: false };
+      return next;
+    });
+  }
+
+  function updateAllowExcess(index: number, value: boolean) {
+    setRows((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], allowExcess: value };
       return next;
     });
   }
@@ -226,11 +241,16 @@ export function ReceiptFormModal({
     return sum + r.deliveredQuantity * price * (1 + r.taxRate / 100);
   }, 0);
 
+  const hasUnacknowledgedExcess = rows.some(
+    (r) => r.deliveredQuantity > 0 && r.deliveredQuantity > r.remaining && !r.allowExcess
+  );
+
   const canSubmit =
     !isSubmitting &&
     !dateError &&
     deliveryDate &&
-    (hasAnyQuantity || notes.trim().length > 0);
+    (hasAnyQuantity || notes.trim().length > 0) &&
+    !hasUnacknowledgedExcess;
 
   async function handleSubmit() {
     setAttempted(true);
@@ -244,7 +264,7 @@ export function ReceiptFormModal({
           productId: r.productId,
           variantId: r.variantId,
           deliveredQuantity: r.deliveredQuantity,
-          allowExcess: r.deliveredQuantity > r.remaining,
+          allowExcess: r.allowExcess,
         })),
       deliveryDate,
       notes: notes.trim(),
@@ -404,35 +424,59 @@ export function ReceiptFormModal({
                         </td>
 
                         {/* Qty Received input */}
-                        <td className="py-2.5 pl-2 pr-3 whitespace-nowrap">
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={row.deliveredQuantityStr}
-                              placeholder="0"
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
-                                updateQuantity(idx, raw);
-                              }}
-                              onFocus={(e) => {
-                                const len = e.target.value.length;
-                                e.target.setSelectionRange(len, len);
-                              }}
-                              className="w-full h-8 border border-[#e5e7eb] rounded-[6px] px-2.5 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]"
-                            />
-                            <span className="text-[12px] text-[#6b7280] whitespace-nowrap">
-                              {getUOMAbbreviation(row.uom)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => resetQuantity(idx)}
-                              className={`flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors flex-shrink-0 ${isActive ? "visible" : "invisible"}`}
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        </td>
+                        {(() => {
+                          const isExcess = row.deliveredQuantity > 0 && row.deliveredQuantity > row.remaining;
+                          const overage = isExcess ? (row.deliveredQuantity - row.remaining) : 0;
+                          return (
+                            <td className="py-2.5 pl-2 pr-3 align-top">
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={row.deliveredQuantityStr}
+                                    placeholder="0"
+                                    onChange={(e) => {
+                                      const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+                                      updateQuantity(idx, raw);
+                                    }}
+                                    onFocus={(e) => {
+                                      const len = e.target.value.length;
+                                      e.target.setSelectionRange(len, len);
+                                    }}
+                                    className={`w-full h-8 border rounded-[6px] px-2.5 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
+                                  />
+                                  <span className="text-[12px] text-[#6b7280] whitespace-nowrap">
+                                    {getUOMAbbreviation(row.uom)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => resetQuantity(idx)}
+                                    className={`flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors flex-shrink-0 ${isActive ? "visible" : "invisible"}`}
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </div>
+                                {isExcess && (
+                                  <div className="flex flex-col gap-1">
+                                    <p className="text-[11px] text-[#ea580c] leading-tight">
+                                      Exceeds remaining by {overage.toLocaleString("en-IN", { maximumFractionDigits: 3 })} {getUOMAbbreviation(row.uom)}
+                                    </p>
+                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={row.allowExcess}
+                                        onChange={(e) => updateAllowExcess(idx, e.target.checked)}
+                                        className="h-3.5 w-3.5 rounded border-[#d1d5db] text-[#0d9488] focus:ring-[#0d9488]"
+                                      />
+                                      <span className="text-[11px] text-[#374151] whitespace-nowrap">Allow Excess Delivery</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })()}
                       </tr>
                     );
                   })}
