@@ -102,6 +102,9 @@ function formatAttrValue(a: { value?: string; unit?: string }): string {
 }
 
 function renderVariantChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
+  // If prev doesn't have the variants key, we can't diff (historical gap)
+  if (prev != null && !("variants" in prev)) return [];
+
   const prevVariants = (Array.isArray(prev?.variants) ? prev.variants : []) as Array<{
     _id?: string; name: string; customAttributes?: Array<{ label: string; unit?: string; value?: string }>;
   }>;
@@ -171,6 +174,7 @@ function renderVariantChanges(prev?: Record<string, unknown>, next?: Record<stri
 
 function renderFileChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
   if (!next?.files) return [];
+  if (prev != null && !("files" in prev)) return [];
   const oldFiles = (Array.isArray(prev?.files) ? prev.files : []) as Array<{ id: string; name: string }>;
   const newFiles = (Array.isArray(next.files) ? next.files : []) as Array<{ id: string; name: string }>;
   const oldIds = new Set(oldFiles.map((f) => String(f.id)));
@@ -191,6 +195,9 @@ function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unk
   for (const [key, newVal] of Object.entries(next)) {
     const label = FIELD_LABELS[key];
     if (!label) continue;
+    // If previousValues exists but doesn't have this key, we don't know the before state
+    // (historical audit gap) — skip rather than show as always-"Added"
+    if (prev != null && !(key in prev)) continue;
     const oldVal = prev?.[key];
     if (serializeForComparison(key, oldVal) === serializeForComparison(key, newVal)) continue;
     const wasEmpty = isEmptyValue(key, oldVal);
@@ -198,6 +205,29 @@ function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unk
     if (wasEmpty && isNowEmpty) continue;
     const type: ChangeType = wasEmpty ? "added" : isNowEmpty ? "removed" : "changed";
     changes.push({ field: label, from: formatFieldValue(key, oldVal), to: formatFieldValue(key, newVal), type });
+  }
+  return changes;
+}
+
+function renderCreateDetails(next?: Record<string, unknown>): FieldChange[] {
+  if (!next) return [];
+  const changes: FieldChange[] = [];
+  for (const [key, val] of Object.entries(next)) {
+    const label = FIELD_LABELS[key];
+    if (!label || key === "status") continue;
+    if (isEmptyValue(key, val)) continue;
+    const formatted = formatFieldValue(key, val);
+    if (formatted) changes.push({ field: label, from: "", to: formatted, type: "added" });
+  }
+  if (Array.isArray(next.variants)) {
+    for (const v of next.variants as any[]) {
+      if (!v?.name) continue;
+      const attrs = (v.customAttributes ?? [])
+        .map((a: any) => { const av = formatAttrValue(a); return av ? `${a.label}: ${av}` : null; })
+        .filter(Boolean)
+        .join(", ");
+      changes.push({ field: "Variant", from: "", to: attrs ? `${v.name} · ${attrs}` : v.name, type: "added" });
+    }
   }
   return changes;
 }
@@ -247,6 +277,8 @@ export function SimpleActivityTimeline({ events, users, showEntityType = false }
                 ...renderFileChanges(event.previousValues, event.newValues),
                 ...renderVariantChanges(event.previousValues, event.newValues),
               ]
+            : event.action === "create"
+            ? renderCreateDetails(event.newValues)
             : [];
 
           return (
