@@ -97,6 +97,78 @@ function serializeForComparison(key: string, val: unknown): string {
   return String(val ?? "");
 }
 
+function formatAttrValue(a: { value?: string; unit?: string }): string {
+  return [a.value, a.unit].filter(Boolean).join(" ").trim();
+}
+
+function renderVariantChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
+  const prevVariants = (Array.isArray(prev?.variants) ? prev.variants : []) as Array<{
+    _id?: string; name: string; customAttributes?: Array<{ label: string; unit?: string; value?: string }>;
+  }>;
+  const nextVariants = (Array.isArray(next?.variants) ? next.variants : []) as Array<{
+    _id?: string; name: string; customAttributes?: Array<{ label: string; unit?: string; value?: string }>;
+  }>;
+
+  if (prevVariants.length === 0 && nextVariants.length === 0) return [];
+
+  const changes: FieldChange[] = [];
+  const key = (v: { _id?: string; name: string }) => v._id ? String(v._id) : v.name;
+
+  const prevMap = new Map(prevVariants.map((v) => [key(v), v]));
+  const nextMap = new Map(nextVariants.map((v) => [key(v), v]));
+
+  // Added variants
+  for (const [k, v] of nextMap) {
+    if (!prevMap.has(k)) {
+      const attrs = (v.customAttributes ?? []).map((a) => `${a.label}: ${formatAttrValue(a)}`).join(", ");
+      changes.push({ field: "Variant", from: "", to: attrs ? `${v.name} · ${attrs}` : v.name, type: "added" });
+    }
+  }
+
+  // Removed variants
+  for (const [k, v] of prevMap) {
+    if (!nextMap.has(k)) {
+      changes.push({ field: "Variant", from: v.name, to: "", type: "removed" });
+    }
+  }
+
+  // Updated variants (same _id, different content)
+  for (const [k, nv] of nextMap) {
+    const ov = prevMap.get(k);
+    if (!ov) continue;
+
+    // Name change
+    if (ov.name !== nv.name) {
+      changes.push({ field: "Variant Renamed", from: ov.name, to: nv.name, type: "changed" });
+    }
+
+    // Custom attribute diffs
+    const ovAttrs = new Map((ov.customAttributes ?? []).map((a) => [a.label, a]));
+    const nvAttrs = new Map((nv.customAttributes ?? []).map((a) => [a.label, a]));
+    const variantLabel = `Variant "${nv.name}"`;
+
+    for (const [label, na] of nvAttrs) {
+      const oa = ovAttrs.get(label);
+      const newVal = formatAttrValue(na);
+      if (!oa) {
+        if (newVal) changes.push({ field: `${variantLabel} · ${label}`, from: "", to: newVal, type: "added" });
+      } else {
+        const oldVal = formatAttrValue(oa);
+        if (oldVal !== newVal) {
+          changes.push({ field: `${variantLabel} · ${label}`, from: oldVal, to: newVal, type: "changed" });
+        }
+      }
+    }
+    for (const [label, oa] of ovAttrs) {
+      if (!nvAttrs.has(label)) {
+        changes.push({ field: `${variantLabel} · ${label}`, from: formatAttrValue(oa), to: "", type: "removed" });
+      }
+    }
+  }
+
+  return changes;
+}
+
 function renderFileChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
   if (!next?.files) return [];
   const oldFiles = (Array.isArray(prev?.files) ? prev.files : []) as Array<{ id: string; name: string }>;
@@ -173,6 +245,7 @@ export function SimpleActivityTimeline({ events, users, showEntityType = false }
             ? [
                 ...renderChanges(event.previousValues, event.newValues),
                 ...renderFileChanges(event.previousValues, event.newValues),
+                ...renderVariantChanges(event.previousValues, event.newValues),
               ]
             : [];
 
