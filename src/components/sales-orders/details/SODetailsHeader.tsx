@@ -420,7 +420,7 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
           )}
           {order.supplierReferenceId && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Customer Ref:</span>
+              <span className="text-[11px] font-semibold tracking-[0.55px] text-[#6b7280] uppercase">Buyer Ref. ID:</span>
               <span className="text-[13px] font-medium text-[#111827]">{order.supplierReferenceId}</span>
             </div>
           )}

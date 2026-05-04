@@ -45,7 +45,7 @@ type FieldConfig = TextField | SelectField | DateRangeField;
 const FIELDS: FieldConfig[] = [
   { key: "poNumber",            label: "SO Number",       type: "text",      param: "poNumber"            },
   { key: "referenceId",         label: "Reference ID",    type: "text",      param: "referenceId"         },
-  { key: "supplierReferenceId", label: "Customer Ref. ID",type: "text",      param: "supplierReferenceId" },
+  { key: "supplierReferenceId", label: "Buyer Ref. ID",   type: "text",      param: "supplierReferenceId" },
   {
     key: "status",
     label: "SO Status",
@@ -92,7 +92,7 @@ function formatChipDate(iso: string): string {
 const CHIP_FORMATTERS: Record<keyof SOActiveFilters, (v: string) => string> = {
   poNumber:            (v) => `SO Number: ${v}`,
   referenceId:         (v) => `Reference ID: ${v}`,
-  supplierReferenceId: (v) => `Customer Ref. ID: ${v}`,
+  supplierReferenceId: (v) => `Buyer Ref. ID: ${v}`,
   status:              (v) => `SO Status: ${capitalize(v)}`,
   receiptStatus:       (v) => `Shipment Status: ${capitalize(v)}`,
   issueDateFrom:       (v) => `Issue Date From: ${formatChipDate(v)}`,

@@ -119,11 +119,11 @@ export function ConfirmPOModal({
           {/* Supplier Reference ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              {isSales ? "Customer Reference ID" : "Supplier Reference ID"}
+              {isSales ? "Buyer Reference ID" : "Supplier Reference ID"}
             </label>
             <input
               type="text"
-              placeholder={isSales ? "Enter customer reference" : "Enter supplier reference"}
+              placeholder={isSales ? "Enter buyer reference" : "Enter supplier reference"}
               value={supplierReferenceId}
               onChange={(e) => setSupplierReferenceId(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
