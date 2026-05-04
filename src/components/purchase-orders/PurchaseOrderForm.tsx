@@ -1387,6 +1387,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     if (!buyerCompany || !buyerLocation) {
       errors.buyer = "Please select a buyer and location.";
     }
+    if (supplierCompanyId && consigneeCompanyId && supplierCompanyId === consigneeCompanyId) {
+      errors.supplier = "Supplier and Consignee (Ship To) cannot be the same company.";
+    }
+    if (supplierCompanyId && buyerCompanyId && supplierCompanyId === buyerCompanyId) {
+      errors.supplier = (errors.supplier ? errors.supplier + " " : "") + "Supplier and Buyer (Bill To) cannot be the same company.";
+    }
     if (!isEditMode && !settings?.generatePOAutomatically && !poNumber.trim()) {
       errors.poNumber = `${orderType === "sales" ? "SO" : "PO"} Number is required.`;
     }
