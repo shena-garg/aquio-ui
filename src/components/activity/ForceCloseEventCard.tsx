@@ -35,6 +35,7 @@ export function ForceCloseEventCard({
   isExpanded,
   onToggle,
 }: ForceCloseEventCardProps) {
+  const isUndo = parsed.event.action === "undo_forcefully_close_item";
   const nv = parsed.event.newValues ?? {};
   const meta = parsed.event.metadata ?? {};
   const { name, variantName } = resolveProductName(
@@ -46,8 +47,8 @@ export function ForceCloseEventCard({
 
   return (
     <EventCardShell
-      dotColor="bg-[#f97316]"
-      title="Item Force Closed"
+      dotColor={isUndo ? "bg-[#0d9488]" : "bg-[#f97316]"}
+      title={isUndo ? "Force Close Undone" : "Item Force Closed"}
       userName={parsed.userName}
       formattedDate={parsed.formattedDate}
       isExpanded={isExpanded}
@@ -55,7 +56,9 @@ export function ForceCloseEventCard({
     >
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-[#6b7280]">Product Closed</p>
+          <p className="text-xs font-medium text-[#6b7280]">
+            {isUndo ? "Product Reopened" : "Product Closed"}
+          </p>
           <p className="text-sm text-[#111827]">
             {name}
             {variantName && (
@@ -67,7 +70,7 @@ export function ForceCloseEventCard({
         {poStatus && (
           <div className="flex items-center gap-2">
             <p className="text-xs font-medium text-[#6b7280]">
-              PO Status changed to
+              Order Status changed to
             </p>
             <EventBadge status={poStatus} />
           </div>

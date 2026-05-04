@@ -20,33 +20,33 @@ function fmt(price: number): string {
   return price.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatDetail(diff: ProductDiff): string {
-  if (diff.type === "removed") return "Removed from order";
+function detailLines(diff: ProductDiff): string[] {
+  if (diff.type === "removed") return ["Removed from order"];
 
   if (diff.type === "added") {
-    const parts: string[] = [];
-    if (diff.quantity != null) parts.push(`Qty ${diff.quantity} ${diff.uom ?? ""}`.trim());
-    if (diff.price != null) parts.push(`₹${fmt(diff.price)} / unit`);
-    if (diff.gst != null) parts.push(`GST ${diff.gst}%`);
-    if (diff.discount != null && diff.discount > 0) parts.push(`Discount ${diff.discount}%`);
-    return parts.join(" · ");
+    const lines: string[] = [];
+    if (diff.quantity != null) lines.push(`Qty: ${diff.quantity} ${diff.uom ?? ""}`.trim());
+    if (diff.price != null) lines.push(`Price: ₹${fmt(diff.price)} / unit`);
+    if (diff.gst != null) lines.push(`GST: ${diff.gst}%`);
+    if (diff.discount != null && diff.discount > 0) lines.push(`Discount: ${diff.discount}%`);
+    return lines;
   }
 
-  // updated — show only what changed
-  const changes: string[] = [];
+  // updated — one line per changed field
+  const lines: string[] = [];
   if (diff.oldQuantity != null && diff.quantity != null && diff.oldQuantity !== diff.quantity) {
-    changes.push(`Qty ${diff.oldQuantity} → ${diff.quantity} ${diff.uom ?? ""}`.trim());
+    lines.push(`Qty: ${diff.oldQuantity} → ${diff.quantity} ${diff.uom ?? ""}`.trim());
   }
   if (diff.oldPrice != null && diff.price != null && diff.oldPrice !== diff.price) {
-    changes.push(`Price ₹${fmt(diff.oldPrice)} → ₹${fmt(diff.price)}`);
+    lines.push(`Price: ₹${fmt(diff.oldPrice)} → ₹${fmt(diff.price)}`);
   }
   if (diff.oldGst != null && diff.gst != null && diff.oldGst !== diff.gst) {
-    changes.push(`GST ${diff.oldGst}% → ${diff.gst}%`);
+    lines.push(`GST: ${diff.oldGst}% → ${diff.gst}%`);
   }
   if (diff.oldDiscount != null && diff.discount != null && diff.oldDiscount !== diff.discount) {
-    changes.push(`Discount ${diff.oldDiscount}% → ${diff.discount}%`);
+    lines.push(`Discount: ${diff.oldDiscount}% → ${diff.discount}%`);
   }
-  return changes.join(" · ");
+  return lines;
 }
 
 export function ProductDiffList({ diffs }: ProductDiffListProps) {
@@ -66,7 +66,9 @@ export function ProductDiffList({ diffs }: ProductDiffListProps) {
               <span className="text-[#6b7280]"> · {diff.variantName}</span>
             )}
           </p>
-          <p className="text-xs text-[#6b7280] mt-0.5">{formatDetail(diff)}</p>
+          {detailLines(diff).map((line, i) => (
+            <p key={i} className="text-xs text-[#6b7280] mt-0.5">{line}</p>
+          ))}
         </div>
       ))}
     </div>

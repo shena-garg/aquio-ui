@@ -94,6 +94,7 @@ export function ActivityTimeline({
                   diffs.get(p.event._id) ?? {
                     productDiffs: [],
                     fieldDiffs: [],
+                    partnerDiffs: [],
                     termsDiff: { added: [], removed: [] },
                     filesDiff: { added: [], removed: [] },
                     summary: "No changes",

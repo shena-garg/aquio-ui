@@ -74,9 +74,17 @@ export interface FileDiff {
   removed: Array<{ id: string; name: string }>;
 }
 
+export interface PartnerDiff {
+  field: string;
+  label: string;
+  oldPartner: any;
+  newPartner: any;
+}
+
 export interface DiffResult {
   productDiffs: ProductDiff[];
   fieldDiffs: SimpleFieldDiff[];
+  partnerDiffs: PartnerDiff[];
   termsDiff: TermsDiff;
   filesDiff: FileDiff;
   summary: string;
@@ -373,18 +381,24 @@ export function computeDiff(
     }
   }
 
-  // Partner fields — diff full representation (company, tax, address)
+  // Partner fields — structured before/after diff
   const PARTNER_LABELS: Record<string, string> = {
     supplier: "Supplier",
     buyer: "Consignee (Ship To)",
     biller: "Buyer (Bill To)",
   };
 
+  const partnerDiffs: PartnerDiff[] = [];
   for (const [field, label] of Object.entries(PARTNER_LABELS)) {
     const oldStr = formatPartnerForDiff(previousValues?.[field]);
     const newStr = formatPartnerForDiff(newValues?.[field]);
     if (oldStr !== newStr) {
-      fieldDiffs.push({ field, label, oldValue: oldStr, newValue: newStr });
+      partnerDiffs.push({
+        field,
+        label,
+        oldPartner: previousValues?.[field],
+        newPartner: newValues?.[field],
+      });
     }
   }
 
@@ -402,10 +416,11 @@ export function computeDiff(
   const sections: string[] = [];
   if (productDiffs.length > 0) sections.push("Products");
   for (const fd of fieldDiffs) sections.push(fd.label);
+  for (const pd of partnerDiffs) sections.push(pd.label);
   if (termsDiff.added.length + termsDiff.removed.length > 0) sections.push("Terms");
   if (filesDiff.added.length + filesDiff.removed.length > 0) sections.push("Files");
 
   const summary = sections.length > 0 ? sections.join(" · ") : "No changes";
 
-  return { productDiffs, fieldDiffs, termsDiff, filesDiff, summary };
+  return { productDiffs, fieldDiffs, partnerDiffs, termsDiff, filesDiff, summary };
 }
