@@ -1393,7 +1393,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
     if (supplierCompanyId && buyerCompanyId && supplierCompanyId === buyerCompanyId) {
       errors.supplier = (errors.supplier ? errors.supplier + " " : "") + "Supplier and Buyer (Bill To) cannot be the same company.";
     }
-    if (!isEditMode && !settings?.generatePOAutomatically && !poNumber.trim()) {
+    const autoGenerateNumber = orderType === "sales" ? settings?.generateSOAutomatically : settings?.generatePOAutomatically;
+    if (!isEditMode && !autoGenerateNumber && !poNumber.trim()) {
       errors.poNumber = `${orderType === "sales" ? "SO" : "PO"} Number is required.`;
     }
     if (!paymentTerms) {
@@ -1469,7 +1470,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         orderType,
         poNumber: isEditMode
           ? originalPoNumber.current
-          : settings?.generatePOAutomatically
+          : autoGenerateNumber
             ? ""
             : poNumber,
         files: files.map((f) => ({ id: f.id, name: f.name })),
