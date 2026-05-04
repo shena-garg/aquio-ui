@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -118,10 +119,12 @@ export default function ForgotPasswordPage() {
           {/* Header */}
           <div className="flex items-center justify-center gap-3 px-6 sm:px-10 pt-8 pb-6">
             <div className="w-8 h-8 flex-shrink-0">
-              <img
+              <Image
                 src="/logo.png"
                 alt="Aquio logo"
-                className="w-full h-full object-contain"
+                width={32}
+                height={32}
+                className="object-contain"
               />
             </div>
             <span className="text-[#0F1720] text-2xl font-extrabold tracking-[0.06em]">
