@@ -25,22 +25,26 @@ function formatDetail(diff: ProductDiff): string {
 
   if (diff.type === "added") {
     const parts: string[] = [];
-    if (diff.quantity != null) parts.push(`Qty ${diff.quantity} ${diff.uom ?? ""}`);
-    if (diff.price != null) parts.push(`₹${fmt(diff.price)}`);
+    if (diff.quantity != null) parts.push(`Qty ${diff.quantity} ${diff.uom ?? ""}`.trim());
+    if (diff.price != null) parts.push(`₹${fmt(diff.price)} / unit`);
     if (diff.gst != null) parts.push(`GST ${diff.gst}%`);
+    if (diff.discount != null && diff.discount > 0) parts.push(`Discount ${diff.discount}%`);
     return parts.join(" · ");
   }
 
   // updated — show only what changed
   const changes: string[] = [];
+  if (diff.oldQuantity != null && diff.quantity != null && diff.oldQuantity !== diff.quantity) {
+    changes.push(`Qty ${diff.oldQuantity} → ${diff.quantity} ${diff.uom ?? ""}`.trim());
+  }
   if (diff.oldPrice != null && diff.price != null && diff.oldPrice !== diff.price) {
     changes.push(`Price ₹${fmt(diff.oldPrice)} → ₹${fmt(diff.price)}`);
   }
-  if (diff.oldQuantity != null && diff.quantity != null && diff.oldQuantity !== diff.quantity) {
-    changes.push(`Qty ${diff.oldQuantity} → ${diff.quantity}`);
-  }
   if (diff.oldGst != null && diff.gst != null && diff.oldGst !== diff.gst) {
     changes.push(`GST ${diff.oldGst}% → ${diff.gst}%`);
+  }
+  if (diff.oldDiscount != null && diff.discount != null && diff.oldDiscount !== diff.discount) {
+    changes.push(`Discount ${diff.oldDiscount}% → ${diff.discount}%`);
   }
   return changes.join(" · ");
 }

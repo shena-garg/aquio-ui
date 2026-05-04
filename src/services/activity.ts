@@ -49,9 +49,11 @@ export interface ProductDiff {
   uom?: string;
   price?: number;
   gst?: number;
+  discount?: number;
   oldPrice?: number;
   oldGst?: number;
   oldQuantity?: number;
+  oldDiscount?: number;
 }
 
 export type SimpleFieldDiff = {
@@ -61,9 +63,21 @@ export type SimpleFieldDiff = {
   newValue: string;
 };
 
+export interface TermsDiff {
+  added: string[];
+  removed: string[];
+}
+
+export interface FileDiff {
+  added: Array<{ id: string; name: string }>;
+  removed: Array<{ id: string; name: string }>;
+}
+
 export interface DiffResult {
   productDiffs: ProductDiff[];
   fieldDiffs: SimpleFieldDiff[];
+  termsDiff: TermsDiff;
+  filesDiff: FileDiff;
   summary: string;
 }
 
@@ -164,8 +178,9 @@ const IGNORED_FIELDS = new Set([
 ]);
 
 const SIMPLE_FIELD_LABELS: Record<string, string> = {
-  referenceId: "Reference ID",
-  supplierReferenceId: "Supplier Reference ID",
+  poNumber: "Order Number",
+  referenceId: "Ref. ID",
+  supplierReferenceId: "Supplier Ref. ID",
   paymentTerms: "Payment Terms",
   issueDate: "Issue Date",
   deliveryDate: "Delivery Date",
@@ -180,6 +195,7 @@ interface RawProductLine {
   price: { value: { $numberDecimal: string } | number };
   quantity: { value: number; postfix: string };
   gst: { value: number };
+  discount?: { value: number };
 }
 
 function productKey(line: RawProductLine): string {
@@ -222,6 +238,7 @@ function diffProducts(
         uom: nLine.quantity.postfix,
         price: readPrice(nLine),
         gst: nLine.gst.value,
+        discount: nLine.discount?.value ?? 0,
       });
     } else {
       const oldPrice = readPrice(oLine);
@@ -230,8 +247,10 @@ function diffProducts(
       const newQty = nLine.quantity.value;
       const oldGst = oLine.gst.value;
       const newGst = nLine.gst.value;
+      const oldDiscount = oLine.discount?.value ?? 0;
+      const newDiscount = nLine.discount?.value ?? 0;
 
-      if (oldPrice !== newPrice || oldQty !== newQty || oldGst !== newGst) {
+      if (oldPrice !== newPrice || oldQty !== newQty || oldGst !== newGst || oldDiscount !== newDiscount) {
         diffs.push({
           type: "updated",
           productId: nLine.product._id,
@@ -242,9 +261,11 @@ function diffProducts(
           uom: nLine.quantity.postfix,
           price: newPrice,
           gst: newGst,
+          discount: newDiscount,
           oldPrice,
           oldGst,
           oldQuantity: oldQty,
+          oldDiscount,
         });
       }
     }
@@ -275,6 +296,53 @@ function stringify(value: unknown): string {
   return String(value);
 }
 
+function formatPartnerForDiff(partner: any): string {
+  if (!partner) return "";
+  const parts: string[] = [stringify(partner.name)];
+  if (partner.taxNumber) parts.push(`Tax: ${partner.taxNumber}`);
+  if (partner.contactNumber) parts.push(`Contact: ${partner.contactNumber}`);
+  const addr = partner.address;
+  if (addr) {
+    const addrParts: string[] = [];
+    if (addr.addressLine1) addrParts.push(addr.addressLine1);
+    if (addr.city) addrParts.push(addr.city);
+    if (addr.state) addrParts.push(addr.state);
+    if (addr.postalCode) addrParts.push(addr.postalCode);
+    if (addrParts.length) parts.push(addrParts.join(", "));
+    if (addr.gstNumber) parts.push(`GST: ${addr.gstNumber}`);
+  }
+  return parts.filter(Boolean).join(" · ");
+}
+
+function diffTerms(
+  prev: any[] | undefined,
+  next: any[] | undefined
+): TermsDiff {
+  const normalise = (t: any): string =>
+    typeof t === "string" ? t : (t?.value ?? t?.text ?? String(t));
+  const prevSet = new Set((prev ?? []).map(normalise));
+  const nextSet = new Set((next ?? []).map(normalise));
+  return {
+    added: [...nextSet].filter((t) => !prevSet.has(t)),
+    removed: [...prevSet].filter((t) => !nextSet.has(t)),
+  };
+}
+
+function diffFileRefs(
+  prev: any[] | undefined,
+  next: any[] | undefined
+): FileDiff {
+  const toMeta = (f: any) => ({ id: String(f.id ?? f._id ?? ""), name: String(f.name ?? "") });
+  const prevList = (prev ?? []).map(toMeta);
+  const nextList = (next ?? []).map(toMeta);
+  const prevIds = new Set(prevList.map((f) => f.id));
+  const nextIds = new Set(nextList.map((f) => f.id));
+  return {
+    added: nextList.filter((f) => !prevIds.has(f.id)),
+    removed: prevList.filter((f) => !nextIds.has(f.id)),
+  };
+}
+
 export function computeDiff(
   previousValues: Record<string, any>,
   newValues: Record<string, any>
@@ -302,29 +370,40 @@ export function computeDiff(
     }
   }
 
-  // Partner fields — diff by .id, display .name
+  // Partner fields — diff full representation (company, tax, address)
   const PARTNER_LABELS: Record<string, string> = {
+    supplier: "Supplier",
     consignee: "Consignee (Ship To)",
     buyer: "Buyer (Bill To)",
     biller: "Biller",
   };
 
   for (const [field, label] of Object.entries(PARTNER_LABELS)) {
-    const oldId = previousValues?.[field]?.id ?? "";
-    const newId = newValues?.[field]?.id ?? "";
-    if (oldId !== newId) {
-      const oldName = stringify(previousValues?.[field]?.name).trim();
-      const newName = stringify(newValues?.[field]?.name).trim();
-      fieldDiffs.push({ field, label, oldValue: oldName, newValue: newName });
+    const oldStr = formatPartnerForDiff(previousValues?.[field]);
+    const newStr = formatPartnerForDiff(newValues?.[field]);
+    if (oldStr !== newStr) {
+      fieldDiffs.push({ field, label, oldValue: oldStr, newValue: newStr });
     }
   }
+
+  const termsDiff = diffTerms(
+    previousValues?.termsAndConditions,
+    newValues?.termsAndConditions
+  );
+
+  const filesDiff = diffFileRefs(
+    previousValues?.files,
+    newValues?.files
+  );
 
   // Build summary
   const sections: string[] = [];
   if (productDiffs.length > 0) sections.push("Products");
   for (const fd of fieldDiffs) sections.push(fd.label);
+  if (termsDiff.added.length + termsDiff.removed.length > 0) sections.push("Terms");
+  if (filesDiff.added.length + filesDiff.removed.length > 0) sections.push("Files");
 
   const summary = sections.length > 0 ? sections.join(" · ") : "No changes";
 
-  return { productDiffs, fieldDiffs, summary };
+  return { productDiffs, fieldDiffs, termsDiff, filesDiff, summary };
 }

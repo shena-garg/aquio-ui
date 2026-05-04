@@ -81,6 +81,7 @@ export function ActivityTimeline({
                 parsed={p}
                 isExpanded={isExpanded}
                 onToggle={toggle}
+                orderType={orderType}
               />
             );
           case "update":
@@ -92,11 +93,14 @@ export function ActivityTimeline({
                   diffs.get(p.event._id) ?? {
                     productDiffs: [],
                     fieldDiffs: [],
+                    termsDiff: { added: [], removed: [] },
+                    filesDiff: { added: [], removed: [] },
                     summary: "No changes",
                   }
                 }
                 isExpanded={isExpanded}
                 onToggle={toggle}
+                orderType={orderType}
               />
             );
           case "cancel":
