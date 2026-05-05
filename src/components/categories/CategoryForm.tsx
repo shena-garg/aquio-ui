@@ -41,6 +41,9 @@ export function CategoryForm({ mode, categoryId, initialValues }: CategoryFormPr
         toast.success("Category created successfully");
       }
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      if (isEdit && categoryId) {
+        await queryClient.invalidateQueries({ queryKey: ["category", categoryId] });
+      }
       router.push("/categories");
     } catch (err: unknown) {
       const message =

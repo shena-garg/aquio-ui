@@ -141,6 +141,9 @@ export function SubCategoryForm({
       }
 
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
+      if (isEdit && subCategoryId) {
+        await queryClient.invalidateQueries({ queryKey: ["subcategory", subCategoryId] });
+      }
       router.push("/categories");
     } catch (err: unknown) {
       const message =
