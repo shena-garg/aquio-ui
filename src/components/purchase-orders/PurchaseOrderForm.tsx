@@ -1332,7 +1332,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   }
 
   function handleProductSelect(rowId: string, product: ProductSearchResult) {
-    updateRow(rowId, { product, variant: null });
+    const variant = product.variants.length === 1 ? product.variants[0] : null;
+    updateRow(rowId, { product, variant });
   }
 
   function handleVariantChange(rowId: string, row: ProductRow, variantId: string) {
