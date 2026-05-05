@@ -33,6 +33,7 @@ import {
 import type { Product } from "@/services/products";
 import { productsService } from "@/services/products";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 // ── Column widths (px) for sticky offset calculation ──────────────────────────
@@ -280,6 +281,19 @@ export function ProductsTable({
 
   // Actions menu extracted for reuse
   function ProductActionsMenu({ product }: { product: Product }) {
+    const { hasPermission } = useAuth();
+
+    const canEdit = hasPermission("product.edit");
+    const canAdd = hasPermission("product.add");
+    const canArchive = hasPermission("product.archive");
+
+    const hasAnyAction =
+      activeTab === "active"
+        ? canEdit || canAdd || canArchive
+        : canAdd;
+
+    if (!hasAnyAction) return null;
+
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -294,38 +308,40 @@ export function ProductsTable({
         <DropdownMenuContent align="start" className="w-48">
           {activeTab === "active" ? (
             <>
-              <RequirePermission permission="product.edit">
+              {canEdit && (
                 <DropdownMenuItem
                   onClick={() => router.push(`/products/${product._id}?edit=true`)}
                 >
                   Edit Product
                 </DropdownMenuItem>
-              </RequirePermission>
-              <RequirePermission permission="product.add">
+              )}
+              {canAdd && (
                 <DropdownMenuItem
                   onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
                 >
                   Create Duplicate
                 </DropdownMenuItem>
-              </RequirePermission>
-              <RequirePermission permission="product.archive">
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setArchiveProduct(product)}
-                  className="text-[#DC2626] focus:text-[#DC2626]"
-                >
-                  Archive
-                </DropdownMenuItem>
-              </RequirePermission>
+              )}
+              {canArchive && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setArchiveProduct(product)}
+                    className="text-[#DC2626] focus:text-[#DC2626]"
+                  >
+                    Archive
+                  </DropdownMenuItem>
+                </>
+              )}
             </>
           ) : (
-            <RequirePermission permission="product.add">
+            canAdd && (
               <DropdownMenuItem
                 onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
               >
                 Create Duplicate
               </DropdownMenuItem>
-            </RequirePermission>
+            )
           )}
         </DropdownMenuContent>
       </DropdownMenu>

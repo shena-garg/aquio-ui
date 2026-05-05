@@ -22,6 +22,7 @@ import {
 import type { PurchaseOrder, POOrderStatus } from "@/services/purchase-orders";
 import { QuantityCell } from "@/components/ui/QuantityCell";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FileText } from "lucide-react";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
@@ -558,8 +559,17 @@ export function POTable({
 
   const totalCols = 1 + activeCols.length;
 
+  const { hasPermission } = useAuth();
+  const hasPOAction =
+    hasPermission("purchase-order.add") ||
+    hasPermission("purchase-order.edit") ||
+    hasPermission("purchase-order.cancel") ||
+    hasPermission("purchase-order.confirm") ||
+    hasPermission("purchase-order.force-close");
+
   // Reusable actions trigger for mobile cards
   function CardActionsMenu({ order }: { order: PurchaseOrder }) {
+    if (!hasPOAction) return null;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -720,22 +730,24 @@ export function POTable({
                           <Eye className="h-[15px] w-[15px]" />
                         </button>
 
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                              aria-label="More actions"
-                            >
-                              <MoreHorizontal className="h-[15px] w-[15px]" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <ActionMenu
-                            order={order}
-                            onCancel={() => setCancelModal({ open: true, order })}
-                            onConfirm={() => setConfirmModal({ open: true, order })}
-                            onForceClose={() => setForceCloseModal({ open: true, order })}
-                          />
-                        </DropdownMenu>
+                        {hasPOAction && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+                                aria-label="More actions"
+                              >
+                                <MoreHorizontal className="h-[15px] w-[15px]" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <ActionMenu
+                              order={order}
+                              onCancel={() => setCancelModal({ open: true, order })}
+                              onConfirm={() => setConfirmModal({ open: true, order })}
+                              onForceClose={() => setForceCloseModal({ open: true, order })}
+                            />
+                          </DropdownMenu>
+                        )}
                       </div>
                     </TableCell>
 

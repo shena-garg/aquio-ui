@@ -22,6 +22,7 @@ import {
 import type { SalesOrder, SOOrderStatus } from "@/services/sales-orders";
 import { QuantityCell } from "@/components/ui/QuantityCell";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CancelPOModal } from "@/components/purchase-orders/modals/CancelPOModal";
 import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOModal";
@@ -557,8 +558,17 @@ export function SOTable({
 
   const totalCols = 1 + activeCols.length;
 
+  const { hasPermission } = useAuth();
+  const hasSOAction =
+    hasPermission("sales-order.add") ||
+    hasPermission("sales-order.edit") ||
+    hasPermission("sales-order.cancel") ||
+    hasPermission("sales-order.confirm") ||
+    hasPermission("sales-order.force-close");
+
   // Reusable actions trigger for mobile cards
   function CardActionsMenu({ order }: { order: SalesOrder }) {
+    if (!hasSOAction) return null;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -719,22 +729,24 @@ export function SOTable({
                           <Eye className="h-[15px] w-[15px]" />
                         </button>
 
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
-                              aria-label="More actions"
-                            >
-                              <MoreHorizontal className="h-[15px] w-[15px]" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <ActionMenu
-                            order={order}
-                            onCancel={() => setCancelModal({ open: true, order })}
-                            onConfirm={() => setConfirmModal({ open: true, order })}
-                            onForceClose={() => setForceCloseModal({ open: true, order })}
-                          />
-                        </DropdownMenu>
+                        {hasSOAction && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#0F1720]"
+                                aria-label="More actions"
+                              >
+                                <MoreHorizontal className="h-[15px] w-[15px]" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <ActionMenu
+                              order={order}
+                              onCancel={() => setCancelModal({ open: true, order })}
+                              onConfirm={() => setConfirmModal({ open: true, order })}
+                              onForceClose={() => setForceCloseModal({ open: true, order })}
+                            />
+                          </DropdownMenu>
+                        )}
                       </div>
                     </TableCell>
 
