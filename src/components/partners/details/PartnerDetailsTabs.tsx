@@ -307,7 +307,7 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af]">
                 <Clock size={12} />
-                <span>Activity may take a moment to appear after changes</span>
+                <span>Activity may take up to a minute to appear after changes</span>
               </div>
               <button
                 onClick={() => refetchActivity()}
