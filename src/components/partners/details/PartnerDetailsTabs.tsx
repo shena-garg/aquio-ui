@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, MapPin, Clock } from "lucide-react";
+import { Plus, MapPin, Clock, RefreshCw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
@@ -214,7 +214,7 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
     { key: "activity", label: "Activity" },
   ];
 
-  const { data: activityEvents = [], isLoading: loadingActivity } = useQuery({
+  const { data: activityEvents = [], isLoading: loadingActivity, refetch: refetchActivity } = useQuery({
     queryKey: ["activity", "partner", partner._id],
     queryFn: () => getEntityActivityLog("partner", partner._id),
     staleTime: 0,
@@ -303,19 +303,29 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
         )}
 
         {activeTab === "activity" && (
-          (loadingActivity || loadingUsers) ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="animate-spin text-gray-400" size={20} />
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af] mb-4">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af]">
                 <Clock size={12} />
                 <span>Activity may take a moment to appear after changes</span>
               </div>
-              <SimpleActivityTimeline events={activityEvents} users={activityUsers} />
+              <button
+                onClick={() => refetchActivity()}
+                disabled={loadingActivity || loadingUsers}
+                className="flex items-center gap-1.5 text-[12px] text-[#6b7280] hover:text-[#111827] disabled:opacity-40 transition-colors"
+              >
+                <RefreshCw size={12} className={(loadingActivity || loadingUsers) ? "animate-spin" : ""} />
+                Refresh
+              </button>
             </div>
-          )
+            {(loadingActivity || loadingUsers) ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="animate-spin text-gray-400" size={20} />
+              </div>
+            ) : (
+              <SimpleActivityTimeline events={activityEvents} users={activityUsers} />
+            )}
+          </div>
         )}
       </div>
 

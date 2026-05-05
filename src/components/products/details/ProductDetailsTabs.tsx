@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Loader2, Pencil, Plus, Trash2, X, Clock } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, X, Clock, RefreshCw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -950,7 +950,7 @@ function computeDateRange(
 }
 
 function ActivityTab({ productId }: { productId: string }) {
-  const { data: events = [], isLoading: loadingEvents } = useQuery({
+  const { data: events = [], isLoading: loadingEvents, refetch } = useQuery({
     queryKey: ["activity", "product", productId],
     queryFn: () => getEntityActivityLog("product", productId),
     staleTime: 0,
@@ -961,17 +961,31 @@ function ActivityTab({ productId }: { productId: string }) {
     staleTime: 5 * 60 * 1000,
   });
 
-  if (loadingEvents || loadingUsers) {
-    return <div className="flex justify-center py-10"><Loader2 className="animate-spin text-gray-400" size={20} /></div>;
-  }
+  const isLoading = loadingEvents || loadingUsers;
 
   return (
     <div className="px-4 sm:px-6 py-5">
-      <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af] mb-4">
-        <Clock size={12} />
-        <span>Activity may take a moment to appear after changes</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-1.5 text-[12px] text-[#9ca3af]">
+          <Clock size={12} />
+          <span>Activity may take a moment to appear after changes</span>
+        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 text-[12px] text-[#6b7280] hover:text-[#111827] disabled:opacity-40 transition-colors"
+        >
+          <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} />
+          Refresh
+        </button>
       </div>
-      <SimpleActivityTimeline events={events} users={users} />
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <Loader2 className="animate-spin text-gray-400" size={20} />
+        </div>
+      ) : (
+        <SimpleActivityTimeline events={events} users={users} />
+      )}
     </div>
   );
 }
