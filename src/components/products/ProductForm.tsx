@@ -30,26 +30,7 @@ import {
   type OrganizationSettings,
 } from "@/services/organization-settings";
 import { productsService } from "@/services/products";
-
-// ---------------------------------------------------------------------------
-// UOM list (from lib/uom.ts keys)
-// ---------------------------------------------------------------------------
-
-const UOM_LIST = [
-  "Kilogram", "Gram", "Milligram", "Metric Ton", "Ton", "Tonne",
-  "Ounce", "Pound", "Kilometer", "Meter", "Centimeter", "Millimeter",
-  "Micrometer", "Nanometer", "Foot", "Yard", "Inch",
-  "Square Meter", "Square Centimeter", "Square Millimeter",
-  "Square Foot", "Square Inch",
-  "Cubic Meter", "Cubic Centimeter", "Cubic Inch", "Cubic Foot", "Cubic Yard",
-  "Liter", "Milliliter", "Microliter", "KiloLiter",
-  "Gallon", "Quart", "Fluid Ounce", "Barrel",
-  "Piece", "Unit", "Each", "Nos", "Pack", "Package",
-  "Box", "Carton", "Case", "Dozen", "Pair",
-  "Roll", "Bundle", "Bag", "Pallet", "Set", "Bottle", "Drum", "Can",
-  "Pouch", "Sachet", "Reel", "Reel Meter", "Rim", "Ream",
-  "Sheet", "Stick", "Tube", "Bar", "Tin", "Coil", "Lot", "Batch",
-];
+import { UOM_LIST } from "@/lib/uom";
 
 // ---------------------------------------------------------------------------
 // Searchable select component

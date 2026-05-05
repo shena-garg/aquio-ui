@@ -1,3 +1,29 @@
+// Canonical list — must match aquio-backend/src/config/units-of-measurement.json names exactly.
+export const UOM_LIST = [
+  // Weight
+  "Kilogram", "Kilogram (Alt)", "Gram", "Gram (Alt)", "Milligram",
+  "Metric Ton", "Ton", "Tonne", "Ounce", "Pound",
+  // Length
+  "Kilometer", "Meter", "Centimeter", "Millimeter", "Micrometer",
+  "Nanometer", "Micron", "Foot", "Yard", "Inch",
+  // Area
+  "Square Meter", "Square Centimeter", "Square Millimeter", "Square Foot", "Square Inch",
+  // Volume
+  "Cubic Meter", "Cubic Centimeter", "Cubic Inch", "Cubic Foot", "Cubic Yard",
+  "Liter", "Milliliter", "Microliter", "KiloLiter", "Gallon", "Quart", "Fluid Ounce", "Barrel",
+  // Count / Pack
+  "Piece", "Unit", "Each", "Nos",
+  "Pack", "Package", "Box", "Carton", "Case", "Dozen", "Pair", "Pallet", "Set",
+  // Container / Industrial
+  "Roll", "Bundle", "Bag", "Bottle", "Drum", "Can", "Pouch", "Sachet",
+  "Reel", "Reel Meter", "Rim", "Rim Meter", "Rim Foot",
+  "Ream", "Sheet", "Stick", "Tube", "Bar", "Tin", "Coil",
+  // Misc
+  "Lot", "Batch",
+] as const;
+
+export type UOM = typeof UOM_LIST[number];
+
 const UOM_MAP: Record<string, string> = {
   "Kilogram": "kg",
   "Kilogram (Alt)": "Kgs",

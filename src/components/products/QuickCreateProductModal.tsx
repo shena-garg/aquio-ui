@@ -10,17 +10,7 @@ import { categoriesService, type Category } from "@/services/categories";
 import { organizationSettingsService, type OrganizationSettings } from "@/services/organization-settings";
 import { productsService } from "@/services/products";
 import { QuickCreateCategoryModal } from "@/components/categories/QuickCreateCategoryModal";
-
-// ── UOM list ──────────────────────────────────────────────────────────────────
-
-const UOM_LIST = [
-  "Piece", "Unit", "Each", "Nos", "Pack", "Box", "Carton", "Case", "Dozen", "Bag", "Set",
-  "Kilogram", "Gram", "Metric Ton", "Ton",
-  "Liter", "Milliliter",
-  "Meter", "Centimeter", "Kilometer",
-  "Square Meter", "Cubic Meter",
-  "Roll", "Bundle", "Bottle", "Drum", "Can", "Reel", "Sheet", "Coil",
-];
+import { UOM_LIST } from "@/lib/uom";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
