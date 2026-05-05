@@ -409,6 +409,7 @@ export function RoleForm({ mode, roleId, initialValues }: RoleFormProps) {
       if (isEdit && roleId) {
         await rolesService.update(roleId, payload);
         toast.success("Role updated successfully");
+        queryClient.removeQueries({ queryKey: ["role", roleId] });
       } else {
         await rolesService.create(payload);
         toast.success("Role created successfully");
