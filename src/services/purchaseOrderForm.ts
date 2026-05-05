@@ -87,11 +87,15 @@ export interface POFormSettings {
 export interface ProductVariant {
   _id: string;
   name: string;
+  customAttributes?: { label: string; unit: string; value: string }[];
 }
 
 export interface ProductSearchResult {
   _id: string;
   name: string;
+  sku?: string;
+  hsnCode?: string;
+  description?: string;
   unitOfMeasurement: string;
   gst: number;
   variants: ProductVariant[];

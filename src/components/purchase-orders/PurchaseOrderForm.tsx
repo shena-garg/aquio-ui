@@ -14,8 +14,14 @@ import {
   CalendarDays,
   AlertTriangle,
   Settings,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { uploadFile } from "@/lib/api-client";
 import { validateFile, getFileAccept } from "@/lib/file-validation";
 import { organizationSettingsService } from "@/services/organization-settings";
@@ -474,6 +480,85 @@ function ProductTypeahead({
       </div>
       {dropdownContent}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Product / Variant info popovers
+// ---------------------------------------------------------------------------
+
+function ProductInfoButton({ product }: { product: ProductSearchResult }) {
+  const rows = [
+    { label: "HSN Code", value: product.hsnCode },
+    { label: "Product Code", value: product.sku },
+    { label: "Description", value: product.description },
+  ].filter((r) => r.value);
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="p-1 text-[#9ca3af] hover:text-[#0d9488] flex-shrink-0 transition-colors"
+          title="Product details"
+        >
+          <Info size={13} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-60 p-3" align="start">
+        <p className="text-[13px] font-semibold text-[#111827] mb-2">{product.name}</p>
+        {rows.length > 0 ? (
+          <div className="space-y-1.5">
+            {rows.map(({ label, value }) => (
+              <div key={label}>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.7px] text-[#6b7280]">
+                  {label}
+                </span>
+                <p className="text-[12px] text-[#374151] leading-snug">{value}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[12px] text-[#9ca3af]">No additional details</p>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function VariantInfoButton({ variant }: { variant: ProductVariant }) {
+  const attrs = variant.customAttributes ?? [];
+  if (attrs.length === 0) return null;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="p-1 text-[#9ca3af] hover:text-[#0d9488] flex-shrink-0 transition-colors"
+          title="Variant attributes"
+        >
+          <Info size={13} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3" align="start">
+        <p className="text-[13px] font-semibold text-[#111827] mb-2">{variant.name}</p>
+        <table className="w-full">
+          <tbody>
+            {attrs.map((attr, i) => (
+              <tr key={i} className="border-b border-[#f3f4f6] last:border-0">
+                <td className="py-1 text-[11px] text-[#6b7280]">
+                  {attr.label}{attr.unit ? ` (${attr.unit})` : ""}
+                </td>
+                <td className="py-1 text-[12px] text-[#111827] font-medium text-right">
+                  {attr.value || "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -1897,7 +1982,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
                       {/* Row 1: Product + Delete */}
                       <div className="flex items-center gap-2">
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <ProductTypeahead
                             value={row.product}
                             onSelect={(p) => handleProductSelect(row.id, p)}
@@ -1908,6 +1993,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             hasError={attempted && !row.product}
                           />
                         </div>
+                        {row.product && (
+                          <ProductInfoButton product={row.product} />
+                        )}
                         <button
                           type="button"
                           onClick={() => removeRow(row.id)}
@@ -1918,14 +2006,14 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                         </button>
                       </div>
 
-                      {/* Row 2: Variant (75%) | GST% (25%) */}
+                      {/* Row 2: Variant | Info | GST% */}
                       <div className="flex items-center gap-2">
-                        <div className="w-3/4 min-w-0">
+                        <div className="flex-1 min-w-0 flex items-center gap-1">
                           <select
                             value={row.variant?._id ?? ""}
                             onChange={(e) => handleVariantChange(row.id, row, e.target.value)}
                             disabled={!hasProduct}
-                            className={`w-full h-8 border border-[#e5e7eb] rounded-[6px] px-2.5 text-[12px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                            className={`flex-1 min-w-0 h-8 border border-[#e5e7eb] rounded-[6px] px-2.5 text-[12px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed ${
                               attempted && hasProduct && !row.variant
                                 ? "ring-1 ring-[#dc2626]"
                                 : ""
@@ -1938,8 +2026,11 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                               </option>
                             ))}
                           </select>
+                          {row.variant && (
+                            <VariantInfoButton variant={row.variant} />
+                          )}
                         </div>
-                        <div className="w-1/4 text-right">
+                        <div className="flex-shrink-0 text-right">
                           <span className="text-[12px] font-medium text-[#374151]">
                             {hasProduct ? `GST ${gst}%` : ""}
                           </span>
@@ -2095,39 +2186,51 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                           >
                             {/* Product */}
                             <td className="h-10 px-1">
-                              <ProductTypeahead
-                                value={row.product}
-                                onSelect={(p) =>
-                                  handleProductSelect(row.id, p)
-                                }
-                                onCreateNew={(q) => {
-                                  setCreateProductInitialName(q);
-                                  setCreateProductForRowId(row.id);
-                                }}
-                                hasError={attempted && !row.product}
-                              />
+                              <div className="flex items-center gap-0.5">
+                                <div className="flex-1 min-w-0">
+                                  <ProductTypeahead
+                                    value={row.product}
+                                    onSelect={(p) =>
+                                      handleProductSelect(row.id, p)
+                                    }
+                                    onCreateNew={(q) => {
+                                      setCreateProductInitialName(q);
+                                      setCreateProductForRowId(row.id);
+                                    }}
+                                    hasError={attempted && !row.product}
+                                  />
+                                </div>
+                                {row.product && (
+                                  <ProductInfoButton product={row.product} />
+                                )}
+                              </div>
                             </td>
 
                             {/* Variant */}
                             <td className="h-10 px-1">
-                              <select
-                                value={row.variant?._id ?? ""}
-                                title={row.variant?.name ?? ""}
-                                onChange={(e) => handleVariantChange(row.id, row, e.target.value)}
-                                disabled={!hasProduct}
-                                className={`w-full border-0 outline-none bg-transparent focus:bg-[#f0fdfa] rounded px-2 py-1 text-[13px] text-[#111827] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
-                                  attempted && hasProduct && !row.variant
-                                    ? "ring-1 ring-[#dc2626]"
-                                    : ""
-                                }`}
-                              >
-                                <option value="">Select</option>
-                                {(row.product?.variants ?? []).map((v) => (
-                                  <option key={v._id} value={v._id}>
-                                    {v.name}
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="flex items-center gap-0.5">
+                                <select
+                                  value={row.variant?._id ?? ""}
+                                  title={row.variant?.name ?? ""}
+                                  onChange={(e) => handleVariantChange(row.id, row, e.target.value)}
+                                  disabled={!hasProduct}
+                                  className={`flex-1 min-w-0 border-0 outline-none bg-transparent focus:bg-[#f0fdfa] rounded px-2 py-1 text-[13px] text-[#111827] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+                                    attempted && hasProduct && !row.variant
+                                      ? "ring-1 ring-[#dc2626]"
+                                      : ""
+                                  }`}
+                                >
+                                  <option value="">Select</option>
+                                  {(row.product?.variants ?? []).map((v) => (
+                                    <option key={v._id} value={v._id}>
+                                      {v.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                {row.variant && (
+                                  <VariantInfoButton variant={row.variant} />
+                                )}
+                              </div>
                             </td>
 
                             {/* Quantity */}
