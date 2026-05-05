@@ -131,8 +131,8 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-px px-2 pt-2 pb-4">
 
-          {/* Dashboard – standalone top item */}
-          <div className="py-1">
+          {/* Dashboard – standalone top item, admin-only */}
+          {(isLoading || hasPermission("organization.view")) && <div className="py-1">
             <Link
               href="/dashboard"
               onClick={() => setMobileOpen(false)}
@@ -152,7 +152,7 @@ export function Sidebar() {
               />
               Dashboard
             </Link>
-          </div>
+          </div>}
 
           {/* Sections */}
           {navSections.map((section) => {

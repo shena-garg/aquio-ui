@@ -39,6 +39,7 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   { path: "/users", permissions: ["user.view"] },
   { path: "/roles", permissions: ["role.view"] },
   { path: "/settings", permissions: ["settings.view"] },
+  { path: "/dashboard", permissions: ["organization.view"] },
   { path: "/company", permissions: ["organization.view"] },
 ];
 
