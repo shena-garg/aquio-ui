@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Lock, X } from "lucide-react";
+import { Loader2, Lock, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { categoriesService, type Category } from "@/services/categories";
@@ -24,6 +24,12 @@ const UOM_LIST = [
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+interface VariantAttribute {
+  label: string;
+  unit: string;
+  value: string;
+}
+
 interface FieldErrors {
   name?: string;
   categoryId?: string;
@@ -32,6 +38,8 @@ interface FieldErrors {
   sku?: string;
   hsnCode?: string;
   gst?: string;
+  variantName?: string;
+  attrLabels?: Record<number, string>;
 }
 
 interface QuickCreateProductModalProps {
@@ -74,6 +82,8 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
   const [sku, setSku] = useState("");
   const [hsnCode, setHsnCode] = useState("");
   const [gst, setGst] = useState("");
+  const [variantName, setVariantName] = useState("Default");
+  const [variantAttributes, setVariantAttributes] = useState<VariantAttribute[]>([]);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoryModalMode, setCategoryModalMode] = useState<
@@ -93,8 +103,8 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
 
   function reset() {
     setName(""); setCategoryId(""); setSubCategoryId(""); setUnitOfMeasurement("");
-    setSku(""); setHsnCode(""); setGst(""); setErrors({}); setIsSubmitting(false);
-    setSubmitError("");
+    setSku(""); setHsnCode(""); setGst(""); setVariantName("Default");
+    setVariantAttributes([]); setErrors({}); setIsSubmitting(false); setSubmitError("");
   }
 
   function handleClose() {
@@ -107,6 +117,20 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
     setSubCategoryId("");
   }
 
+  function addAttribute() {
+    setVariantAttributes((prev) => [...prev, { label: "", unit: "", value: "" }]);
+  }
+
+  function updateAttribute(index: number, field: keyof VariantAttribute, val: string) {
+    setVariantAttributes((prev) =>
+      prev.map((a, i) => (i === index ? { ...a, [field]: val } : a))
+    );
+  }
+
+  function removeAttribute(index: number) {
+    setVariantAttributes((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit() {
     const errs: FieldErrors = {};
     if (!name.trim()) errs.name = "Product name is required";
@@ -116,6 +140,12 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
     if (!autoSku && !sku.trim()) errs.sku = "SKU is required";
     if (!hsnCode.trim()) errs.hsnCode = "HSN code is required";
     if (!gst) errs.gst = "GST rate is required";
+    if (!variantName.trim()) errs.variantName = "Variant name is required";
+    const attrLabelErrs: Record<number, string> = {};
+    variantAttributes.forEach((a, i) => {
+      if (!a.label.trim()) attrLabelErrs[i] = "Label is required";
+    });
+    if (Object.keys(attrLabelErrs).length > 0) errs.attrLabels = attrLabelErrs;
 
     setErrors(errs);
     if (Object.keys(errs).length > 0 || isSubmitting) return;
@@ -130,7 +160,12 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
         hsnCode: hsnCode.trim(),
         gst: parseFloat(gst),
         ...(autoSku ? {} : { sku: sku.trim() }),
-        variants: [{ name: "Default", customAttributes: [] }],
+        variants: [{
+          name: variantName.trim(),
+          customAttributes: variantAttributes
+            .filter((a) => a.label.trim())
+            .map((a) => ({ label: a.label.trim(), unit: a.unit.trim(), value: a.value.trim() })),
+        }],
       } as Parameters<typeof productsService.create>[0]);
 
       toast.success("Product created successfully");
@@ -288,8 +323,86 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
                 {errors.gst && <p className="text-[12px] text-[#dc2626] mt-1">{errors.gst}</p>}
               </div>
 
+              {/* Variant section */}
+              <div className="border-t border-gray-100 pt-4 space-y-3">
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Variant</p>
+
+                {/* Variant Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Variant Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Default, 500ml, Red"
+                    value={variantName}
+                    onChange={(e) => setVariantName(e.target.value)}
+                    className={inputClass(errors.variantName)}
+                  />
+                  {errors.variantName && (
+                    <p className="text-[12px] text-[#dc2626] mt-1">{errors.variantName}</p>
+                  )}
+                </div>
+
+                {/* Custom Attributes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Custom Attributes <span className="text-[11px] text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  {variantAttributes.length > 0 && (
+                    <div className="space-y-2 mb-2">
+                      {variantAttributes.map((attr, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <input
+                              type="text"
+                              placeholder="Label (e.g. Size)"
+                              value={attr.label}
+                              onChange={(e) => updateAttribute(i, "label", e.target.value)}
+                              className={inputClass(errors.attrLabels?.[i])}
+                            />
+                            {errors.attrLabels?.[i] && (
+                              <p className="text-[12px] text-[#dc2626] mt-0.5">{errors.attrLabels[i]}</p>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Unit (e.g. ml)"
+                            value={attr.unit}
+                            onChange={(e) => updateAttribute(i, "unit", e.target.value)}
+                            className={`w-24 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Value"
+                            value={attr.value}
+                            onChange={(e) => updateAttribute(i, "value", e.target.value)}
+                            className={`w-24 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeAttribute(i)}
+                            className="mt-2.5 text-gray-400 hover:text-[#dc2626] transition-colors flex-shrink-0"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={addAttribute}
+                    className="flex items-center gap-1 text-[12px] text-[#0d9488] font-medium hover:text-[#0f766e]"
+                  >
+                    <Plus size={12} />
+                    Add Attribute
+                  </button>
+                </div>
+              </div>
+
               <p className="text-[11px] text-gray-400">
-                A &quot;Default&quot; variant will be created automatically. You can add more variants from the product page.
+                You can add more variants from the product page.
               </p>
             </div>
           )}

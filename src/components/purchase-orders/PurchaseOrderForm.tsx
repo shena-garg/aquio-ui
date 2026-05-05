@@ -1084,10 +1084,19 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           ? parseFloat(p.price.value.$numberDecimal ?? "0")
           : (p.price?.value ?? 0);
 
-        const variant: ProductVariant = { _id: variantId, name: variantName };
+        const variantAttrs: { label: string; unit: string; value: string }[] =
+          p.metadata?.variant?.customAttributes ?? [];
+        const variant: ProductVariant = {
+          _id: variantId,
+          name: variantName,
+          ...(variantAttrs.length > 0 ? { customAttributes: variantAttrs } : {}),
+        };
         const product: ProductSearchResult = {
           _id: productId,
           name: productName,
+          sku: p.metadata?.product?.sku,
+          hsnCode: p.metadata?.product?.hsnCode,
+          description: p.metadata?.product?.description,
           unitOfMeasurement: uom,
           gst,
           variants: [variant],
@@ -1171,10 +1180,19 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           ? parseFloat(p.price.value.$numberDecimal ?? "0")
           : (p.price?.value ?? 0);
 
-        const variant: ProductVariant = { _id: variantId, name: variantName };
+        const variantAttrs: { label: string; unit: string; value: string }[] =
+          p.metadata?.variant?.customAttributes ?? [];
+        const variant: ProductVariant = {
+          _id: variantId,
+          name: variantName,
+          ...(variantAttrs.length > 0 ? { customAttributes: variantAttrs } : {}),
+        };
         const product: ProductSearchResult = {
           _id: productId,
           name: productName,
+          sku: p.metadata?.product?.sku,
+          hsnCode: p.metadata?.product?.hsnCode,
+          description: p.metadata?.product?.description,
           unitOfMeasurement: uom,
           gst,
           variants: [variant],
