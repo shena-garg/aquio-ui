@@ -36,8 +36,8 @@ export interface OrderEntity {
 export type Supplier = OrderEntity;
 
 export interface POProductMetadata {
-  product: { name: string };
-  variant: { name: string };
+  product: { name: string; sku?: string; hsnCode?: string; description?: string };
+  variant: { name: string; customAttributes?: { label: string; unit: string; value: string }[] };
 }
 
 export interface POProduct {

@@ -1133,6 +1133,65 @@ function parseDecimal(val: { $numberDecimal: string } | number | string): number
   return parseFloat(val.$numberDecimal);
 }
 
+/* -- Product + Variant info popover ---------------------------------------- */
+
+function ProductVariantInfoButton({ metadata }: { metadata: { product: { name: string; sku?: string; hsnCode?: string; description?: string }; variant: { name: string; customAttributes?: { label: string; unit: string; value: string }[] } } }) {
+  const productRows = [
+    { label: "HSN Code", value: metadata.product.hsnCode },
+    { label: "Product Code", value: metadata.product.sku },
+    { label: "Description", value: metadata.product.description },
+  ].filter((r) => r.value);
+  const attrs = metadata.variant.customAttributes ?? [];
+
+  if (productRows.length === 0 && attrs.length === 0) return null;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="p-0.5 text-[#9ca3af] hover:text-[#0d9488] flex-shrink-0 transition-colors" title="Product details">
+          <Info size={12} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-60 p-3" align="start">
+        {productRows.length > 0 && (
+          <>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.6px] text-[#6b7280] mb-1.5">Product Info</p>
+            <div className="space-y-1.5 mb-3">
+              {productRows.map(({ label, value }) => (
+                <div key={label}>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.7px] text-[#9ca3af]">{label}</span>
+                  <p className="text-[12px] text-[#374151] leading-snug">{value}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        {attrs.length > 0 && (
+          <>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.6px] text-[#6b7280] mb-1.5">
+              {metadata.variant.name}
+            </p>
+            <table className="w-full">
+              <tbody>
+                {attrs.map((attr, i) => (
+                  <tr key={i} className="border-b border-[#f3f4f6] last:border-0">
+                    <td className="py-1 text-[11px] text-[#6b7280]">
+                      {attr.label}{attr.unit ? ` (${attr.unit})` : ""}
+                    </td>
+                    <td className="py-1 text-[12px] text-[#111827] font-medium text-right">
+                      {attr.value || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 /* -- Products table -------------------------------------------------------- */
 
 function ProductsTable({
@@ -1248,9 +1307,12 @@ function ProductsTable({
               {/* Row 1: Product name + Line Total / pricing */}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex flex-col gap-[2px] min-w-0">
-                  <span className="text-[13px] font-medium text-[#111827] truncate">
-                    {product.metadata.product.name}
-                  </span>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[13px] font-medium text-[#111827] truncate">
+                      {product.metadata.product.name}
+                    </span>
+                    <ProductVariantInfoButton metadata={product.metadata} />
+                  </div>
                   <span className="text-[12px] text-[#6b7280] truncate">
                     {product.metadata.variant.name}
                   </span>
@@ -1414,9 +1476,12 @@ function ProductsTable({
                   {/* Product */}
                   <td className="py-2.5 px-3">
                     <div className="flex flex-col gap-[3px]">
-                      <span className="text-[13px] font-medium leading-[16.9px] text-[#111827]">
-                        {product.metadata.product.name}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[13px] font-medium leading-[16.9px] text-[#111827]">
+                          {product.metadata.product.name}
+                        </span>
+                        <ProductVariantInfoButton metadata={product.metadata} />
+                      </div>
                       <span className="text-[12px] font-normal leading-[15.6px] text-[#6b7280]">
                         {product.metadata.variant.name}
                       </span>
