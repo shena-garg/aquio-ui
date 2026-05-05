@@ -419,12 +419,14 @@ function ProductTypeahead({
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleSelect(p)}
-              className="w-full text-left px-3 py-2 text-[13px] text-[#111827] hover:bg-[#f3f4f6]"
+              className="w-full text-left px-3 py-2 hover:bg-[#f3f4f6]"
             >
-              <span className="font-medium">{p.name}</span>
-              <span className="text-[#9ca3af] ml-1.5 text-[11px]">
-                {p.unitOfMeasurement} · GST {p.gst}%
-              </span>
+              <div className="text-[13px] font-medium text-[#111827] leading-tight">{p.name}</div>
+              {(p.categoryName || p.subCategoryName) && (
+                <div className="text-[11px] text-[#9ca3af] mt-0.5 leading-tight">
+                  {[p.categoryName, p.subCategoryName].filter(Boolean).join(" | ")}
+                </div>
+              )}
             </button>
           ))
         : !searching &&

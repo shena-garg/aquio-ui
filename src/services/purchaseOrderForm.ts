@@ -99,6 +99,8 @@ export interface ProductSearchResult {
   unitOfMeasurement: string;
   gst: number;
   variants: ProductVariant[];
+  categoryName?: string;
+  subCategoryName?: string;
 }
 
 export interface ProductSearchResponse {
