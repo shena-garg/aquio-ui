@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { ChevronDown, Loader2, Paperclip, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFile } from "@/lib/api-client";
+import { validateFile, getFileAccept } from "@/lib/file-validation";
 import type { Product } from "@/services/products";
 import type { ProductEditState } from "@/app/(dashboard)/products/[id]/page";
 
@@ -64,6 +65,8 @@ export function ProductDetailsExtra({
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !editState) return;
+    const err = validateFile(file, "product");
+    if (err) { setUploadError(err); if (fileInputRef.current) fileInputRef.current.value = ""; return; }
     setUploading(true);
     try {
       const uploaded = await uploadFile(file);
@@ -192,6 +195,7 @@ export function ProductDetailsExtra({
               <input
                 ref={fileInputRef}
                 type="file"
+                accept={getFileAccept("product")}
                 className="hidden"
                 onChange={handleFileUpload}
               />

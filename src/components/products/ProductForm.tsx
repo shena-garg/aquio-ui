@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import apiClient from "@/lib/api-client";
+import { validateFile, getFileAccept } from "@/lib/file-validation";
 import {
   categoriesService,
   type Category,
@@ -736,6 +737,11 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
 
+    for (const file of Array.from(fileList)) {
+      const err = validateFile(file, "product");
+      if (err) { setFileUploadError(err); if (fileInputRef.current) fileInputRef.current.value = ""; return; }
+    }
+
     setIsUploading(true);
     try {
       for (const file of Array.from(fileList)) {
@@ -1408,6 +1414,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
                 ref={fileInputRef}
                 type="file"
                 multiple
+                accept={getFileAccept("product")}
                 onChange={handleFileUpload}
                 className="hidden"
               />

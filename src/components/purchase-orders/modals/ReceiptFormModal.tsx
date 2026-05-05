@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { getUOMAbbreviation } from "@/lib/uom";
 import apiClient, { uploadFile } from "@/lib/api-client";
+import { validateFile, getFileAccept } from "@/lib/file-validation";
 import type {
   PurchaseOrder,
   POReceipt,
@@ -210,6 +211,11 @@ export function ReceiptFormModal({
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
+
+    for (const file of Array.from(fileList)) {
+      const err = validateFile(file, "receipt");
+      if (err) { setSubmitError(err); if (fileInputRef.current) fileInputRef.current.value = ""; return; }
+    }
 
     setIsUploading(true);
     try {
@@ -551,6 +557,7 @@ export function ReceiptFormModal({
               ref={fileInputRef}
               type="file"
               multiple
+              accept={getFileAccept("receipt")}
               onChange={handleFileUpload}
               className="hidden"
             />

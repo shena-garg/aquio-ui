@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadFile } from "@/lib/api-client";
+import { validateFile, getFileAccept } from "@/lib/file-validation";
 import { organizationSettingsService } from "@/services/organization-settings";
 import { productsService } from "@/services/products";
 import { QuickCreateProductModal } from "@/components/products/QuickCreateProductModal";
@@ -1146,6 +1147,11 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
+
+    for (const file of Array.from(fileList)) {
+      const err = validateFile(file, "order");
+      if (err) { setFileUploadError(err); if (fileInputRef.current) fileInputRef.current.value = ""; return; }
+    }
 
     setIsUploading(true);
     try {
@@ -2308,6 +2314,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                     ref={fileInputRef}
                     type="file"
                     multiple
+                    accept={getFileAccept("order")}
                     onChange={handleFileUpload}
                     className="hidden"
                   />
