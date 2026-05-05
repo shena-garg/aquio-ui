@@ -193,12 +193,14 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
               Create Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setCancelOpen(true)}
-              className="text-[#DC2626] focus:text-[#DC2626]"
-            >
-              Cancel Order
-            </DropdownMenuItem>
+            {order.receiptStatus !== "partial" && (
+              <DropdownMenuItem
+                onClick={() => setCancelOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Cancel Order
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
               Mark as Confirmed
             </DropdownMenuItem>
@@ -232,12 +234,14 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
               Create Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setCancelOpen(true)}
-              className="text-[#DC2626] focus:text-[#DC2626]"
-            >
-              Cancel Order
-            </DropdownMenuItem>
+            {order.receiptStatus !== "partial" && (
+              <DropdownMenuItem
+                onClick={() => setCancelOpen(true)}
+                className="text-[#DC2626] focus:text-[#DC2626]"
+              >
+                Cancel Order
+              </DropdownMenuItem>
+            )}
             <RequirePermission permission="sales-order.force-close">
               <DropdownMenuItem
                 onClick={() => setForceCloseOpen(true)}
