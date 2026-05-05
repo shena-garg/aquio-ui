@@ -34,7 +34,6 @@ const FIELD_LABELS: Record<string, string> = {
   gst: "GST",
   hsnCode: "HSN Code",
   description: "Description",
-  termsOfConditions: "Terms",
   status: "Status",
   categoryName: "Category",
   subCategoryName: "Subcategory",
@@ -67,15 +66,12 @@ const STATUS_VALUE_LABELS: Record<string, string> = {
 
 function isEmptyValue(key: string, val: unknown): boolean {
   if (val === undefined || val === null || val === "") return true;
-  if (key === "termsOfConditions" && Array.isArray(val)) return val.length === 0;
   return false;
 }
 
 function formatFieldValue(key: string, val: unknown): string {
   if (isEmptyValue(key, val)) return "";
   if (key === "status") return STATUS_VALUE_LABELS[String(val)] ?? String(val);
-  if (key === "termsOfConditions" && Array.isArray(val))
-    return `${val.length} term${val.length === 1 ? "" : "s"}`;
   if (key === "description") {
     const str = String(val);
     return str.length > 80 ? str.slice(0, 80) + "…" : str;
@@ -92,8 +88,7 @@ interface FieldChange {
   type: ChangeType;
 }
 
-function serializeForComparison(key: string, val: unknown): string {
-  if (key === "termsOfConditions" && Array.isArray(val)) return JSON.stringify(val);
+function serializeForComparison(_key: string, val: unknown): string {
   return String(val ?? "");
 }
 
@@ -189,6 +184,29 @@ function renderFileChanges(prev?: Record<string, unknown>, next?: Record<string,
   return changes;
 }
 
+function renderTermsChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
+  const hasKey = (obj?: Record<string, unknown>) => obj != null && "termsOfConditions" in obj;
+  if (prev != null && !hasKey(prev) && !hasKey(next)) return [];
+
+  const normalise = (t: unknown): string =>
+    typeof t === "string" ? t : ((t as any)?.value ?? (t as any)?.text ?? String(t));
+
+  const prevTerms = (Array.isArray(prev?.termsOfConditions) ? prev!.termsOfConditions : []).map(normalise);
+  const nextTerms = (Array.isArray(next?.termsOfConditions) ? next!.termsOfConditions : []).map(normalise);
+
+  const prevSet = new Set(prevTerms);
+  const nextSet = new Set(nextTerms);
+  const changes: FieldChange[] = [];
+
+  for (const t of nextTerms) {
+    if (!prevSet.has(t)) changes.push({ field: "Terms", from: "", to: t, type: "added" });
+  }
+  for (const t of prevTerms) {
+    if (!nextSet.has(t)) changes.push({ field: "Terms", from: t, to: "", type: "removed" });
+  }
+  return changes;
+}
+
 function renderChanges(prev?: Record<string, unknown>, next?: Record<string, unknown>): FieldChange[] {
   if (!next) return [];
   const changes: FieldChange[] = [];
@@ -218,6 +236,13 @@ function renderCreateDetails(next?: Record<string, unknown>): FieldChange[] {
     if (isEmptyValue(key, val)) continue;
     const formatted = formatFieldValue(key, val);
     if (formatted) changes.push({ field: label, from: "", to: formatted, type: "added" });
+  }
+  // Terms — show each term individually
+  if (Array.isArray(next.termsOfConditions)) {
+    for (const t of next.termsOfConditions as any[]) {
+      const text = typeof t === "string" ? t : (t?.value ?? t?.text ?? String(t));
+      if (text.trim()) changes.push({ field: "Terms", from: "", to: text, type: "added" });
+    }
   }
   if (Array.isArray(next.variants)) {
     for (const v of next.variants as any[]) {
@@ -274,6 +299,7 @@ export function SimpleActivityTimeline({ events, users, showEntityType = false }
           const changes = event.action === "update"
             ? [
                 ...renderChanges(event.previousValues, event.newValues),
+                ...renderTermsChanges(event.previousValues, event.newValues),
                 ...renderFileChanges(event.previousValues, event.newValues),
                 ...renderVariantChanges(event.previousValues, event.newValues),
               ]

@@ -180,6 +180,7 @@ export default function ProductDetailPage() {
         termsOfConditions: editState.termsOfConditions.filter((t) => t.trim()),
         files: editState.files.map(({ id, name }) => ({ id, name })),
         variants: product.variants.map((v) => ({
+          _id: v._id,
           name: v.name,
           customAttributes: v.customAttributes.map((a) => ({
             label: a.label,
