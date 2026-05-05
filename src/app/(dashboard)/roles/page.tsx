@@ -15,7 +15,6 @@ export default function RolesPage() {
   const { data: roles, isLoading } = useQuery({
     queryKey: ["roles"],
     queryFn: () => rolesService.list().then((r) => r.data),
-    staleTime: 5 * 60 * 1000, // 5 minutes — roles change infrequently
   });
 
   const actions = (

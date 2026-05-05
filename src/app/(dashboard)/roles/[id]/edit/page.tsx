@@ -39,6 +39,7 @@ export default function EditRolePage() {
     queryKey: ["role", id],
     queryFn: () => rolesService.getById(id).then((r) => r.data),
     enabled: !!id,
+    staleTime: 0,
   });
 
   if (isLoading) return <EditSkeleton />;
