@@ -636,8 +636,8 @@ function ShipmentSummaryCard({
                             )}
                           </div>
                         </td>
-                        <td className="h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black whitespace-nowrap border-b border-[#e5e7eb]">
-                          <span className="inline-flex gap-1">
+                        <td className="h-[52px] py-2.5 pr-3 align-top text-[13px] font-normal leading-[16.9px] text-black border-b border-[#e5e7eb]">
+                          <span className="flex flex-wrap gap-x-1 gap-y-0">
                             <QuantityCell value={totalShipped} uom={uom} />
                             <span>/</span>
                             <QuantityCell value={ordered} uom={uom} />
