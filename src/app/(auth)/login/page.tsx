@@ -35,6 +35,9 @@ export default function LoginPage() {
     try {
       const loginResponse = await authService.login({ email: email.trim(), password });
       localStorage.setItem("accessToken", loginResponse.data.accessToken);
+      if (loginResponse.data.refreshToken) {
+        localStorage.setItem("refreshToken", loginResponse.data.refreshToken);
+      }
       const userResponse = await authService.me();
       localStorage.setItem("user", JSON.stringify(userResponse.data));
       router.push("/dashboard");

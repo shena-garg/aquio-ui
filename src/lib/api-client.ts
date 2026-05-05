@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -17,7 +18,7 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // These endpoints return 401 for wrong credentials / wrong code — not session expiry.
-// A 401 from them must never trigger the global logout redirect.
+// A 401 from them must never trigger silent refresh or the global logout redirect.
 const AUTH_ACTION_ENDPOINTS = [
   "/users/login",
   "/users/verify-code",
@@ -27,23 +28,82 @@ const AUTH_ACTION_ENDPOINTS = [
   "/auth/set-password",
 ];
 
-// Redirect to /login on 401 only when a session token exists AND the request
-// was not to an auth-action endpoint (where 401 means "wrong credentials").
+// Silent token refresh — one in-flight refresh at a time; concurrent 401s queue up.
+let isRefreshing = false;
+type QueueEntry = { resolve: (token: string) => void; reject: (err: unknown) => void };
+let refreshQueue: QueueEntry[] = [];
+
+function processQueue(error: unknown, token: string | null) {
+  for (const entry of refreshQueue) {
+    if (error) entry.reject(error);
+    else entry.resolve(token!);
+  }
+  refreshQueue = [];
+}
+
+function clearSession() {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+  window.location.href = "/login";
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const hasToken = !!localStorage.getItem("accessToken");
+  async (error) => {
     const requestUrl: string = error.config?.url ?? "";
     const isAuthAction = AUTH_ACTION_ENDPOINTS.some((path) =>
       requestUrl.includes(path),
     );
-    if (error.response?.status === 401 && hasToken && !isAuthAction) {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+
+    if (error.response?.status !== 401 || isAuthAction) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
+
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      clearSession();
+      return Promise.reject(error);
+    }
+
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    if (originalRequest._retry) {
+      clearSession();
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      }).then((newToken) => {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return apiClient(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await axios.post<{ accessToken: string; refreshToken: string }>(
+        `${baseURL}/auth/refresh`,
+        { refreshToken },
+      );
+      const { accessToken, refreshToken: newRefreshToken } = res.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", newRefreshToken);
+      processQueue(null, accessToken);
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      clearSession();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  },
 );
 
 export async function uploadFile(

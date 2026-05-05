@@ -71,6 +71,9 @@ export default function SignupPage() {
         phoneNumber: values.phone,
       });
       localStorage.setItem("accessToken", response.data.accessToken);
+      if (response.data.refreshToken) {
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+      }
       localStorage.setItem("user", JSON.stringify(response.data.user));
       toast.success("Account created successfully!");
       router.push("/onboarding");
