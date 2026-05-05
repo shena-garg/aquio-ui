@@ -1143,7 +1143,7 @@ function ProductVariantInfoButton({ metadata }: { metadata: { product: { name: s
     { label: "Product Code", value: metadata.product.sku },
     { label: "Description", value: metadata.product.description },
   ].filter((r) => r.value);
-  const attrs = metadata.variant.customAttributes ?? [];
+  const attrs = (metadata.variant.customAttributes ?? []).filter((a) => a.value?.toString().trim());
 
   if (productRows.length === 0 && attrs.length === 0) return null;
 
