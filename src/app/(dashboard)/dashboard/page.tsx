@@ -108,7 +108,7 @@ const TABS = [
   { id: "overview", label: "Overview" },
   { id: "buying", label: "Buying" },
   { id: "selling", label: "Selling" },
-  { id: "full", label: "Full View" },
+  { id: "full", label: "Old View" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
