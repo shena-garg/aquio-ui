@@ -81,7 +81,6 @@ const navSections: NavSection[] = [
       { label: "Roles", href: "/roles", icon: ShieldCheck, permission: "role.view" },
       { label: "Settings", href: "/settings", icon: Settings, permission: "settings.view" },
       { label: "Company", href: "/company", icon: Building2, permission: "organization.view" },
-      { label: "Notifications", href: "/notifications", icon: Bell, permission: "notification.view" },
     ],
   },
 ];
@@ -167,6 +166,34 @@ export function Sidebar() {
               Dashboard
             </Link>
           </div>}
+
+          {/* Notifications – standalone below Dashboard, admin-only */}
+          {(isLoading || hasPermission("notification.view")) && (
+            <Link
+              href="/notifications"
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "flex items-center gap-[10px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
+                isActive("/notifications")
+                  ? "bg-[#1f2937] border-l-[#0d9488] text-white"
+                  : "rounded-[6px] border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
+              )}
+            >
+              <Bell
+                className={cn(
+                  "h-[18px] w-[18px] flex-shrink-0",
+                  isActive("/notifications") ? "text-white" : "text-[#e5e7eb]"
+                )}
+                strokeWidth={1.5}
+              />
+              <span className="flex-1">Notifications</span>
+              {unreadCount > 0 && (
+                <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#0d9488] px-1 text-[11px] font-semibold text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Sections */}
           {navSections.map((section) => {
