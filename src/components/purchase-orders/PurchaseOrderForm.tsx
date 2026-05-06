@@ -1569,7 +1569,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
       const payload: any = {
         supplier: buildPartnerPayload(supplierCompany!, supplierLocation!),
-        buyer: buildPartnerPayload(buyerCompany!, buyerLocation!),
+        buyer: buildPartnerPayload(consigneeCompany!, consigneeLocation!),
         biller: buildPartnerPayload(buyerCompany!, buyerLocation!),
         referenceId,
         supplierReferenceId: supplierRefId,
