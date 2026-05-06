@@ -141,6 +141,7 @@ export type POActiveFilters = {
   deliveryDateFrom?: string;
   deliveryDateTo?: string;
   supplierId?: string;
+  productValue?: string;
 };
 
 export interface GetPurchaseOrdersParams extends POActiveFilters {
@@ -216,6 +217,7 @@ export const purchaseOrdersService = {
     deliveryDateFrom,
     deliveryDateTo,
     supplierId,
+    productValue,
   }: GetPurchaseOrdersParams) => {
     const params: Record<string, string | number | string[]> = {
       page,
@@ -241,6 +243,7 @@ export const purchaseOrdersService = {
     if (deliveryDateFrom)   params.deliveryDateFrom   = deliveryDateFrom;
     if (deliveryDateTo)     params.deliveryDateTo     = deliveryDateTo;
     if (supplierId)         params.supplierId         = supplierId;
+    if (productValue)       params.productValue       = productValue;
 
     return apiClient.get<PurchaseOrdersResponse>("/purchase-orders/list", {
       params,
