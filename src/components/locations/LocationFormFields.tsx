@@ -96,6 +96,12 @@ export function getZipValidation(
   return { hint };
 }
 
+// ── India states (derived from GST codes so auto-fill values always match) ────
+
+export const INDIA_STATES: string[] = [
+  ...new Set(Object.values(GST_STATE_CODES)),
+].sort();
+
 // ── Country searchable select ──────────────────────────────────────────────────
 
 export function CountrySelect({
@@ -198,6 +204,116 @@ export function CountrySelect({
               }`}
             >
               {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── State searchable select (India only) ─────────────────────────────────────
+
+export function StateSelect({
+  value,
+  onChange,
+  hasError,
+}: {
+  value: string;
+  onChange: (name: string) => void;
+  hasError?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const displayValue = open ? query : value;
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return INDIA_STATES;
+    const q = query.toLowerCase();
+    return INDIA_STATES.filter((s) => s.toLowerCase().includes(q));
+  }, [query]);
+
+  function updatePosition() {
+    if (!inputRef.current) return;
+    const rect = inputRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: "fixed",
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }
+
+  function handleFocus() {
+    setQuery("");
+    updatePosition();
+    setOpen(true);
+  }
+
+  function handleSelect(name: string) {
+    onChange(name);
+    setQuery("");
+    setOpen(false);
+    inputRef.current?.blur();
+  }
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    function reposition() { updatePosition(); }
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrapperRef}>
+      <div className="relative flex items-center">
+        <Search size={13} className="absolute left-2.5 text-gray-400 pointer-events-none" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={displayValue}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={handleFocus}
+          placeholder="Select state"
+          className={`w-full border ${hasError ? "border-[#dc2626]" : "border-gray-300"} rounded-md pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488]`}
+        />
+      </div>
+      {open && filtered.length > 0 && (
+        <div
+          style={dropdownStyle}
+          className="max-h-48 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+        >
+          {filtered.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => handleSelect(s)}
+              className={`flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-gray-50 ${
+                s === value ? "bg-[#f0fdfa] text-[#0d9488] font-medium" : "text-gray-900"
+              }`}
+            >
+              {s}
             </button>
           ))}
         </div>
@@ -478,13 +594,21 @@ export function LocationFormFields({
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             State <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            placeholder="State"
-            value={values.state}
-            onChange={(e) => onChange({ state: e.target.value })}
-            className={inp(errors.state)}
-          />
+          {values.country === "India" ? (
+            <StateSelect
+              value={values.state}
+              onChange={(name) => onChange({ state: name })}
+              hasError={!!errors.state}
+            />
+          ) : (
+            <input
+              type="text"
+              placeholder="State / Province"
+              value={values.state}
+              onChange={(e) => onChange({ state: e.target.value })}
+              className={inp(errors.state)}
+            />
+          )}
           {errors.state && (
             <p className="text-[12px] text-[#dc2626] mt-1">{errors.state}</p>
           )}
