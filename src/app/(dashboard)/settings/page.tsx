@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, X, Plus, ShoppingCart, TrendingUp, Package } from "lucide-react";
+import { Loader2, X, Plus, ShoppingCart, TrendingUp, Package, Bell } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +39,12 @@ const TABS = [
     value: "product" as const,
     icon: <Package className="h-4 w-4" />,
     short: "Product",
+  },
+  {
+    label: "Notifications",
+    value: "notifications" as const,
+    icon: <Bell className="h-4 w-4" />,
+    short: "Notifs",
   },
 ];
 
@@ -348,6 +354,11 @@ export default function SettingsPage() {
   const [skuPrefix, setSkuPrefix] = useState("");
   const [skuSeparator, setSkuSeparator] = useState("");
   const [nextSKUNumber, setNextSKUNumber] = useState(1);
+
+  // Notifications
+  const [notifPoDigest, setNotifPoDigest] = useState(true);
+  const [notifSoDigest, setNotifSoDigest] = useState(true);
+
   const [saveError, setSaveError] = useState("");
 
   // ── Dirty check ──
@@ -380,7 +391,9 @@ export default function SettingsPage() {
         (settings.generateSKUAutomatically ?? false) ||
       skuPrefix !== (settings.skuPrefix ?? "") ||
       skuSeparator !== (settings.skuSeparator ?? "") ||
-      nextSKUNumber !== (settings.nextSKUNumber ?? 1));
+      nextSKUNumber !== (settings.nextSKUNumber ?? 1) ||
+      notifPoDigest !== (settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true) ||
+      notifSoDigest !== (settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true));
 
   // Warn on browser close / refresh
   useEffect(() => {
@@ -438,6 +451,8 @@ export default function SettingsPage() {
     setSkuPrefix(settings.skuPrefix ?? "");
     setSkuSeparator(settings.skuSeparator ?? "");
     setNextSKUNumber(settings.nextSKUNumber ?? 1);
+    setNotifPoDigest(settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true);
+    setNotifSoDigest(settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true);
   }, [settings]);
 
   async function handleSave() {
@@ -464,6 +479,12 @@ export default function SettingsPage() {
         skuPrefix,
         skuSeparator,
         nextSKUNumber,
+        notificationPreferences: {
+          overdueDigest: {
+            po: { enabled: notifPoDigest },
+            so: { enabled: notifSoDigest },
+          },
+        },
       });
       toast.success("Settings saved successfully");
       queryClient.invalidateQueries({ queryKey: ["organization-settings"] });
@@ -682,6 +703,32 @@ export default function SettingsPage() {
                 </div>
               )}
 
+              {/* ── Notifications ── */}
+              {activeTab === "notifications" && (
+                <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-5 sm:px-6 divide-y divide-[#f3f4f6]">
+                  <div className="py-5">
+                    <p className="text-[13px] font-semibold text-[#374151] mb-1">Overdue Order Email Digest</p>
+                    <p className="text-[12px] text-[#6b7280] mb-4">
+                      A daily email is sent at 8:00 AM IST to all Administrator users listing overdue orders. Toggle off to stop sending for your organisation.
+                    </p>
+                    <div className="flex flex-col gap-4">
+                      <Toggle
+                        label="Purchase Order overdue digest"
+                        description="Daily email listing overdue POs grouped by severity"
+                        checked={notifPoDigest}
+                        onChange={setNotifPoDigest}
+                      />
+                      <Toggle
+                        label="Sales Order overdue digest"
+                        description="Daily email listing overdue SOs grouped by severity"
+                        checked={notifSoDigest}
+                        onChange={setNotifSoDigest}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
 
@@ -729,6 +776,8 @@ export default function SettingsPage() {
                       setSkuPrefix(settings.skuPrefix ?? "");
                       setSkuSeparator(settings.skuSeparator ?? "");
                       setNextSKUNumber(settings.nextSKUNumber ?? 1);
+                      setNotifPoDigest(settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true);
+                      setNotifSoDigest(settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true);
                     }
                   }}
                   className="h-8 text-[13px] border-gray-200 text-gray-600"

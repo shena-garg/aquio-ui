@@ -29,9 +29,15 @@ export interface SignupPayload {
 }
 
 export interface UpdateProfilePayload {
-  name: string;
-  phoneNumber: string;
-  countryCode: string;
+  name?: string;
+  phoneNumber?: string;
+  countryCode?: string;
+  notificationPreferences?: {
+    overdueDigest: {
+      po: { enabled: boolean };
+      so: { enabled: boolean };
+    };
+  };
 }
 
 export interface ChangePasswordPayload {

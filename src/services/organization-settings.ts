@@ -25,6 +25,13 @@ export interface OrganizationSettings {
   skuPrefix: string;
   skuSeparator: string;
   nextSKUNumber: number;
+  // Notifications
+  notificationPreferences?: {
+    overdueDigest: {
+      po: { enabled: boolean };
+      so: { enabled: boolean };
+    };
+  };
   // Meta
   logo?: { id: string; name: string };
   createdAt: string;

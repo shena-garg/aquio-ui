@@ -44,6 +44,7 @@ export default function ProfilePage() {
       <div className="flex-1 overflow-auto bg-[#f9fafb]">
         <div className="mx-auto max-w-[600px] p-4 sm:p-6 flex flex-col gap-6">
           <ProfileSection user={user} />
+          <NotificationPreferencesSection user={user} />
           <ChangePasswordSection />
         </div>
       </div>
@@ -58,6 +59,12 @@ interface UserData {
   email?: string;
   phoneNumber?: string;
   countryCode?: string;
+  notificationPreferences?: {
+    overdueDigest?: {
+      po?: { enabled?: boolean };
+      so?: { enabled?: boolean };
+    };
+  };
 }
 
 function ProfileSection({ user }: { user: UserData | undefined }) {
@@ -175,6 +182,106 @@ function ProfileSection({ user }: { user: UserData | undefined }) {
         >
           {isSubmitting && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
           Save Changes
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Notification Preferences Section ───────────────────────────────────────
+
+function NotificationPreferencesSection({ user }: { user: UserData | undefined }) {
+  const [poEnabled, setPoEnabled] = useState(
+    user?.notificationPreferences?.overdueDigest?.po?.enabled ?? true
+  );
+  const [soEnabled, setSoEnabled] = useState(
+    user?.notificationPreferences?.overdueDigest?.so?.enabled ?? true
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  async function handleSave() {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      await authService.updateProfile({
+        notificationPreferences: {
+          overdueDigest: {
+            po: { enabled: poEnabled },
+            so: { enabled: soEnabled },
+          },
+        },
+      });
+      toast.success("Notification preferences saved");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to save preferences";
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function Toggle({ label, description, checked, onChange }: {
+    label: string;
+    description?: string;
+    checked: boolean;
+    onChange: (v: boolean) => void;
+  }) {
+    return (
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-gray-700">{label}</p>
+          {description && <p className="text-[12px] text-gray-400 mt-0.5">{description}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={() => onChange(!checked)}
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${
+            checked ? "bg-[#0d9488]" : "bg-gray-200"
+          }`}
+        >
+          <span
+            className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+              checked ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-4 sm:px-6 py-5">
+      <h3 className="text-sm font-semibold text-[#111827] mb-1">Email Notifications</h3>
+      <p className="text-[12px] text-[#6b7280] mb-5">
+        Control which daily digest emails you receive. Organisation-level settings can override these.
+      </p>
+      <div className="flex flex-col gap-4">
+        <Toggle
+          label="Purchase Order overdue digest"
+          description="Daily email listing overdue POs grouped by severity"
+          checked={poEnabled}
+          onChange={setPoEnabled}
+        />
+        <Toggle
+          label="Sales Order overdue digest"
+          description="Daily email listing overdue SOs grouped by severity"
+          checked={soEnabled}
+          onChange={setSoEnabled}
+        />
+      </div>
+      {submitError && <p className="text-[13px] text-[#dc2626] mt-4">{submitError}</p>}
+      <div className="mt-4 flex justify-end border-t border-gray-200 pt-4">
+        <Button
+          onClick={handleSave}
+          disabled={isSubmitting}
+          className="bg-[#0d9488] hover:bg-[#0f766e] text-white"
+        >
+          {isSubmitting && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+          Save Preferences
         </Button>
       </div>
     </div>

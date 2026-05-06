@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -23,7 +24,9 @@ import {
   X,
   Moon,
   Sun,
+  Bell,
 } from "lucide-react";
+import { notificationsService } from "@/services/notifications";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -78,6 +81,7 @@ const navSections: NavSection[] = [
       { label: "Roles", href: "/roles", icon: ShieldCheck, permission: "role.view" },
       { label: "Settings", href: "/settings", icon: Settings, permission: "settings.view" },
       { label: "Company", href: "/company", icon: Building2, permission: "organization.view" },
+      { label: "Notifications", href: "/notifications", icon: Bell, permission: "notification.view" },
     ],
   },
 ];
@@ -88,6 +92,16 @@ export function Sidebar() {
   const { user, hasPermission, isLoading, logout } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const canViewNotifications = !isLoading && hasPermission("notification.view");
+  const { data: unreadData } = useQuery({
+    queryKey: ["notifications-unread-count"],
+    queryFn: () => notificationsService.unreadCount().then((r) => r.data.data.count),
+    enabled: canViewNotifications,
+    refetchInterval: 30_000,
+    staleTime: 0,
+  });
+  const unreadCount = unreadData ?? 0;
 
   // Close drawer on route change
   useEffect(() => {
@@ -173,6 +187,7 @@ export function Sidebar() {
                 {visibleItems.map((item) => {
                   const active = isActive(item.href);
                   const Icon = item.icon;
+                  const isNotifications = item.href === "/notifications";
                   return (
                     <Link
                       key={item.href}
@@ -192,7 +207,12 @@ export function Sidebar() {
                         )}
                         strokeWidth={1.5}
                       />
-                      {item.label}
+                      <span className="flex-1">{item.label}</span>
+                      {isNotifications && unreadCount > 0 && (
+                        <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#0d9488] px-1 text-[11px] font-semibold text-white">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
