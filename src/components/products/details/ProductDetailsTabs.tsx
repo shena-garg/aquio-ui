@@ -1380,7 +1380,7 @@ function ProcurementContent({
       </div>
 
       {/* Supplier Intelligence */}
-      <SupplierIntelligenceTable suppliers={data?.suppliers ?? []} />
+      <SupplierIntelligenceTable suppliers={data?.suppliers ?? []} uom={summary?.uom ?? ""} />
 
       {/* Volume Intelligence / Demand Patterns */}
       {data?.volumeIntelligence && summary && summary.poCount > 0 && (
@@ -1392,7 +1392,7 @@ function ProcurementContent({
       )}
 
       {/* Recent POs */}
-      <RecentPOsTable recentPOs={data?.recentPOs ?? []} />
+      <RecentPOsTable recentPOs={data?.recentPOs ?? []} uom={summary?.uom ?? ""} />
     </>
   );
 }
@@ -1987,7 +1987,7 @@ function SalesContent({
       </div>
 
       {/* Buyer Intelligence */}
-      <BuyerIntelligenceTable buyers={data?.buyers ?? []} />
+      <BuyerIntelligenceTable buyers={data?.buyers ?? []} uom={summary?.uom ?? ""} />
 
       {/* Demand Patterns */}
       {data?.volumeIntelligence && summary && summary.soCount > 0 && (
@@ -1999,7 +1999,7 @@ function SalesContent({
       )}
 
       {/* Recent Sales Orders */}
-      <RecentSalesOrdersTable recentOrders={data?.recentSOs ?? []} />
+      <RecentSalesOrdersTable recentOrders={data?.recentSOs ?? []} uom={summary?.uom ?? ""} />
     </>
   );
 }
@@ -2438,7 +2438,8 @@ function buyerLastOrder(b: BuyerRow): {
 
 /* ── Buyer Intelligence Table ───────────────────────────────────────────── */
 
-function BuyerIntelligenceTable({ buyers }: { buyers: BuyerRow[] }) {
+function BuyerIntelligenceTable({ buyers, uom }: { buyers: BuyerRow[]; uom: string }) {
+  const abbr = getUOMAbbreviation(uom);
   return (
     <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
@@ -2475,7 +2476,7 @@ function BuyerIntelligenceTable({ buyers }: { buyers: BuyerRow[] }) {
                     className="border-b border-[#e5e7eb] last:border-b-0 hover:bg-[#f9fafb]"
                   >
                     <td className={cn(tdCls, "font-medium")}>{b.buyerName}</td>
-                    <td className={tdCls}>{b.units}</td>
+                    <td className={tdCls}>{b.units}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       ₹{b.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
@@ -2518,7 +2519,8 @@ function BuyerIntelligenceTable({ buyers }: { buyers: BuyerRow[] }) {
 
 /* ── Recent Sales Orders Table ──────────────────────────────────────────── */
 
-function RecentSalesOrdersTable({ recentOrders }: { recentOrders: RecentSO[] }) {
+function RecentSalesOrdersTable({ recentOrders, uom }: { recentOrders: RecentSO[]; uom: string }) {
+  const abbr = getUOMAbbreviation(uom);
   return (
     <div className="mx-4 sm:mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
@@ -2572,8 +2574,8 @@ function RecentSalesOrdersTable({ recentOrders }: { recentOrders: RecentSO[] }) 
                     <td className={tdCls}>
                       ₹{so.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className={tdCls}>{so.unitsSold}</td>
-                    <td className={cn(tdCls, getReceivedColor(so.unitsDelivered, so.unitsSold))}>{so.unitsDelivered}</td>
+                    <td className={tdCls}>{so.unitsSold}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={cn(tdCls, getReceivedColor(so.unitsDelivered, so.unitsSold))}>{so.unitsDelivered}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       <span
                         className={cn(
@@ -3188,7 +3190,8 @@ function supplierLastOrder(s: SupplierRow): {
   };
 }
 
-function SupplierIntelligenceTable({ suppliers }: { suppliers: SupplierRow[] }) {
+function SupplierIntelligenceTable({ suppliers, uom }: { suppliers: SupplierRow[]; uom: string }) {
+  const abbr = getUOMAbbreviation(uom);
   return (
     <div className="mx-4 sm:mx-8 mt-4 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
@@ -3225,7 +3228,7 @@ function SupplierIntelligenceTable({ suppliers }: { suppliers: SupplierRow[] }) 
                     className="border-b border-[#e5e7eb] last:border-b-0 hover:bg-[#f9fafb]"
                   >
                     <td className={cn(tdCls, "font-medium")}>{s.supplierName}</td>
-                    <td className={tdCls}>{s.units}</td>
+                    <td className={tdCls}>{s.units}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       ₹{s.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
@@ -3335,7 +3338,8 @@ function formatShortDate(iso: string): string {
   });
 }
 
-function RecentPOsTable({ recentPOs }: { recentPOs: RecentPO[] }) {
+function RecentPOsTable({ recentPOs, uom }: { recentPOs: RecentPO[]; uom: string }) {
+  const abbr = getUOMAbbreviation(uom);
   return (
     <div className="mx-4 sm:mx-8 mt-4 mb-8 border border-[#e5e7eb] rounded-lg overflow-hidden bg-white">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb]">
@@ -3389,8 +3393,8 @@ function RecentPOsTable({ recentPOs }: { recentPOs: RecentPO[] }) {
                     <td className={tdCls}>
                       ₹{po.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className={tdCls}>{po.unitsOrdered}</td>
-                    <td className={cn(tdCls, getReceivedColor(po.unitsReceived, po.unitsOrdered))}>{po.unitsReceived}</td>
+                    <td className={tdCls}>{po.unitsOrdered}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={cn(tdCls, getReceivedColor(po.unitsReceived, po.unitsOrdered))}>{po.unitsReceived}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       <span
                         className={cn(
