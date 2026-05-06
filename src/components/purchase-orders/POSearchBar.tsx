@@ -171,7 +171,7 @@ function PartnerSearchInput({
   }, [open]);
 
   const inputCls = mobile
-    ? "h-9 flex-1 rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488] cursor-pointer"
+    ? "h-9 w-full flex-1 rounded-md border border-gray-200 bg-white px-2.5 pr-7 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
     : "h-8 w-48 rounded-md border border-gray-200 bg-white px-2.5 pr-7 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]";
 
   return (
@@ -179,7 +179,7 @@ function PartnerSearchInput({
       <input
         ref={inputRef}
         type="text"
-        placeholder="Search supplier…"
+        placeholder="Select Supplier…"
         value={displayValue}
         onFocus={handleOpen}
         onChange={(e) => { setQuery(e.target.value); if (!open) setOpen(true); updatePosition(); }}
