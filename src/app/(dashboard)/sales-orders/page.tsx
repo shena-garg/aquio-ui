@@ -20,6 +20,7 @@ import { POCustomizePanel } from "@/components/purchase-orders/POCustomizePanel"
 import type { ColumnConfig } from "@/components/purchase-orders/POCustomizePanel";
 import { salesOrdersService } from "@/services/sales-orders";
 import type { SOFilterStatus, SOActiveFilters, CsvPattern } from "@/services/sales-orders";
+import { getVendorCompaniesWithLocations, getMyOrganization } from "@/services/purchaseOrderForm";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { RequireVerification } from "@/components/auth/RequireVerification";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -122,6 +123,24 @@ export default function SalesOrdersPage() {
       // ignore storage errors
     }
   }, [prefsLoaded, visibleColumns, columnOrder, frozenCount]);
+
+  // ── Partner options for Buyer filter ─────────────────────────────────────
+  const { data: vendors } = useQuery({
+    queryKey: ["vendor-companies"],
+    queryFn: getVendorCompaniesWithLocations,
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: ownOrg } = useQuery({
+    queryKey: ["my-organization"],
+    queryFn: getMyOrganization,
+    staleTime: 10 * 60 * 1000,
+  });
+  const partnerOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    if (ownOrg) opts.push({ value: ownOrg._id, label: ownOrg.name });
+    if (vendors) vendors.forEach((v) => opts.push({ value: v._id, label: v.name }));
+    return opts;
+  }, [vendors, ownOrg]);
 
   // ── Data fetching ─────────────────────────────────────────────────────────
   const queryKey = useMemo(
@@ -315,6 +334,7 @@ export default function SalesOrdersPage() {
       <SOSearchBar
         activeFilters={activeFilters}
         activeStatus={activeStatus}
+        partnerOptions={partnerOptions}
         onSearch={handleSearch}
         onReset={handleReset}
         onRemoveFilter={handleRemoveFilter}

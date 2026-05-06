@@ -15,7 +15,8 @@ type FieldKey =
   | "status"
   | "receiptStatus"
   | "issueDate"
-  | "deliveryDate";
+  | "deliveryDate"
+  | "supplierId";
 
 interface TextField {
   key: FieldKey;
@@ -32,6 +33,13 @@ interface SelectField {
   options: { value: string; label: string }[];
 }
 
+interface DynamicSelectField {
+  key: FieldKey;
+  label: string;
+  type: "dynamicSelect";
+  param: keyof POActiveFilters;
+}
+
 interface DateRangeField {
   key: FieldKey;
   label: string;
@@ -40,12 +48,13 @@ interface DateRangeField {
   toParam: keyof POActiveFilters;
 }
 
-type FieldConfig = TextField | SelectField | DateRangeField;
+type FieldConfig = TextField | SelectField | DynamicSelectField | DateRangeField;
 
 const FIELDS: FieldConfig[] = [
-  { key: "poNumber",            label: "PO Number",       type: "text",      param: "poNumber"            },
-  { key: "referenceId",         label: "Reference ID",    type: "text",      param: "referenceId"         },
-  { key: "supplierReferenceId", label: "Supplier Ref. ID",type: "text",      param: "supplierReferenceId" },
+  { key: "poNumber",            label: "PO Number",       type: "text",          param: "poNumber"            },
+  { key: "referenceId",         label: "Reference ID",    type: "text",          param: "referenceId"         },
+  { key: "supplierReferenceId", label: "Supplier Ref. ID",type: "text",          param: "supplierReferenceId" },
+  { key: "supplierId",          label: "Supplier",        type: "dynamicSelect", param: "supplierId"          },
   {
     key: "status",
     label: "PO Status",
@@ -89,26 +98,20 @@ function formatChipDate(iso: string): string {
   return `${day} ${months[month - 1]} ${year}`;
 }
 
-const CHIP_FORMATTERS: Record<keyof POActiveFilters, (v: string) => string> = {
-  poNumber:            (v) => `PO Number: ${v}`,
-  referenceId:         (v) => `Reference ID: ${v}`,
-  supplierReferenceId: (v) => `Supplier Ref. ID: ${v}`,
-  status:              (v) => `PO Status: ${capitalize(v)}`,
-  receiptStatus:       (v) => `Receipt Status: ${capitalize(v)}`,
-  issueDateFrom:       (v) => `Issue Date From: ${formatChipDate(v)}`,
-  issueDateTo:         (v) => `Issue Date To: ${formatChipDate(v)}`,
-  deliveryDateFrom:    (v) => `Delivery Date From: ${formatChipDate(v)}`,
-  deliveryDateTo:      (v) => `Delivery Date To: ${formatChipDate(v)}`,
-};
-
 const SELECT_INPUT_CLASS =
   "h-8 cursor-pointer rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
+export interface PartnerOption {
+  value: string;
+  label: string;
+}
+
 interface POSearchBarProps {
   activeFilters: POActiveFilters;
   activeStatus?: POFilterStatus;
+  partnerOptions?: PartnerOption[];
   onSearch: (params: POActiveFilters) => void;
   onReset: () => void;
   onRemoveFilter: (key: keyof POActiveFilters) => void;
@@ -119,6 +122,7 @@ interface POSearchBarProps {
 export function POSearchBar({
   activeFilters,
   activeStatus,
+  partnerOptions = [],
   onSearch,
   onReset,
   onRemoveFilter,
@@ -164,7 +168,6 @@ export function POSearchBar({
       return f;
     });
 
-  // If the active tab changes and the selected field is no longer visible, reset to default
   useEffect(() => {
     if (!visibleFields.find((f) => f.key === selectedField)) {
       setSelectedField("poNumber");
@@ -178,14 +181,12 @@ export function POSearchBar({
 
   const currentField = visibleFields.find((f) => f.key === selectedField) ?? visibleFields[0];
 
-  // Clears input values only — used when the field selector changes
   function resetInputState() {
     setInputValue("");
     setDateFrom("");
     setDateTo("");
   }
 
-  // Clears the entire local search bar state — used after search is submitted or reset
   function resetAllLocalState() {
     setSelectedField("poNumber");
     setInputValue("");
@@ -220,53 +221,100 @@ export function POSearchBar({
     onReset();
   }
 
+  function formatChip(key: keyof POActiveFilters, value: string): string {
+    if (key === "supplierId") {
+      const name = partnerOptions.find((o) => o.value === value)?.label ?? value;
+      return `Supplier: ${name}`;
+    }
+    const staticFormatters: Partial<Record<keyof POActiveFilters, (v: string) => string>> = {
+      poNumber:            (v) => `PO Number: ${v}`,
+      referenceId:         (v) => `Reference ID: ${v}`,
+      supplierReferenceId: (v) => `Supplier Ref. ID: ${v}`,
+      status:              (v) => `PO Status: ${capitalize(v)}`,
+      receiptStatus:       (v) => `Receipt Status: ${capitalize(v)}`,
+      issueDateFrom:       (v) => `Issue Date From: ${formatChipDate(v)}`,
+      issueDateTo:         (v) => `Issue Date To: ${formatChipDate(v)}`,
+      deliveryDateFrom:    (v) => `Delivery Date From: ${formatChipDate(v)}`,
+      deliveryDateTo:      (v) => `Delivery Date To: ${formatChipDate(v)}`,
+    };
+    return staticFormatters[key]?.(value) ?? `${key}: ${value}`;
+  }
+
   const activeEntries = (
     Object.entries(activeFilters) as [keyof POActiveFilters, string][]
   ).filter(([, v]) => Boolean(v));
 
   const hasFilters = activeEntries.length > 0;
 
-  const searchFields = (
-    <>
-      {/* Field selector */}
-      <select
-        value={selectedField}
-        onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
-        className={SELECT_INPUT_CLASS}
-      >
-        {visibleFields.map((f) => (
-          <option key={f.key} value={f.key}>{f.label}</option>
-        ))}
-      </select>
+  const valueInput = (mobile?: boolean) => {
+    const cls = mobile
+      ? "h-9 flex-1 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+      : "h-8 w-full lg:w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20";
+    const selectCls = mobile
+      ? "h-9 flex-1 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+      : SELECT_INPUT_CLASS;
 
-      {/* Text input */}
-      {currentField.type === "text" && (
+    if (currentField.type === "text") {
+      return (
         <Input
           type="text"
           placeholder={`Search by ${currentField.label}…`}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          className="h-8 w-full lg:w-56 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
+          className={cls}
         />
-      )}
-
-      {/* Select input */}
-      {currentField.type === "select" && (
+      );
+    }
+    if (currentField.type === "select") {
+      return (
         <select
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className={SELECT_INPUT_CLASS}
+          className={selectCls}
         >
           <option value="">Select {currentField.label}…</option>
           {currentField.options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-      )}
-
-      {/* Date range inputs */}
-      {currentField.type === "dateRange" && (
+      );
+    }
+    if (currentField.type === "dynamicSelect") {
+      return (
+        <select
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className={selectCls}
+        >
+          <option value="">Select {currentField.label}…</option>
+          {partnerOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      );
+    }
+    if (currentField.type === "dateRange") {
+      if (mobile) {
+        return (
+          <div className="flex items-center gap-1.5 flex-1">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="h-9 flex-1 rounded-md border border-gray-200 bg-white px-2 text-[12px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+            />
+            <span className="text-[12px] text-gray-400">–</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="h-9 flex-1 rounded-md border border-gray-200 bg-white px-2 text-[12px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+            />
+          </div>
+        );
+      }
+      return (
         <div className="flex items-center gap-2">
           <span className="text-[13px] text-gray-500">From</span>
           <input
@@ -283,25 +331,49 @@ export function POSearchBar({
             className={`${SELECT_INPUT_CLASS} w-[130px]`}
           />
         </div>
+      );
+    }
+    return null;
+  };
+
+  const searchFields = (mobile?: boolean) => (
+    <>
+      <select
+        value={selectedField}
+        onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
+        className={
+          mobile
+            ? "h-9 w-[130px] flex-shrink-0 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
+            : SELECT_INPUT_CLASS
+        }
+      >
+        {visibleFields.map((f) => (
+          <option key={f.key} value={f.key}>{f.label}</option>
+        ))}
+      </select>
+
+      {valueInput(mobile)}
+
+      {!mobile && (
+        <>
+          <Button
+            onClick={handleSearch}
+            disabled={isSearchDisabled}
+            size="sm"
+            className="h-8 px-4 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
+          >
+            Search
+          </Button>
+          <Button
+            onClick={handleReset}
+            variant="outline"
+            size="sm"
+            className="h-8 border-gray-200 px-4 text-[13px] text-gray-600 hover:text-[#0F1720]"
+          >
+            Reset
+          </Button>
+        </>
       )}
-
-      <Button
-        onClick={handleSearch}
-        disabled={isSearchDisabled}
-        size="sm"
-        className="h-8 px-4 text-[13px] !bg-[#0d9488] hover:!bg-[#0f766e] text-white disabled:opacity-50"
-      >
-        Search
-      </Button>
-
-      <Button
-        onClick={handleReset}
-        variant="outline"
-        size="sm"
-        className="h-8 border-gray-200 px-4 text-[13px] text-gray-600 hover:text-[#0F1720]"
-      >
-        Reset
-      </Button>
     </>
   );
 
@@ -312,7 +384,7 @@ export function POSearchBar({
           key={key}
           className="flex items-center gap-1 rounded-full border border-[#0d9488]/20 bg-[#0d9488]/10 px-3 py-1 text-xs text-[#0d9488]"
         >
-          {CHIP_FORMATTERS[key]?.(value) ?? `${key}: ${value}`}
+          {formatChip(key, value)}
           <button
             onClick={() => onRemoveFilter(key)}
             className="ml-0.5 rounded-full hover:text-[#0f766e]"
@@ -322,7 +394,6 @@ export function POSearchBar({
           </button>
         </span>
       ))}
-
       {activeEntries.length > 1 && (
         <button
           onClick={onReset}
@@ -338,7 +409,7 @@ export function POSearchBar({
     <div className="bg-white">
       {/* ── Desktop search row ── */}
       <div className="hidden lg:flex flex-wrap items-center gap-2 px-6 py-3">
-        {searchFields}
+        {searchFields()}
       </div>
 
       {/* ── Mobile: Filter button + chips ── */}
@@ -350,7 +421,7 @@ export function POSearchBar({
                 key={key}
                 className="flex items-center gap-1 rounded-full border border-[#0d9488]/20 bg-[#0d9488]/10 px-2.5 py-1 text-[11px] text-[#0d9488]"
               >
-                {CHIP_FORMATTERS[key]?.(value) ?? `${key}: ${value}`}
+                {formatChip(key, value)}
                 <button
                   onClick={() => onRemoveFilter(key)}
                   className="ml-0.5 rounded-full hover:text-[#0f766e]"
@@ -391,59 +462,9 @@ export function POSearchBar({
                 Close
               </button>
             </div>
-            {/* Row 1: Field selector + Value input */}
             <div className="flex items-center gap-2">
-              <select
-                value={selectedField}
-                onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
-                className="h-9 w-[130px] flex-shrink-0 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-              >
-                {FIELDS.map((f) => (
-                  <option key={f.key} value={f.key}>{f.label}</option>
-                ))}
-              </select>
-              {currentField.type === "text" && (
-                <Input
-                  type="text"
-                  placeholder={`${currentField.label}…`}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="h-9 flex-1 border-gray-200 text-[13px] shadow-none focus-visible:border-[#0d9488] focus-visible:ring-[#0d9488]/20"
-                />
-              )}
-              {currentField.type === "select" && (
-                <select
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className="h-9 flex-1 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-                >
-                  <option value="">Select…</option>
-                  {currentField.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              )}
-              {currentField.type === "dateRange" && (
-                <div className="flex items-center gap-1.5 flex-1">
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="h-9 flex-1 rounded-md border border-gray-200 bg-white px-2 text-[12px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-                  />
-                  <span className="text-[12px] text-gray-400">–</span>
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="h-9 flex-1 rounded-md border border-gray-200 bg-white px-2 text-[12px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-                  />
-                </div>
-              )}
+              {searchFields(true)}
             </div>
-
-            {/* Row 2: Reset link + Search button */}
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => { handleReset(); setMobileFilterOpen(false); }}

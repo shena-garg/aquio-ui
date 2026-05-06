@@ -140,6 +140,7 @@ export type SOActiveFilters = {
   issueDateTo?: string;
   deliveryDateFrom?: string;
   deliveryDateTo?: string;
+  buyerId?: string;
 };
 
 export interface GetSalesOrdersParams extends SOActiveFilters {
@@ -214,6 +215,7 @@ export const salesOrdersService = {
     issueDateTo,
     deliveryDateFrom,
     deliveryDateTo,
+    buyerId,
   }: GetSalesOrdersParams) => {
     const params: Record<string, string | number | string[]> = {
       page,
@@ -238,6 +240,7 @@ export const salesOrdersService = {
     if (issueDateTo)        params.issueDateTo        = issueDateTo;
     if (deliveryDateFrom)   params.deliveryDateFrom   = deliveryDateFrom;
     if (deliveryDateTo)     params.deliveryDateTo     = deliveryDateTo;
+    if (buyerId)            params.buyerId            = buyerId;
 
     return apiClient.get<SalesOrdersResponse>("/purchase-orders/list", {
       params,
