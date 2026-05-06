@@ -1,10 +1,37 @@
 "use client";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { IBM_Plex_Sans, Geist_Mono } from "next/font/google";
+import { WifiOff } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
+
+function OfflineBanner() {
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  if (isOnline) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center gap-2 bg-[#dc2626] px-4 py-2 text-white">
+      <WifiOff className="h-4 w-4 flex-shrink-0" />
+      <span className="text-[13px] font-medium">No internet connection. Please check your network.</span>
+    </div>
+  );
+}
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
@@ -32,6 +59,7 @@ export default function RootLayout({
       <body className={`${ibmPlexSans.variable} ${geistMono.variable} font-sans antialiased`}>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider delayDuration={300}>
+            <OfflineBanner />
             {children}
             <Toaster position="top-right" />
             <ReactQueryDevtools initialIsOpen={false} />
