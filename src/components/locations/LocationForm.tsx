@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { locationsService } from "@/services/locations";
-import { CountrySelect, getZipValidation } from "./LocationFormFields";
+import { CountrySelect, StateSelect, getZipValidation } from "./LocationFormFields";
 
 interface LocationFormProps {
   mode: "create" | "edit";
@@ -415,13 +415,21 @@ export function LocationForm({ mode, locationId, initialValues }: LocationFormPr
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     State <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className={inputClass(errors.state)}
-                  />
+                  {country === "India" ? (
+                    <StateSelect
+                      value={state}
+                      onChange={(name) => setState(name)}
+                      hasError={!!errors.state}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="State / Province"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      className={inputClass(errors.state)}
+                    />
+                  )}
                   {errors.state && (
                     <p className="text-[12px] text-[#dc2626] mt-1">{errors.state}</p>
                   )}
