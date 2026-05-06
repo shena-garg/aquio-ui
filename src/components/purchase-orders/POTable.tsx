@@ -114,6 +114,7 @@ const COL_WIDTH: Record<string, number> = {
   supplierRef:   120,
   issueDate:     110,
   delivery:      150,
+  delaySeverity: 110,
   status:        110,
   receipt:       220,
   amount:        140,
@@ -228,6 +229,31 @@ const COLUMN_DEFS: ColDef[] = [
         </div>
       </TableCell>
     ),
+  },
+  {
+    key: "delaySeverity",
+    width: COL_WIDTH.delaySeverity,
+    renderHead: ({ headCls, style }) => (
+      <TableHead className={`${TH} ${headCls}`} style={style}>Delay</TableHead>
+    ),
+    renderCell: (order, { cellCls, style }) => {
+      const isActiveOverdue = order.delayDays > 0 && order.status !== "draft" && order.status !== "cancelled" && order.status !== "completed";
+      let badge: React.ReactNode = null;
+      if (isActiveOverdue) {
+        if (order.delayDays >= 7) {
+          badge = <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]">Critical</span>;
+        } else if (order.delayDays >= 3) {
+          badge = <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-[#fff7ed] text-[#ea580c] border border-[#fed7aa]">Warning</span>;
+        } else {
+          badge = <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-[#fffbeb] text-[#d97706] border border-[#fde68a]">Watch</span>;
+        }
+      }
+      return (
+        <TableCell className={`px-3 ${cellCls}`} style={style}>
+          {badge ?? <span className="text-gray-300 text-[13px]">—</span>}
+        </TableCell>
+      );
+    },
   },
   {
     key: "status",

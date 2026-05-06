@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, SlidersHorizontal, Plus, Loader2 } from "lucide-react";
@@ -34,6 +34,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
   { key: "customerRef",    label: "Buyer Ref. ID",    locked: false },
   { key: "issueDate",      label: "Issue Date",       locked: false },
   { key: "delivery",       label: "Delivery",         locked: false },
+  { key: "delaySeverity",  label: "Delay",            locked: false },
   { key: "status",         label: "Status",           locked: false },
   { key: "shipment",       label: "Shipment",         locked: false },
   { key: "amount",         label: "Amount",           locked: false },
@@ -53,12 +54,24 @@ const PREFS_STORAGE_KEY = "so-column-prefs";
 export default function SalesOrdersPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
 
   // ── Table / filter state ──────────────────────────────────────────────────
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
-  const [activeStatus, setActiveStatus] = useState<SOFilterStatus | undefined>(undefined);
-  const [activeFilters, setActiveFilters] = useState<SOActiveFilters>({});
+  const [activeStatus, setActiveStatus] = useState<SOFilterStatus | undefined>(() => {
+    const s = searchParams.get("status");
+    return (s === "delayed" || s === "in_progress" || s === "completed" || s === "draft" || s === "cancelled")
+      ? (s as SOFilterStatus)
+      : undefined;
+  });
+  const [activeFilters, setActiveFilters] = useState<SOActiveFilters>(() => {
+    const severity = searchParams.get("delaySeverity");
+    if (severity === "watch" || severity === "warning" || severity === "critical") {
+      return { delaySeverity: severity };
+    }
+    return {};
+  });
 
   // ── Column customization state ────────────────────────────────────────────
   const [prefsLoaded, setPrefsLoaded] = useState(false);

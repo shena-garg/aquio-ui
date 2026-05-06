@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, SlidersHorizontal, Plus, Loader2 } from "lucide-react";
@@ -28,19 +28,20 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 // ── Column config ─────────────────────────────────────────────────────────────
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
-  { key: "poNumber",      label: "PO Number",      locked: true  },
-  { key: "refId",         label: "Ref. ID",         locked: false },
-  { key: "supplier",      label: "Supplier",        locked: false },
-  { key: "supplierRef",   label: "Supplier Ref.",   locked: false },
-  { key: "issueDate",     label: "Issue Date",      locked: false },
-  { key: "delivery",      label: "Delivery",        locked: false },
-  { key: "status",        label: "Status",          locked: false },
-  { key: "receipt",       label: "Receipt",         locked: false },
-  { key: "amount",        label: "Amount",          locked: false },
-  { key: "paymentTerms",  label: "Payment Terms",   locked: false },
-  { key: "receiptStatus", label: "Receipt Status",  locked: false },
-  { key: "totalOrder",    label: "Total Order",     locked: false },
-  { key: "pendingOrder",  label: "Pending Order",   locked: false },
+  { key: "poNumber",       label: "PO Number",      locked: true  },
+  { key: "refId",          label: "Ref. ID",         locked: false },
+  { key: "supplier",       label: "Supplier",        locked: false },
+  { key: "supplierRef",    label: "Supplier Ref.",   locked: false },
+  { key: "issueDate",      label: "Issue Date",      locked: false },
+  { key: "delivery",       label: "Delivery",        locked: false },
+  { key: "delaySeverity",  label: "Delay",           locked: false },
+  { key: "status",         label: "Status",          locked: false },
+  { key: "receipt",        label: "Receipt",         locked: false },
+  { key: "amount",         label: "Amount",          locked: false },
+  { key: "paymentTerms",   label: "Payment Terms",   locked: false },
+  { key: "receiptStatus",  label: "Receipt Status",  locked: false },
+  { key: "totalOrder",     label: "Total Order",     locked: false },
+  { key: "pendingOrder",   label: "Pending Order",   locked: false },
 ];
 
 const DEFAULT_COLUMN_KEYS = DEFAULT_COLUMNS.map((c) => c.key);
@@ -53,12 +54,24 @@ const PREFS_STORAGE_KEY = "po-column-prefs";
 export default function PurchaseOrdersPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
 
   // ── Table / filter state ──────────────────────────────────────────────────
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
-  const [activeStatus, setActiveStatus] = useState<POFilterStatus | undefined>(undefined);
-  const [activeFilters, setActiveFilters] = useState<POActiveFilters>({});
+  const [activeStatus, setActiveStatus] = useState<POFilterStatus | undefined>(() => {
+    const s = searchParams.get("status");
+    return (s === "delayed" || s === "in_progress" || s === "completed" || s === "draft" || s === "cancelled")
+      ? (s as POFilterStatus)
+      : undefined;
+  });
+  const [activeFilters, setActiveFilters] = useState<POActiveFilters>(() => {
+    const severity = searchParams.get("delaySeverity");
+    if (severity === "watch" || severity === "warning" || severity === "critical") {
+      return { delaySeverity: severity };
+    }
+    return {};
+  });
 
   // ── Column customization state ────────────────────────────────────────────
   const [prefsLoaded, setPrefsLoaded] = useState(false);

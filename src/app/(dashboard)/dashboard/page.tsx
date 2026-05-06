@@ -927,6 +927,7 @@ function OverduePill({
 }) {
   const style = OVERDUE_STYLES[severity];
   const basePath = orderType === "purchase" ? "/purchase-orders" : "/sales-orders";
+  const viewAllHref = `${basePath}?status=delayed&delaySeverity=${severity}`;
 
   return (
     <Popover>
@@ -972,8 +973,8 @@ function OverduePill({
           ))}
         </div>
         <div className="px-3 py-2 border-t border-[#f3f4f6]">
-          <Link href={basePath} className="text-[12px] text-[#0d9488] font-medium hover:underline">
-            View all {orderType === "purchase" ? "purchase" : "sales"} orders →
+          <Link href={viewAllHref} className="text-[12px] text-[#0d9488] font-medium hover:underline">
+            View all {severity} delayed {orderType === "purchase" ? "POs" : "SOs"} →
           </Link>
         </div>
       </PopoverContent>

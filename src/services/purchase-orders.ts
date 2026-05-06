@@ -142,6 +142,7 @@ export type POActiveFilters = {
   deliveryDateTo?: string;
   supplierId?: string;
   productValue?: string;
+  delaySeverity?: "watch" | "warning" | "critical";
 };
 
 export interface GetPurchaseOrdersParams extends POActiveFilters {
@@ -218,6 +219,7 @@ export const purchaseOrdersService = {
     deliveryDateTo,
     supplierId,
     productValue,
+    delaySeverity,
   }: GetPurchaseOrdersParams) => {
     const params: Record<string, string | number | string[]> = {
       page,
@@ -244,6 +246,9 @@ export const purchaseOrdersService = {
     if (deliveryDateTo)     params.deliveryDateTo     = deliveryDateTo;
     if (supplierId)         params.supplierId         = supplierId;
     if (productValue)       params.productValue       = productValue;
+    if (delaySeverity === "watch")    { params.minDelay = 1; params.maxDelay = 2; }
+    if (delaySeverity === "warning")  { params.minDelay = 3; params.maxDelay = 6; }
+    if (delaySeverity === "critical") { params.minDelay = 7; }
 
     return apiClient.get<PurchaseOrdersResponse>("/purchase-orders/list", {
       params,

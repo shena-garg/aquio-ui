@@ -533,8 +533,8 @@ export function POSearchBar({
 
     if (currentField.type === "dateRange") {
       const params: POActiveFilters = {};
-      if (dateFrom) params[currentField.fromParam] = dateFrom;
-      if (dateTo)   params[currentField.toParam]   = dateTo;
+      if (dateFrom) (params as Record<string, string>)[currentField.fromParam] = dateFrom;
+      if (dateTo)   (params as Record<string, string>)[currentField.toParam]   = dateTo;
       onSearch(params);
     } else {
       onSearch({ [currentField.param]: inputValue });
@@ -553,6 +553,10 @@ export function POSearchBar({
       return `Supplier: ${name}`;
     }
     if (key === "productValue") return `Product: ${productLabel || value}`;
+    if (key === "delaySeverity") {
+      const labels: Record<string, string> = { watch: "Delay: Watch (1–2d)", warning: "Delay: Warning (3–6d)", critical: "Delay: Critical (7+d)" };
+      return labels[value] ?? `Delay: ${value}`;
+    }
     const staticFormatters: Partial<Record<keyof POActiveFilters, (v: string) => string>> = {
       poNumber:            (v) => `PO Number: ${v}`,
       referenceId:         (v) => `Reference ID: ${v}`,
@@ -730,11 +734,52 @@ export function POSearchBar({
     </div>
   );
 
+  const delaySeverityPills = activeStatus === "delayed" && (
+    <div className="flex items-center gap-2 px-4 sm:px-6 pb-3 pt-0">
+      <span className="text-[11px] text-gray-400 font-medium">Filter by severity:</span>
+      {(["watch", "warning", "critical"] as const).map((sev) => {
+        const styles = {
+          watch:    { bg: "bg-[#fffbeb]", text: "text-[#d97706]", border: "border-[#fde68a]", activeBg: "!bg-[#d97706]",    label: "Watch (1–2d)"    },
+          warning:  { bg: "bg-[#fff7ed]", text: "text-[#ea580c]", border: "border-[#fed7aa]", activeBg: "!bg-[#ea580c]",    label: "Warning (3–6d)"  },
+          critical: { bg: "bg-[#fef2f2]", text: "text-[#dc2626]", border: "border-[#fecaca]", activeBg: "!bg-[#dc2626]",    label: "Critical (7+d)"  },
+        }[sev];
+        const isActive = activeFilters.delaySeverity === sev;
+        return (
+          <button
+            key={sev}
+            type="button"
+            onClick={() =>
+              onSearch({ delaySeverity: isActive ? undefined : sev })
+            }
+            className={[
+              "inline-flex items-center rounded-full border px-3 py-0.5 text-[11px] font-semibold transition-colors",
+              isActive
+                ? `${styles.activeBg} text-white border-transparent`
+                : `${styles.bg} ${styles.text} ${styles.border} hover:opacity-80`,
+            ].join(" ")}
+          >
+            {styles.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="bg-white">
       {/* ── Desktop search row ── */}
       <div className="hidden lg:flex flex-wrap items-center gap-2 px-6 py-3">
         {searchFields()}
+      </div>
+
+      {/* ── Delay severity quick-filter (Delayed tab only) ── */}
+      <div className="hidden lg:block">
+        {delaySeverityPills}
+      </div>
+
+      {/* ── Delay severity quick-filter (Delayed tab only, mobile) ── */}
+      <div className="lg:hidden">
+        {delaySeverityPills}
       </div>
 
       {/* ── Mobile: Filter button + chips ── */}

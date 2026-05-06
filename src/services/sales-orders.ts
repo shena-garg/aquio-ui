@@ -142,6 +142,7 @@ export type SOActiveFilters = {
   deliveryDateTo?: string;
   buyerId?: string;
   productValue?: string;
+  delaySeverity?: "watch" | "warning" | "critical";
 };
 
 export interface GetSalesOrdersParams extends SOActiveFilters {
@@ -218,6 +219,7 @@ export const salesOrdersService = {
     deliveryDateTo,
     buyerId,
     productValue,
+    delaySeverity,
   }: GetSalesOrdersParams) => {
     const params: Record<string, string | number | string[]> = {
       page,
@@ -244,6 +246,9 @@ export const salesOrdersService = {
     if (deliveryDateTo)     params.deliveryDateTo     = deliveryDateTo;
     if (buyerId)            params.buyerId            = buyerId;
     if (productValue)       params.productValue       = productValue;
+    if (delaySeverity === "watch")    { params.minDelay = 1; params.maxDelay = 2; }
+    if (delaySeverity === "warning")  { params.minDelay = 3; params.maxDelay = 6; }
+    if (delaySeverity === "critical") { params.minDelay = 7; }
 
     return apiClient.get<SalesOrdersResponse>("/purchase-orders/list", {
       params,
