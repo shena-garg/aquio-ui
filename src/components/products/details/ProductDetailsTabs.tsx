@@ -2476,16 +2476,16 @@ function BuyerIntelligenceTable({ buyers, uom }: { buyers: BuyerRow[]; uom: stri
                     className="border-b border-[#e5e7eb] last:border-b-0 hover:bg-[#f9fafb]"
                   >
                     <td className={cn(tdCls, "font-medium")}>{b.buyerName}</td>
-                    <td className={tdCls}>{b.units}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={tdCls}>{b.units.toLocaleString("en-IN")}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       ₹{b.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>
                       ₹{b.minPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} – ₹{b.maxPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className={tdCls}>{b.soCount}</td>
+                    <td className={tdCls}>{b.soCount.toLocaleString("en-IN")}</td>
                     <td className={tdCls}>
-                      {b.avgLeadTimeDays != null ? `${b.avgLeadTimeDays} days` : "—"}
+                      {b.avgLeadTimeDays != null ? `${b.avgLeadTimeDays.toLocaleString("en-IN")} days` : "—"}
                     </td>
                     <td className={cn(tdCls, onTimeRateClass(b.onTimeRate))}>
                       {b.onTimeRate != null ? `${b.onTimeRate}%` : "—"}
@@ -2574,8 +2574,8 @@ function RecentSalesOrdersTable({ recentOrders, uom }: { recentOrders: RecentSO[
                     <td className={tdCls}>
                       ₹{so.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className={tdCls}>{so.unitsSold}{abbr ? ` ${abbr}` : ""}</td>
-                    <td className={cn(tdCls, getReceivedColor(so.unitsDelivered, so.unitsSold))}>{so.unitsDelivered}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={tdCls}>{so.unitsSold.toLocaleString("en-IN")}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={cn(tdCls, getReceivedColor(so.unitsDelivered, so.unitsSold))}>{so.unitsDelivered.toLocaleString("en-IN")}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       <span
                         className={cn(
@@ -3228,16 +3228,16 @@ function SupplierIntelligenceTable({ suppliers, uom }: { suppliers: SupplierRow[
                     className="border-b border-[#e5e7eb] last:border-b-0 hover:bg-[#f9fafb]"
                   >
                     <td className={cn(tdCls, "font-medium")}>{s.supplierName}</td>
-                    <td className={tdCls}>{s.units}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={tdCls}>{s.units.toLocaleString("en-IN")}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       ₹{s.avgPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className={tdCls}>
                       ₹{s.minPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} – ₹{s.maxPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className={tdCls}>{s.poCount}</td>
+                    <td className={tdCls}>{s.poCount.toLocaleString("en-IN")}</td>
                     <td className={tdCls}>
-                      {s.avgLeadTimeDays != null ? `${s.avgLeadTimeDays} days` : "—"}
+                      {s.avgLeadTimeDays != null ? `${s.avgLeadTimeDays.toLocaleString("en-IN")} days` : "—"}
                     </td>
                     <td className={cn(tdCls, onTimeRateClass(s.onTimeRate))}>
                       {s.onTimeRate != null ? `${s.onTimeRate}%` : "—"}
@@ -3393,8 +3393,8 @@ function RecentPOsTable({ recentPOs, uom }: { recentPOs: RecentPO[]; uom: string
                     <td className={tdCls}>
                       ₹{po.unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className={tdCls}>{po.unitsOrdered}{abbr ? ` ${abbr}` : ""}</td>
-                    <td className={cn(tdCls, getReceivedColor(po.unitsReceived, po.unitsOrdered))}>{po.unitsReceived}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={tdCls}>{po.unitsOrdered.toLocaleString("en-IN")}{abbr ? ` ${abbr}` : ""}</td>
+                    <td className={cn(tdCls, getReceivedColor(po.unitsReceived, po.unitsOrdered))}>{po.unitsReceived.toLocaleString("en-IN")}{abbr ? ` ${abbr}` : ""}</td>
                     <td className={tdCls}>
                       <span
                         className={cn(
