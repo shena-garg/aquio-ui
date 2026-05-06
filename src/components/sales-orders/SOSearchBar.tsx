@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Filter, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Filter, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SOActiveFilters, SOFilterStatus } from "@/services/sales-orders";
@@ -96,6 +96,120 @@ function formatChipDate(iso: string): string {
   const [year, month, day] = iso.split("-").map(Number);
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${day} ${months[month - 1]} ${year}`;
+}
+
+// ── Partner searchable dropdown ───────────────────────────────────────────────
+
+function PartnerSearchInput({
+  options,
+  value,
+  onChange,
+  mobile,
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (id: string) => void;
+  mobile?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
+  const displayValue = open ? query : selectedLabel;
+
+  const filtered = query.trim()
+    ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  function updatePosition() {
+    if (!inputRef.current) return;
+    const rect = inputRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: "fixed",
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: Math.max(rect.width, 200),
+      zIndex: 9999,
+    });
+  }
+
+  function handleOpen() {
+    setQuery("");
+    setOpen(true);
+    updatePosition();
+  }
+
+  function handleSelect(opt: { value: string; label: string }) {
+    onChange(opt.value);
+    setQuery("");
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    function reposition() { updatePosition(); }
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
+  const inputCls = mobile
+    ? "h-9 flex-1 rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488] cursor-pointer"
+    : "h-8 w-48 rounded-md border border-gray-200 bg-white px-2.5 pr-7 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]";
+
+  return (
+    <div ref={wrapperRef} className={mobile ? "flex-1 relative" : "relative"}>
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Search buyer…"
+        value={displayValue}
+        onFocus={handleOpen}
+        onChange={(e) => { setQuery(e.target.value); if (!open) setOpen(true); updatePosition(); }}
+        className={inputCls}
+        autoComplete="off"
+      />
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+      {open && (
+        <div style={dropdownStyle} className="bg-white border border-[#e5e7eb] rounded-md shadow-lg max-h-56 overflow-y-auto">
+          {filtered.length > 0 ? (
+            filtered.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleSelect(opt)}
+                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f3f4f6] ${
+                  opt.value === value ? "bg-[#f0fdfa] text-[#0d9488] font-medium" : "text-[#0F1720]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))
+          ) : (
+            <p className="px-3 py-2 text-[13px] text-gray-400">No matches</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const SELECT_INPUT_CLASS =
@@ -282,16 +396,12 @@ export function SOSearchBar({
     }
     if (currentField.type === "dynamicSelect") {
       return (
-        <select
+        <PartnerSearchInput
+          options={partnerOptions}
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          className={selectCls}
-        >
-          <option value="">Select {currentField.label}…</option>
-          {partnerOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+          onChange={setInputValue}
+          mobile={mobile}
+        />
       );
     }
     if (currentField.type === "dateRange") {
