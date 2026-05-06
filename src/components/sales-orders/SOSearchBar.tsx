@@ -517,7 +517,6 @@ export function SOSearchBar({
     setInputValue("");
     setDateFrom("");
     setDateTo("");
-    setProductLabel("");
   }
 
   function handleFieldChange(key: FieldKey) {

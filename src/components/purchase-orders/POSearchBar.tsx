@@ -518,7 +518,6 @@ export function POSearchBar({
     setInputValue("");
     setDateFrom("");
     setDateTo("");
-    setProductLabel("");
   }
 
   function handleFieldChange(key: FieldKey) {
