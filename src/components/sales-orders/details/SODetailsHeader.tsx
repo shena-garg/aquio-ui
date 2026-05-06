@@ -264,9 +264,14 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
           variant="outline"
           className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
           onClick={handleDownloadPdf}
+          disabled={isGeneratingPdf}
         >
-          <Download className="h-4 w-4 mr-1.5" />
-          Download PDF
+          {isGeneratingPdf ? (
+            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-1.5" />
+          )}
+          {isGeneratingPdf ? "Generating…" : "Download PDF"}
         </Button>
       ) : canGeneratePdf ? (
         <Button
@@ -338,8 +343,13 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
           variant="outline"
           className="h-9 w-9 rounded-[6px] p-0"
           onClick={handleDownloadPdf}
+          disabled={isGeneratingPdf}
         >
-          <Download className="h-4 w-4" />
+          {isGeneratingPdf ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
         </Button>
       ) : canGeneratePdf ? (
         <Button
