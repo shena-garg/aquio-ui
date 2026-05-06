@@ -57,6 +57,7 @@ export function ProductDetailsHeader({
       await productsService.archive(product._id);
       toast.success(`${product.name} has been archived`);
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", product._id] });
       router.push("/products");
     } catch {
       setArchiveError("Failed to archive product");

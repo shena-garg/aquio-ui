@@ -441,12 +441,13 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         </div>
       )}
 
-      {order.delayDays > 0 && (
+      {order.delayDays > 0 && order.status !== "draft" && order.status !== "cancelled" && (
         <div className="flex items-center gap-2 px-6 py-1.5 bg-[#fffbeb] border-b border-[#e5e7eb] border-l-4 border-l-[#f59e0b]">
           <AlertTriangle size={14} className="text-[#92400e] flex-shrink-0" />
           <span className="text-[13px] font-medium text-[#92400e]">
-            Delivery overdue by {order.delayDays}{" "}
-            {order.delayDays === 1 ? "day" : "days"} — Expected{" "}
+            {order.status === "completed"
+              ? `Delivered ${order.delayDays} ${order.delayDays === 1 ? "day" : "days"} late — Expected `
+              : `Delivery overdue by ${order.delayDays} ${order.delayDays === 1 ? "day" : "days"} — Expected `}
             {new Date(order.deliveryDate).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",

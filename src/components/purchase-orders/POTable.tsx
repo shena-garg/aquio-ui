@@ -220,9 +220,9 @@ const COLUMN_DEFS: ColDef[] = [
       <TableCell className={`px-3 ${cellCls}`} style={style}>
         <div className="flex items-center gap-2">
           <span className="text-[13px] text-gray-600">{formatDate(order.deliveryDate)}</span>
-          {order.delayDays > 0 && (
+          {order.delayDays > 0 && order.status !== "draft" && order.status !== "cancelled" && (
             <span className="rounded bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-600">
-              Overdue {order.delayDays}d
+              {order.status === "completed" ? "Late" : "Overdue"} {order.delayDays}d
             </span>
           )}
         </div>
@@ -654,9 +654,9 @@ export function POTable({
                   <span>{formatDate(order.issueDate)}</span>
                   <span className="text-gray-300">→</span>
                   <span>{formatDate(order.deliveryDate)}</span>
-                  {order.delayDays > 0 && (
+                  {order.delayDays > 0 && order.status !== "draft" && order.status !== "cancelled" && (
                     <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
-                      Overdue {order.delayDays}d
+                      {order.status === "completed" ? "Late" : "Overdue"} {order.delayDays}d
                     </span>
                   )}
                   <div className="ml-auto flex-shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -685,7 +685,7 @@ export function POTable({
 
       {/* ── Desktop table ── */}
       <div className={`hidden lg:block transition-all duration-300 ${flash ? "ring-2 ring-[#0d9488]/40 rounded-md" : ""}`}>
-        <div className="w-full overflow-x-auto bg-white [&_th]:border-b [&_th]:border-gray-200 [&_td]:border-b [&_td]:border-gray-100 [&_tbody_tr:last-child_td]:border-b-0">
+        <div className="w-full overflow-x-auto bg-white [&_th]:border-b [&_th]:border-gray-200 [&_td]:border-b [&_td]:border-gray-100 [&_td]:overflow-hidden [&_tbody_tr:last-child_td]:border-b-0">
           <Table
             className="border-separate border-spacing-0 table-fixed"
             style={{ width: tableWidth, minWidth: tableWidth }}
