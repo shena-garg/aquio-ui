@@ -105,6 +105,7 @@ function ReceiptCell({ totalQuantity, pendingQuantity, receiptCompletionPercenta
 // ── Column widths (px) for sticky offset calculation ──────────────────────────
 
 const ACTIONS_COL_WIDTH = 68;
+const FROZEN_SHADOW = "shadow-[2px_0_5px_-1px_rgba(0,0,0,0.12)]";
 
 const COL_WIDTH: Record<string, number> = {
   poNumber:      140,
@@ -543,6 +544,13 @@ export function POTable({
     [columnOrder, visibleColumns],
   );
 
+  const tableWidth = useMemo(
+    () => ACTIONS_COL_WIDTH + activeCols.reduce((sum, col) => sum + col.width, 0),
+    [activeCols],
+  );
+
+  const actionsShadowCls = frozenCount === 0 ? FROZEN_SHADOW : "";
+
   // Compute sticky properties for a given active column index
   const getStickyFor = useCallback(function getStickyFor(index: number): Sticky {
     if (index >= frozenCount) return NO_STICKY;
@@ -550,9 +558,10 @@ export function POTable({
     for (let i = 0; i < index; i++) {
       left += activeCols[i].width;
     }
+    const isLast = index === frozenCount - 1;
     return {
-      headCls: "sticky z-20 bg-gray-50",
-      cellCls: "sticky z-10 bg-white group-hover:bg-gray-50",
+      headCls: `sticky z-20 bg-gray-50${isLast ? ` ${FROZEN_SHADOW}` : ""}`,
+      cellCls: `sticky z-10 bg-white group-hover:bg-gray-50${isLast ? ` ${FROZEN_SHADOW}` : ""}`,
       style: { left },
     };
   }, [activeCols, frozenCount]);
@@ -677,12 +686,21 @@ export function POTable({
       {/* ── Desktop table ── */}
       <div className={`hidden lg:block transition-all duration-300 ${flash ? "ring-2 ring-[#0d9488]/40 rounded-md" : ""}`}>
         <div className="w-full overflow-x-auto bg-white [&_th]:border-b [&_th]:border-gray-200 [&_td]:border-b [&_td]:border-gray-100 [&_tbody_tr:last-child_td]:border-b-0">
-          <Table className="min-w-[1600px] border-separate border-spacing-0">
+          <Table
+            className="border-separate border-spacing-0 table-fixed"
+            style={{ width: tableWidth, minWidth: tableWidth }}
+          >
+            <colgroup>
+              <col style={{ width: ACTIONS_COL_WIDTH }} />
+              {activeCols.map((col) => (
+                <col key={col.key} style={{ width: col.width }} />
+              ))}
+            </colgroup>
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50 border-b-0">
                 {/* Actions — always sticky at left: 0 */}
                 <TableHead
-                  className="w-[68px] px-4 sticky z-20 bg-gray-50"
+                  className={`w-[68px] px-4 sticky z-20 bg-gray-50 ${actionsShadowCls}`}
                   style={{ left: 0 }}
                 />
                 {activeCols.map((col, i) => (
@@ -714,11 +732,11 @@ export function POTable({
                 orders.map((order) => (
                   <TableRow
                     key={order.id}
-                    className="group hover:bg-gray-50 border-b-0"
+                    className="group hover:bg-gray-50 border-b-0 bg-white"
                   >
                     {/* Actions — always sticky at left: 0 */}
                     <TableCell
-                      className="w-[68px] px-4 sticky z-10 bg-white group-hover:bg-gray-50"
+                      className={`w-[68px] px-4 sticky z-10 bg-white group-hover:bg-gray-50 ${actionsShadowCls}`}
                       style={{ left: 0 }}
                     >
                       <div className="flex items-center gap-1">
