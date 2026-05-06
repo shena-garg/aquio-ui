@@ -130,7 +130,7 @@ export default function PurchaseOrdersPage() {
       purchaseOrdersService
         .list({ page, limit, tabStatus: activeStatus, ...activeFilters })
         .then((res) => res.data),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
     refetchInterval: 30_000,
   });
 
