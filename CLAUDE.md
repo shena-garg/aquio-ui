@@ -16,7 +16,8 @@ src/
 │   │   └── signup/page.tsx
 │   ├── (dashboard)/            # Protected pages (sidebar + auth)
 │   │   ├── layout.tsx          # AuthProvider + Sidebar + RouteGuard
-│   │   ├── dashboard/          # Analytics dashboard with charts
+│   │   ├── dashboard/          # Analytics dashboard — tabs: Overview, Buying, Selling, Old View
+│   │   ├── notifications/      # In-app notifications list page (/notifications)
 │   │   ├── purchase-orders/    # List, [id] detail, [id]/edit, create
 │   │   ├── sales-orders/       # List, [id] detail, [id]/edit, create
 │   │   ├── products/           # List, [id] detail, new
@@ -25,9 +26,9 @@ src/
 │   │   ├── locations/          # Locations with GST/address
 │   │   ├── users/              # User management, [id]/edit
 │   │   ├── roles/              # Role + permission management
-│   │   ├── settings/           # Organization settings
+│   │   ├── settings/           # Organization settings (incl. notification preferences tab)
 │   │   ├── company/            # Company profile
-│   │   └── profile/            # User profile
+│   │   └── profile/            # User profile (incl. notification preferences + change password)
 │   ├── layout.tsx              # Root layout (QueryClient, Toaster, fonts)
 │   └── globals.css             # Tailwind + global styles
 ├── components/
@@ -63,7 +64,8 @@ src/
 │   ├── organization.ts
 │   ├── organization-settings.ts
 │   ├── dashboard.ts
-│   └── activity.ts
+│   ├── activity.ts
+│   └── notifications.ts
 ├── contexts/
 │   └── AuthContext.tsx          # Auth state, permissions, user/role data
 ├── hooks/
@@ -139,9 +141,9 @@ For Vercel deployment, set this in the Vercel project's environment variables da
 - `useAuth().hasPermission("entity.action")` for inline permission checks
 - Permission format: `{entity}.{action}` (e.g., `purchase-order.force-close`)
 
-## Backend Cutover Status (as of 2026-04-21)
+## Backend Cutover Status (as of 2026-05-06)
 
-- **aquio-backend is fully built and deployed on Render** — all Phase 1 modules complete including PDF generation
+- **aquio-backend is fully built and deployed on Render** — all modules complete including Notifications
 - **aquio-ui is live and pointing to aquio-backend** — cutover complete
 - `NEXT_PUBLIC_API_BASE_URL` in production env points to the Render backend URL
 - In `.env.local` for development: use Render URL or `http://localhost:3001` if running locally

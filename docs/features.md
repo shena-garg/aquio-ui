@@ -1,7 +1,7 @@
 # Aquio — Implemented Features
 
 Complete reference of everything built and live in production.
-Last updated: 2026-04-25
+Last updated: 2026-05-06
 
 ---
 
@@ -41,9 +41,13 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 
 ## Dashboard
 
-- **Analytics cards** — Total orders, total spend, pending receipts, overdue orders.
-- **Charts** — Orders over time, spend by category, top suppliers by order volume.
-- **Onboarding banner** — Surfaces incomplete setup steps.
+Four-tab layout with a shared period selector (This Month / This Quarter / Last 30 Days / Last 12 Months).
+
+- **Overview tab** — Morning check. Quick-action buttons (New PO / New SO) in header. Four KPI cards: Total Spend, Total Revenue, Gross Margin % (conditional — shown only when both buying and selling data exist in the period, otherwise "—" with tooltip), Fulfillment Rate. **Overdue Orders widget** (always visible): Watch / Warning / Critical severity pill buttons for both POs and SOs; clicking any pill opens a Radix Popover listing up to 10 orders with order number, counterparty, and days overdue (direct links). **Alerts & Insights** panel — auto-expands when critical or warning alerts are present. Combined Spend vs Revenue bar chart with Gross Margin % trend line (secondary Y-axis).
+- **Buying tab** — PO deep-dive. KPIs: Total Spend, Open POs (count + value), Overdue POs, Fulfillment Rate. Overdue PO severity widget. Monthly spend bar chart. Top Suppliers table (spend, fulfillment %, price trend). Top Products by Spend table.
+- **Selling tab** — SO deep-dive. KPIs: Total Revenue, Open SOs (count + value), Overdue SOs, Total SO count. Overdue SO severity widget. Monthly revenue bar chart. Top Buyers table (revenue, fulfillment %, price trend). Top Products by Revenue table.
+- **Old View tab** — Original dashboard layout preserved: 6 KPI cards, Alerts & Insights, Spend vs Revenue chart, Recent Activity feed, Top Products (both), Top Suppliers and Top Buyers.
+- **Onboarding checklist** — Shown instead of dashboard for new orgs. Five-step setup (Location → Settings → Category → Partner → Product) with inline quick-create modals. Progress bar. One-time celebration screen on completion.
 - **Dark mode** — Toggle in sidebar user menu. Persists across sessions.
 
 ---
@@ -131,7 +135,28 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 ## Settings
 
 - **Organisation settings** — Payment terms (PO + SO), GST rates, PO/SO number auto-generation, SKU auto-generation, reference ID visibility.
+- **Notification preferences tab** — Org-level toggles for PO and SO overdue email digests. Both org-level and user-level must be enabled for a user to receive a digest.
 - **Quick-configure modal** — Accessible from onboarding banner for fast initial setup.
+
+---
+
+## Profile
+
+- **Edit** — Name, phone number.
+- **Email** — Read-only (cannot change email after signup).
+- **Notification preferences** — User-level toggles for PO and SO overdue email digests. Independent of org-level settings; both must be enabled for the digest to send.
+- **Change password** — Current password + new password with complexity enforcement.
+
+---
+
+## Notifications
+
+- **Sidebar bell icon** — Unread count badge shown directly below Dashboard in the sidebar. Polls every 30 seconds. Badge capped at 99+.
+- **`/notifications` page** — Flat list of all in-app notifications for the logged-in Administrator. Unread items highlighted in teal. Clicking an item marks it read and navigates to the related record (PO, SO, product, etc.). Mark All Read button. Load-more pagination.
+- **Fan-out source** — Every event written to the audit trail is fanned out as a notification to all active Administrator users in the organisation. Forward-only: new admins don't receive history from before they joined.
+- **Overdue email digest** — Two separate daily emails (PO and SO) sent at 8:00 AM IST. Severity-bucketed table: Watch (1–2d), Warning (3–6d), Critical (7+d). If no overdue orders exist, sends a short all-clear email. Logs stored in `emaildigestlogs` collection.
+- **Permission-gated** — Only users with `notification.view` permission (Administrator role) can see the notifications page and sidebar badge.
+- **Offline banner** — Fixed red bar at top of screen when internet connection is lost. Listens to browser `online`/`offline` events.
 
 ---
 
@@ -185,4 +210,5 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 | Roles | `GET/POST/PATCH/DELETE /roles` |
 | Orders | `GET/POST/PATCH /purchase-orders`, receipts, status transitions, CSV export, dashboard analytics |
 | PDF | `PATCH /purchase-orders/:id/pdf` — generates PDF, uploads to S3, returns file metadata |
-| Audit | Event-driven, no direct endpoints |
+| Audit | Event-driven, no direct endpoints; emits `audit.event.written` after each flush |
+| Notifications | `GET/PATCH /notifications`, `GET /notifications/unread-count`, `POST /notifications/internal/trigger-digest` |

@@ -12,7 +12,7 @@ All API calls use Axios via `src/lib/api-client.ts` with automatic Bearer token 
 |--------|----------|---------|---------|----------|
 | POST | `/users/login` | User login | `{ email: string, password: string }` | `{ accessToken: string, user: object }` |
 | GET | `/users/my-own` | Get current user profile | — | `User` |
-| PATCH | `/users/my-own` | Update profile | `{ name?: string, phoneNumber?: string, countryCode?: string }` | `User` |
+| PATCH | `/users/my-own` | Update profile | `{ name?: string, phoneNumber?: string, countryCode?: string, notificationPreferences?: { overdueDigest: { po: { enabled: boolean }, so: { enabled: boolean } } } }` | `User` |
 | PATCH | `/users/change-password` | Change password | `{ oldPassword: string, newPassword: string }` | — |
 
 ---
@@ -196,7 +196,7 @@ Uses the **same backend endpoints** as Purchase Orders but with `orderType="sale
 
 | Method | Endpoint | Purpose | Request | Response |
 |--------|----------|---------|---------|----------|
-| GET | `/purchase-orders/analytics/dashboard` | Dashboard overview | Query: `fromDate, toDate` | Dashboard analytics (KPIs, charts data) |
+| GET | `/purchase-orders/analytics/dashboard` | Dashboard overview | Query: `fromDate, toDate` | `{ kpis: { totalSpend, totalRevenue, grossMarginPct, openPOCount, openPOValue, openSOCount, openSOValue, fulfillmentRate, overduePOCount, overdueSOCount, poCount, soCount, trends: { spend, revenue, margin, fulfillment } }, alerts: [], overdueOrders: { po: { watch, warning, critical }, so: { watch, warning, critical } }, spendRevenueHistory: [], topProducts: { topBySpend, topByRevenue }, topSuppliers: [], topBuyers: [], recentActivity: [] }` |
 
 ---
 
@@ -218,6 +218,52 @@ Uses the **same backend endpoints** as Purchase Orders but with `orderType="sale
 | Method | Endpoint | Purpose | Request | Response |
 |--------|----------|---------|---------|----------|
 | POST | `/files/upload` | Upload file | `FormData` (multipart/form-data) | `{ id: string, name: string }` |
+
+---
+
+## Notifications
+
+**Service:** `src/services/notifications.ts`
+
+| Method | Endpoint | Purpose | Request | Response |
+|--------|----------|---------|---------|----------|
+| GET | `/notifications` | List notifications (paginated) | Query: `page, limit` | `{ data: Notification[], pagination: { total, page, limit }, unreadCount: number }` |
+| GET | `/notifications/unread-count` | Get unread badge count | — | `{ data: { count: number } }` |
+| PATCH | `/notifications/:id/read` | Mark single notification read | — | `{ data: { success: true } }` |
+| PATCH | `/notifications/mark-all-read` | Mark all notifications read | — | `{ data: { success: true } }` |
+| POST | `/notifications/internal/trigger-digest` | Manually trigger overdue email digest | Query: `type=po\|so`; Header: `x-cron-secret` (optional) | `{ message: string }` |
+
+**Notification object shape:**
+```
+{
+  _id: string,
+  userId: string,
+  organizationId: string,
+  type: string,
+  title: string,           // human-readable e.g. "Purchase order confirmed"
+  entityType: string,      // e.g. "purchase_order"
+  entityId: string,
+  performedBy: string,
+  read: boolean,
+  readAt?: Date,
+  occurredAt: Date
+}
+```
+
+**Permission required:** `notification.view` (Administrator role only)
+
+---
+
+## Organization Settings — Notification Preferences
+
+Notification preferences are stored on both `OrganizationSettings` and `User` documents.
+
+| Method | Endpoint | Purpose | Request |
+|--------|----------|---------|---------|
+| PATCH | `/organization-settings/my-own` | Update org-level digest preferences | Include `notificationPreferences: { overdueDigest: { po: { enabled: boolean }, so: { enabled: boolean } } }` in body |
+| PATCH | `/users/my-own` | Update user-level digest preferences | Include `notificationPreferences: { overdueDigest: { po: { enabled: boolean }, so: { enabled: boolean } } }` in body |
+
+Both must be `enabled: true` for a digest email to send to a given user.
 
 ---
 

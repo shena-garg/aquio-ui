@@ -1,7 +1,7 @@
 # To-Do List
 
 Pending work, open issues, and planned roadmap items.
-Last updated: 2026-04-25
+Last updated: 2026-05-06
 
 > Completed features have been moved to [docs/features.md](./features.md).
 
@@ -42,8 +42,8 @@ Last updated: 2026-04-25
 
 | File | Line | Issue |
 |------|------|-------|
-| `src/components/purchase-orders/details/PODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" |
-| `src/components/sales-orders/details/SODetailsTabs.tsx` | 147 | **Notifications tab** — Shows "Coming soon" |
+| `src/components/purchase-orders/details/PODetailsTabs.tsx` | 147 | **Notifications tab on PO detail** — Shows "Coming soon" (order-specific notifications, separate from the global /notifications page) |
+| `src/components/sales-orders/details/SODetailsTabs.tsx` | 147 | **Notifications tab on SO detail** — Shows "Coming soon" (order-specific notifications, separate from the global /notifications page) |
 
 ---
 
@@ -54,7 +54,7 @@ Last updated: 2026-04-25
 ### Immediate (Next 1–2 months)
 1. 🔥 **Approval Workflows** — Biggest adoption blocker for teams with 5+ people
 2. 🔥 **Invoice & Three-Way Matching** — PO → GRN → Invoice; required before finance can pay
-3. 🔥 **Notifications tab** — Replace "Coming soon" on PO/SO detail pages
+3. 🔥 **Notifications tab on PO/SO detail** — Replace "Coming soon" with order-specific notification history
 4. ⭐ **Invoice OCR (AI Phase 1)** — Upload invoice → Claude extracts line items; immediate daily ROI
 
 ### Short-term (Month 2–4)
