@@ -23,7 +23,7 @@ All API calls use Axios via `src/lib/api-client.ts` with automatic Bearer token 
 
 | Method | Endpoint | Purpose | Request | Response |
 |--------|----------|---------|---------|----------|
-| GET | `/purchase-orders/list` | List POs with filters | Query: `page, limit, orderType="purchase", status, poNumber, referenceId, supplierReferenceId, receiptStatus, issueDateFrom, issueDateTo, deliveryDateFrom, deliveryDateTo` | `PurchaseOrdersResponse { data: PurchaseOrder[], pagination: { total, page, limit }, counts: POStatusCounts }` |
+| GET | `/purchase-orders/list` | List POs with filters | Query: `page, limit, orderType="purchase", status, poNumber, referenceId, supplierReferenceId, receiptStatus, issueDateFrom, issueDateTo, deliveryDateFrom, deliveryDateTo, minDelay, maxDelay` — `minDelay`/`maxDelay` filter by `delayDays` range (Watch=1-2, Warning=3-6, Critical=7+); when `status=delayed` results sort by `delayDays` desc | `PurchaseOrdersResponse { data: PurchaseOrder[], pagination: { total, page, limit }, counts: POStatusCounts }` |
 | GET | `/purchase-orders/list` | Export POs as CSV | Query: `format="csv", csvPattern: "basic"|"comprehensive", orderType="purchase", status, ...filters` | `Blob` |
 | GET | `/purchase-orders/{id}?comprehensive=true` | Get single PO with full details | — | `PurchaseOrder` |
 | PATCH | `/purchase-orders/{id}/cancel` | Cancel PO | `{ cancellationReason: string, cancellationNotes?: string }` | — |
@@ -58,7 +58,7 @@ Uses the **same backend endpoints** as Purchase Orders but with `orderType="sale
 
 | Method | Endpoint | Purpose | Request | Response |
 |--------|----------|---------|---------|----------|
-| GET | `/purchase-orders/list` | List SOs | Query: `orderType="sales"`, same filters as PO | `SalesOrdersResponse` |
+| GET | `/purchase-orders/list` | List SOs | Query: `orderType="sales"`, same filters as PO including `minDelay`/`maxDelay` | `SalesOrdersResponse` |
 | GET | `/purchase-orders/list` | Export SOs as CSV | Query: `format="csv", orderType="sales"` | `Blob` |
 | GET | `/purchase-orders/{id}?comprehensive=true` | Get single SO | — | `SalesOrder` |
 | PATCH | `/purchase-orders/{id}/cancel` | Cancel SO | Same as PO | — |
@@ -96,9 +96,9 @@ Uses the **same backend endpoints** as Purchase Orders but with `orderType="sale
 
 | Method | Endpoint | Purpose | Request | Response |
 |--------|----------|---------|---------|----------|
-| GET | `/purchase-orders/analytics/product-procurement` | Procurement analytics | Query: `productId, variantId, fromDate, toDate` | Analytics data |
-| GET | `/purchase-orders/analytics/product-sales` | Sales analytics | Query: `productId, variantId, fromDate, toDate` | Analytics data |
-| GET | `/purchase-orders/analytics/product-margin` | Margin analytics | Query: `productId, variantId, fromDate, toDate` | Analytics data |
+| GET | `/purchase-orders/analytics/product-procurement` | Procurement analytics | Query: `productId, variantId, fromDate, toDate` | `{ summary: { totalUnitsOrdered, totalUnitsReceived, totalSpend, avgBuyPrice, poCount, uom, fulfillmentRate, bestPrice, worstPrice, ... }, priceHistory: [], volumeHistory: [], volumeIntelligence: {}, suppliers: [{ supplierId, supplierName, units, avgPrice, minPrice, maxPrice, poCount, avgLeadTimeDays, onTimeRate, totalSpend, ... }], recentPOs: [{ poId, poNumber, supplierName, unitsOrdered, unitsReceived, issueDate, deliveryDate, unitPrice, status, receiptStatus, leadTimeDays, ... }] }` |
+| GET | `/purchase-orders/analytics/product-sales` | Sales analytics | Query: `productId, variantId, fromDate, toDate` | `{ summary: { totalUnitsSold, totalUnitsDelivered, totalRevenue, avgSellPrice, soCount, uom, fulfillmentRate, ... }, priceHistory: [], volumeHistory: [], volumeIntelligence: {}, buyers: [{ buyerId, buyerName, units, avgPrice, minPrice, maxPrice, soCount, avgLeadTimeDays, onTimeRate, totalRevenue, ... }], recentSOs: [{ soId, soNumber, buyerName, unitsSold, unitsDelivered, issueDate, deliveryDate, unitPrice, status, receiptStatus, leadTimeDays, ... }] }` |
+| GET | `/purchase-orders/analytics/product-margin` | Margin analytics | Query: `productId, variantId, fromDate, toDate` | `{ summary: { avgBuyPrice, avgSellPrice, avgGrossMarginPct, marginTrend, marginTrendPct, currentBuyPrice, currentSellPrice }, waterfall: [{ label, value, type }], marginHistory: [{ month, grossMarginPct }] }` |
 
 ---
 

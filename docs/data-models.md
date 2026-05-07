@@ -126,6 +126,7 @@ All TypeScript interfaces, types, and enums used across the Aquio frontend. This
 | `pendingQuantity` | `number` | No | Aggregated pending |
 | `receiptCompletionPercentage` | `number` | Yes | 0-100 |
 | `delayDays` | `number` | Yes | 0 if not overdue |
+| `leadTimeDays` | `number \| null` | No | Days from issueDate to first receipt deliveryDate; set on receipt create/update; null if no receipts |
 | `paymentTerms` | `string` | Yes | |
 | `hasUniformUOM` | `boolean` | No | false if products have mixed units |
 | `commonUOM` | `string` | No | Only set if hasUniformUOM is true |
