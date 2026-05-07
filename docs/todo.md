@@ -1,7 +1,7 @@
 # To-Do List
 
 Pending work, open issues, and planned roadmap items.
-Last updated: 2026-05-06
+Last updated: 2026-05-07
 
 > Completed features have been moved to [docs/features.md](./features.md).
 
@@ -200,6 +200,37 @@ The pre-PO workflow. Most SMB procurement tools skip this — it's a major diffe
 - [ ] **Partial acceptance** — Accept some units, reject others; rejected qty goes to quarantine
 - [ ] **Non-conformance report** — Record quality failures; notify supplier; track resolution
 - [ ] **QC stats per supplier** — % of batches passing QC over time
+
+---
+
+## Downloadable Reports (Admin)
+
+> System admin can download reports in PDF/Excel for monthly, quarterly, or yearly periods.
+> Start with Tier 1 — data already exists. Tier 2 needs aggregation. Tier 3 needs AI/ML.
+
+### Tier 1 — High value, data already exists
+
+- [ ] **Spend Analysis Report** *(monthly / quarterly / yearly)* — Total spend by supplier, category, product. MoM/QoQ trend. Top 10 suppliers by spend (Pareto).
+- [ ] **Supplier Performance Report** *(monthly / quarterly)* — On-time delivery rate, fulfillment rate, avg lead time, price trend, force-close rate per supplier.
+- [ ] **PO Cycle Time Report** *(monthly)* — Avg days: draft → issued → confirmed → first receipt → closed. Breakdown by supplier and category.
+- [ ] **Inventory Flow Report** *(monthly)* — Units ordered vs received per product/category. Pending open exposure. Excess deliveries flagged.
+
+### Tier 2 — High value, needs aggregation
+
+- [ ] **Gross Margin Report** *(monthly / quarterly / yearly)* — Avg buy vs sell price per product over time. Margin % trend. Products with negative or sub-5% margin flagged.
+- [ ] **Buyer / Customer Performance Report** *(quarterly)* — Revenue per buyer, fulfillment rate to buyers, avg order size, payment terms utilization.
+- [ ] **Overdue & Delay Analysis Report** *(monthly)* — % of POs and SOs delayed, avg delay by supplier/buyer/category, Watch/Warning/Critical distribution, cost of delay in ₹.
+
+### Tier 3 — AI-augmented (plan now, build after 3+ months of data)
+
+- [ ] **Price Anomaly Report** *(monthly)* — Orders where unit price deviated >X% from product's historical average. Flags maverick spend and data entry errors.
+- [ ] **Demand Forecast Report** *(monthly)* — Projected demand for next 30/60/90 days per product based on order history. Confidence interval from historical volatility.
+- [ ] **Supplier Risk Scorecard** *(quarterly)* — Composite score: on-time rate + fulfillment rate + price stability + lead time consistency. Red/Amber/Green classification.
+
+### Recommended build order
+1. Spend Analysis → Supplier Performance → Gross Margin (covers CFO, procurement head, and ops)
+2. PO Cycle Time → Inventory Flow → Overdue Analysis
+3. Buyer Performance → Price Anomaly → Demand Forecast → Supplier Risk Scorecard
 
 ---
 
