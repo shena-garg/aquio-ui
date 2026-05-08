@@ -11,6 +11,7 @@ import { organizationSettingsService, type OrganizationSettings } from "@/servic
 import { productsService } from "@/services/products";
 import { QuickCreateCategoryModal } from "@/components/categories/QuickCreateCategoryModal";
 import { UOM_LIST } from "@/lib/uom";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -219,12 +220,17 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
                     + New Category
                   </button>
                 </div>
-                <select value={categoryId} onChange={(e) => handleCategoryChange(e.target.value)} className={selectClass(errors.categoryId)}>
-                  <option value="">Select category</option>
-                  {categories.filter((c) => !c.parentId).map((c) => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  value={categoryId}
+                  onChange={handleCategoryChange}
+                  options={[
+                    { value: "", label: "Select category" },
+                    ...categories.filter((c) => !c.parentId).map((c) => ({ value: c._id, label: c.name })),
+                  ]}
+                  placeholder="Select category"
+                  error={!!errors.categoryId}
+                  className="w-full h-10"
+                />
                 {errors.categoryId && <p className="text-[12px] text-[#dc2626] mt-1">{errors.categoryId}</p>}
               </div>
 
@@ -244,13 +250,18 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
                     </button>
                   )}
                 </div>
-                <select value={subCategoryId} onChange={(e) => setSubCategoryId(e.target.value)}
-                  disabled={!categoryId} className={selectClass(errors.subCategoryId)}>
-                  <option value="">{categoryId ? "Select subcategory" : "Select a category first"}</option>
-                  {subCategories.map((sc) => (
-                    <option key={sc._id} value={sc._id}>{sc.name}</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  value={subCategoryId}
+                  onChange={setSubCategoryId}
+                  options={[
+                    { value: "", label: categoryId ? "Select subcategory" : "Select a category first" },
+                    ...subCategories.map((sc) => ({ value: sc._id, label: sc.name })),
+                  ]}
+                  placeholder={categoryId ? "Select subcategory" : "Select a category first"}
+                  disabled={!categoryId}
+                  error={!!errors.subCategoryId}
+                  className="w-full h-10"
+                />
                 {errors.subCategoryId && <p className="text-[12px] text-[#dc2626] mt-1">{errors.subCategoryId}</p>}
               </div>
 
@@ -259,10 +270,17 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Unit of Measurement <span className="text-red-500">*</span>
                 </label>
-                <select value={unitOfMeasurement} onChange={(e) => setUnitOfMeasurement(e.target.value)} className={selectClass(errors.unitOfMeasurement)}>
-                  <option value="">Select unit</option>
-                  {UOM_LIST.map((u) => <option key={u} value={u}>{u}</option>)}
-                </select>
+                <CustomSelect
+                  value={unitOfMeasurement}
+                  onChange={setUnitOfMeasurement}
+                  options={[
+                    { value: "", label: "Select unit" },
+                    ...UOM_LIST.map((u) => ({ value: u, label: u })),
+                  ]}
+                  placeholder="Select unit"
+                  error={!!errors.unitOfMeasurement}
+                  className="w-full h-10"
+                />
                 {errors.unitOfMeasurement && <p className="text-[12px] text-[#dc2626] mt-1">{errors.unitOfMeasurement}</p>}
               </div>
 
@@ -300,12 +318,20 @@ export function QuickCreateProductModal({ open, onClose, onCreated, initialName 
                   GST Rate <span className="text-red-500">*</span>
                 </label>
                 {settings?.applicableGst && settings.applicableGst.length > 0 ? (
-                  <select value={gst} onChange={(e) => setGst(e.target.value)} className={selectClass(errors.gst)}>
-                    <option value="">Select GST rate</option>
-                    {settings.applicableGst.map((rate) => (
-                      <option key={rate} value={String(rate)}>{rate}%</option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    value={gst}
+                    onChange={setGst}
+                    options={[
+                      { value: "", label: "Select GST rate" },
+                      ...(settings?.applicableGst ?? []).map((rate) => ({
+                        value: String(rate),
+                        label: `${rate}%`,
+                      })),
+                    ]}
+                    placeholder="Select GST rate"
+                    error={!!errors.gst}
+                    className="w-full h-10"
+                  />
                 ) : (
                   <input type="number" placeholder="e.g. 18" min="0" max="100" value={gst}
                     onChange={(e) => setGst(e.target.value)} className={inputClass(errors.gst)} />

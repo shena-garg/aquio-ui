@@ -25,6 +25,7 @@ import { QuickCreateLocationModal } from "@/components/locations/QuickCreateLoca
 import { QuickCreateProductModal } from "@/components/products/QuickCreateProductModal";
 import { QuickConfigureSettingsModal } from "@/components/settings/QuickConfigureSettingsModal";
 import { QuickCreatePartnerModal } from "@/components/partners/QuickCreatePartnerModal";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 /* ── Period options ──────────────────────────────────────────────────────── */
 
@@ -233,15 +234,12 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <label className="text-[12px] text-[#6b7280]">Period</label>
-              <select
-                className={selectCls}
+              <CustomSelect
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value as PeriodValue)}
-              >
-                {PERIOD_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedPeriod(val as PeriodValue)}
+                options={PERIOD_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+                className="h-8"
+              />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-[#6b7280] uppercase tracking-[0.6px] font-medium">From</span>

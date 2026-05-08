@@ -13,6 +13,7 @@ import { UsersTable } from "@/components/users/UsersTable";
 import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 // ── Search field config ──────────────────────────────────────────────────────
 
@@ -153,17 +154,12 @@ export default function UsersPage() {
       {/* Search bar – desktop */}
       <div className="hidden lg:block bg-white">
         <div className="flex flex-wrap items-center gap-2 px-6 py-3">
-          <select
+          <CustomSelect
             value={searchField}
-            onChange={(e) => setSearchField(e.target.value as SearchFieldKey)}
-            className={SELECT_INPUT_CLASS}
-          >
-            {SEARCH_FIELDS.map((f) => (
-              <option key={f.key} value={f.key}>
-                {f.label}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setSearchField(val as SearchFieldKey)}
+            options={SEARCH_FIELDS.map((f) => ({ value: f.key, label: f.label }))}
+            className="h-8"
+          />
 
           <Input
             type="text"
@@ -234,17 +230,12 @@ export default function UsersPage() {
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <select
+              <CustomSelect
                 value={searchField}
-                onChange={(e) => setSearchField(e.target.value as SearchFieldKey)}
-                className="h-9 w-[130px] flex-shrink-0 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-              >
-                {SEARCH_FIELDS.map((f) => (
-                  <option key={f.key} value={f.key}>
-                    {f.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSearchField(val as SearchFieldKey)}
+                options={SEARCH_FIELDS.map((f) => ({ value: f.key, label: f.label }))}
+                className="h-9 w-[130px] flex-shrink-0"
+              />
               <Input
                 type="text"
                 placeholder={`${SEARCH_FIELDS.find((f) => f.key === searchField)!.label}…`}

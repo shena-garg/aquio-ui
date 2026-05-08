@@ -17,6 +17,7 @@ import { categoriesService } from "@/services/categories";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import type { Category } from "@/services/categories";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 // ── Column config ─────────────────────────────────────────────────────────────
 
@@ -310,16 +311,17 @@ export default function ProductsPage() {
       {/* ── Search bar – desktop ─────────────────────────────────────── */}
       <div className="hidden lg:block bg-white">
         <div className="flex flex-wrap items-center gap-2 px-6 py-3">
-          <select
+          <CustomSelect
             value={selectedField}
-            onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
-            className={SELECT_INPUT_CLASS}
-          >
-            <option value="sku">Product Code</option>
-            <option value="name">Product Name</option>
-            <option value="categoryId">Category</option>
-            <option value="subCategoryId">Subcategory</option>
-          </select>
+            onChange={(val) => handleFieldChange(val as FieldKey)}
+            options={[
+              { value: "sku", label: "Product Code" },
+              { value: "name", label: "Product Name" },
+              { value: "categoryId", label: "Category" },
+              { value: "subCategoryId", label: "Subcategory" },
+            ]}
+            className="h-8"
+          />
 
           {(selectedField === "sku" || selectedField === "name") && (
             <Input
@@ -333,29 +335,29 @@ export default function ProductsPage() {
           )}
 
           {selectedField === "categoryId" && (
-            <select
+            <CustomSelect
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className={SELECT_INPUT_CLASS}
-            >
-              <option value="">Select Category…</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>{cat.name}</option>
-              ))}
-            </select>
+              onChange={setInputValue}
+              options={[
+                { value: "", label: "Select Category…" },
+                ...categories.map((cat) => ({ value: cat._id, label: cat.name })),
+              ]}
+              placeholder="Select Category…"
+              className="h-8 w-48"
+            />
           )}
 
           {selectedField === "subCategoryId" && (
-            <select
+            <CustomSelect
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className={SELECT_INPUT_CLASS}
-            >
-              <option value="">Select Subcategory…</option>
-              {allSubCategories.map((sub) => (
-                <option key={sub._id} value={sub._id}>{sub.name}</option>
-              ))}
-            </select>
+              onChange={setInputValue}
+              options={[
+                { value: "", label: "Select Subcategory…" },
+                ...allSubCategories.map((sub) => ({ value: sub._id, label: sub.name })),
+              ]}
+              placeholder="Select Subcategory…"
+              className="h-8 w-48"
+            />
           )}
 
           <Button
@@ -456,16 +458,17 @@ export default function ProductsPage() {
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <select
+              <CustomSelect
                 value={selectedField}
-                onChange={(e) => handleFieldChange(e.target.value as FieldKey)}
-                className="h-9 w-[130px] flex-shrink-0 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-              >
-                <option value="sku">Product Code</option>
-                <option value="name">Product Name</option>
-                <option value="categoryId">Category</option>
-                <option value="subCategoryId">Subcategory</option>
-              </select>
+                onChange={(val) => handleFieldChange(val as FieldKey)}
+                options={[
+                  { value: "sku", label: "Product Code" },
+                  { value: "name", label: "Product Name" },
+                  { value: "categoryId", label: "Category" },
+                  { value: "subCategoryId", label: "Subcategory" },
+                ]}
+                className="h-9 w-[130px] flex-shrink-0"
+              />
 
               {(selectedField === "sku" || selectedField === "name") && (
                 <Input
@@ -484,29 +487,29 @@ export default function ProductsPage() {
               )}
 
               {selectedField === "categoryId" && (
-                <select
+                <CustomSelect
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className="h-9 flex-1 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-                >
-                  <option value="">Select Category…</option>
-                  {categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>{cat.name}</option>
-                  ))}
-                </select>
+                  onChange={setInputValue}
+                  options={[
+                    { value: "", label: "Select Category…" },
+                    ...categories.map((cat) => ({ value: cat._id, label: cat.name })),
+                  ]}
+                  placeholder="Select Category…"
+                  className="h-9 flex-1"
+                />
               )}
 
               {selectedField === "subCategoryId" && (
-                <select
+                <CustomSelect
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className="h-9 flex-1 cursor-pointer rounded-md border border-gray-200 bg-white px-2 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-                >
-                  <option value="">Select Subcategory…</option>
-                  {allSubCategories.map((sub) => (
-                    <option key={sub._id} value={sub._id}>{sub.name}</option>
-                  ))}
-                </select>
+                  onChange={setInputValue}
+                  options={[
+                    { value: "", label: "Select Subcategory…" },
+                    ...allSubCategories.map((sub) => ({ value: sub._id, label: sub.name })),
+                  ]}
+                  placeholder="Select Subcategory…"
+                  className="h-9 flex-1"
+                />
               )}
             </div>
 

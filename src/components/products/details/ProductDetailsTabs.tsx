@@ -13,6 +13,7 @@ import {
 import { productsService, type CreateProductPayload } from "@/services/products";
 import { getEntityActivityLog, getUsers } from "@/services/activity";
 import { SimpleActivityTimeline } from "@/components/activity/SimpleActivityTimeline";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
   LineChart,
   Line,
@@ -278,16 +279,17 @@ function VariantEditDialog({
                         </td>
                         <td className="py-2 px-3">
                           {isDropdown ? (
-                            <select
+                            <CustomSelect
                               value={attr.value}
-                              onChange={(e) => updateAttrValue(i, e.target.value)}
-                              className={hasError ? inputErrorCls : inputCls}
-                            >
-                              <option value="">Select…</option>
-                              {dropdownOptions.map((opt) => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
+                              onChange={(val) => updateAttrValue(i, val)}
+                              options={[
+                                { value: "", label: "Select…" },
+                                ...dropdownOptions.map((opt) => ({ value: opt, label: opt })),
+                              ]}
+                              placeholder="Select…"
+                              error={hasError}
+                              className="w-full h-8"
+                            />
                           ) : (
                             <input
                               value={attr.value}
@@ -1013,33 +1015,23 @@ function AnalyticsTab({ product }: { product: Product }) {
         {/* Variant dropdown */}
         <div className="flex items-center gap-2">
           <label className="text-[12px] text-[#6b7280]">Variant</label>
-          <select
-            className={selectCls}
+          <CustomSelect
             value={selectedVariant}
-            onChange={(e) => setSelectedVariant(e.target.value)}
-          >
-            {variants.map((v) => (
-              <option key={v._id} value={v._id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
+            onChange={setSelectedVariant}
+            options={variants.map((v) => ({ value: v._id, label: v.name }))}
+            className="h-8"
+          />
         </div>
 
         {/* Period dropdown */}
         <div className="flex items-center gap-2">
           <label className="text-[12px] text-[#6b7280]">Period</label>
-          <select
-            className={selectCls}
+          <CustomSelect
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as PeriodValue)}
-          >
-            {PERIOD_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setSelectedPeriod(val as PeriodValue)}
+            options={PERIOD_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+            className="h-8"
+          />
         </div>
 
         {/* Custom date range */}

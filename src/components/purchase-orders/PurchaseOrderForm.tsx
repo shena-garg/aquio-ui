@@ -44,6 +44,7 @@ import {
   type ProductSearchResult,
   type ProductVariant,
 } from "@/services/purchaseOrderForm";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 // ---------------------------------------------------------------------------
 // Product row type
@@ -224,20 +225,20 @@ function PartnerCard({
       <div className="grid grid-cols-2 gap-4">
         {/* Left column: Company dropdown + Tax/Contact */}
         <div className="flex flex-col gap-2">
-          <select
+          <CustomSelect
             value={selectedCompanyId}
-            onChange={(e) => onCompanyChange(e.target.value)}
+            onChange={onCompanyChange}
+            options={[
+              { value: "", label: "Select company" },
+              ...companies.map((c) => ({
+                value: c._id,
+                label: c.name + (c._type === "own" ? " (Your Org)" : ""),
+              })),
+            ]}
+            placeholder="Select company"
             disabled={disabled}
-            className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option value="">Select company</option>
-            {companies.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-                {c._type === "own" ? " (Your Org)" : ""}
-              </option>
-            ))}
-          </select>
+            className="w-full h-9"
+          />
 
           {company ? (() => {
             const taxNum = (company as VendorCompany).taxNumber;
@@ -264,19 +265,17 @@ function PartnerCard({
 
         {/* Right column: Location dropdown + GST/Address */}
         <div className="flex flex-col gap-2">
-          <select
+          <CustomSelect
             value={selectedLocationId}
-            onChange={(e) => onLocationChange(e.target.value)}
+            onChange={onLocationChange}
+            options={[
+              { value: "", label: "Select location" },
+              ...locations.map((l) => ({ value: l._id, label: l.name })),
+            ]}
+            placeholder="Select location"
             disabled={disabled || locations.length === 0}
-            className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option value="">Select location</option>
-            {locations.map((l) => (
-              <option key={l._id} value={l._id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
+            className="w-full h-9"
+          />
 
           {location ? (
             <div className="space-y-0.5">
@@ -2030,23 +2029,18 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                       {/* Row 2: Variant | Info | GST% */}
                       <div className="flex items-center gap-2">
                         <div className="flex-1 min-w-0 flex items-center gap-1">
-                          <select
+                          <CustomSelect
                             value={row.variant?._id ?? ""}
-                            onChange={(e) => handleVariantChange(row.id, row, e.target.value)}
+                            onChange={(variantId) => handleVariantChange(row.id, row, variantId)}
+                            options={[
+                              { value: "", label: "Select variant" },
+                              ...(row.product?.variants ?? []).map((v) => ({ value: v._id, label: v.name })),
+                            ]}
+                            placeholder="Select variant"
                             disabled={!hasProduct}
-                            className={`flex-1 min-w-0 h-8 border border-[#e5e7eb] rounded-[6px] px-2.5 text-[12px] text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white disabled:opacity-50 disabled:cursor-not-allowed ${
-                              attempted && hasProduct && !row.variant
-                                ? "ring-1 ring-[#dc2626]"
-                                : ""
-                            }`}
-                          >
-                            <option value="">Select variant</option>
-                            {(row.product?.variants ?? []).map((v) => (
-                              <option key={v._id} value={v._id}>
-                                {v.name}
-                              </option>
-                            ))}
-                          </select>
+                            error={!!(attempted && hasProduct && !row.variant)}
+                            className="flex-1 min-w-0 h-8"
+                          />
                           {row.variant && (
                             <VariantInfoButton variant={row.variant} />
                           )}
@@ -2230,24 +2224,18 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             {/* Variant */}
                             <td className="h-10 px-1">
                               <div className="flex items-center gap-0.5">
-                                <select
+                                <CustomSelect
                                   value={row.variant?._id ?? ""}
-                                  title={row.variant?.name ?? ""}
-                                  onChange={(e) => handleVariantChange(row.id, row, e.target.value)}
+                                  onChange={(variantId) => handleVariantChange(row.id, row, variantId)}
+                                  options={[
+                                    { value: "", label: "Select" },
+                                    ...(row.product?.variants ?? []).map((v) => ({ value: v._id, label: v.name })),
+                                  ]}
+                                  placeholder="Select"
                                   disabled={!hasProduct}
-                                  className={`flex-1 min-w-0 border-0 outline-none bg-transparent focus:bg-[#f0fdfa] rounded px-2 py-1 text-[13px] text-[#111827] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
-                                    attempted && hasProduct && !row.variant
-                                      ? "ring-1 ring-[#dc2626]"
-                                      : ""
-                                  }`}
-                                >
-                                  <option value="">Select</option>
-                                  {(row.product?.variants ?? []).map((v) => (
-                                    <option key={v._id} value={v._id}>
-                                      {v.name}
-                                    </option>
-                                  ))}
-                                </select>
+                                  error={!!(attempted && hasProduct && !row.variant)}
+                                  className="flex-1 min-w-0 h-8 border-transparent bg-transparent hover:border-[#e5e7eb] focus:bg-[#f0fdfa]"
+                                />
                                 {row.variant && (
                                   <VariantInfoButton variant={row.variant} />
                                 )}

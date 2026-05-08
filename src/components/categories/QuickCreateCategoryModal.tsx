@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { categoriesService } from "@/services/categories";
 import type { CustomAttribute } from "@/services/categories";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -248,16 +249,15 @@ export function QuickCreateCategoryModal({
                           className="w-16 border border-gray-200 rounded px-2 py-1.5 text-[12px] outline-none focus:ring-1 focus:ring-[#0d9488]"
                         />
                         {/* Type */}
-                        <select
+                        <CustomSelect
                           value={row.valueType}
-                          onChange={(e) =>
-                            updateAttribute(row.id, { valueType: e.target.value as "text" | "dropdown" })
-                          }
-                          className="w-24 border border-gray-200 rounded px-1.5 py-1.5 text-[12px] outline-none focus:ring-1 focus:ring-[#0d9488] bg-white"
-                        >
-                          <option value="text">Text</option>
-                          <option value="dropdown">Dropdown</option>
-                        </select>
+                          onChange={(val) => updateAttribute(row.id, { valueType: val as "text" | "dropdown" })}
+                          options={[
+                            { value: "text", label: "Text" },
+                            { value: "dropdown", label: "Dropdown" },
+                          ]}
+                          className="w-24 h-8"
+                        />
                         {/* Values (dropdown only) */}
                         <input
                           type="text"

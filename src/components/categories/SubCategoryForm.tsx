@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { categoriesService } from "@/services/categories";
 import type { CustomAttribute } from "@/services/categories";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 interface AttributeRow extends CustomAttribute {
   id: string;
@@ -262,18 +263,15 @@ export function SubCategoryForm({
 
                         {/* Type */}
                         <td className="h-10 px-1">
-                          <select
+                          <CustomSelect
                             value={row.valueType}
-                            onChange={(e) =>
-                              updateAttribute(row.id, {
-                                valueType: e.target.value as "text" | "dropdown",
-                              })
-                            }
-                            className="w-full border-0 outline-none bg-transparent focus:bg-[#f0fdfa] rounded px-2 py-1 text-[13px] text-[#111827] cursor-pointer"
-                          >
-                            <option value="text">Text</option>
-                            <option value="dropdown">Dropdown</option>
-                          </select>
+                            onChange={(val) => updateAttribute(row.id, { valueType: val as "text" | "dropdown" })}
+                            options={[
+                              { value: "text", label: "Text" },
+                              { value: "dropdown", label: "Dropdown" },
+                            ]}
+                            className="w-full h-8 border-0 bg-transparent"
+                          />
                         </td>
 
                         {/* Values */}

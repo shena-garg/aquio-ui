@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import type { SOActiveFilters, SOFilterStatus } from "@/services/sales-orders";
 import { searchProducts } from "@/services/purchaseOrderForm";
 import type { ProductSearchResult } from "@/services/purchaseOrderForm";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 // ── Field config ──────────────────────────────────────────────────────────────
 
@@ -107,95 +108,6 @@ function formatChipDate(iso: string): string {
   const [year, month, day] = iso.split("-").map(Number);
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${day} ${months[month - 1]} ${year}`;
-}
-
-// ── Field selector dropdown ───────────────────────────────────────────────────
-
-function FieldSelectorDropdown({
-  fields,
-  value,
-  onChange,
-  mobile,
-}: {
-  fields: { key: string; label: string }[];
-  value: string;
-  onChange: (key: string) => void;
-  mobile?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  const selectedLabel = fields.find((f) => f.key === value)?.label ?? "";
-
-  function updatePosition() {
-    if (!triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    setDropdownStyle({
-      position: "fixed",
-      top: rect.bottom + 4,
-      left: rect.left,
-      width: Math.max(rect.width, 160),
-      zIndex: 9999,
-    });
-  }
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    function reposition() { updatePosition(); }
-    window.addEventListener("scroll", reposition, true);
-    window.addEventListener("resize", reposition);
-    return () => {
-      window.removeEventListener("scroll", reposition, true);
-      window.removeEventListener("resize", reposition);
-    };
-  }, [open]);
-
-  const btnCls = mobile
-    ? "h-9 w-[130px] flex-shrink-0 flex items-center justify-between gap-1 rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-    : "h-8 flex items-center justify-between gap-1 rounded-md border border-gray-200 bg-white px-2.5 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]";
-
-  return (
-    <div ref={wrapperRef} className={mobile ? "flex-shrink-0" : undefined}>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => { setOpen((o) => !o); updatePosition(); }}
-        className={btnCls}
-      >
-        <span>{selectedLabel}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-      </button>
-      {open && (
-        <div style={dropdownStyle} className="bg-white border border-[#e5e7eb] rounded-md shadow-lg overflow-y-auto max-h-64">
-          {fields.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => { onChange(f.key); setOpen(false); }}
-              className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f3f4f6] ${
-                f.key === value ? "bg-[#f0fdfa] text-[#0d9488] font-medium" : "text-[#0F1720]"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 // ── Partner searchable dropdown ───────────────────────────────────────────────
@@ -600,16 +512,13 @@ export function SOSearchBar({
     }
     if (currentField.type === "select") {
       return (
-        <select
+        <CustomSelect
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          className={selectCls}
-        >
-          <option value="">Select {currentField.label}…</option>
-          {currentField.options.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+          onChange={setInputValue}
+          options={currentField.options}
+          placeholder={`Select ${currentField.label}…`}
+          className={mobile ? "h-9 flex-1" : "h-8 w-48"}
+        />
       );
     }
     if (currentField.type === "dynamicSelect") {
@@ -675,11 +584,11 @@ export function SOSearchBar({
 
   const searchFields = (mobile?: boolean) => (
     <>
-      <FieldSelectorDropdown
-        fields={visibleFields}
+      <CustomSelect
         value={selectedField}
         onChange={(key) => handleFieldChange(key as FieldKey)}
-        mobile={mobile}
+        options={visibleFields.map((f) => ({ value: f.key, label: f.label }))}
+        className={mobile ? "h-9 w-[130px] flex-shrink-0" : "h-8"}
       />
 
       {valueInput(mobile)}

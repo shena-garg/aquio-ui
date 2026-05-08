@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 interface UserFormProps {
   mode: "create" | "edit";
@@ -214,20 +215,17 @@ export function UserForm({ mode, userId, initialValues, headerless = false }: Us
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Assign Role <span className="text-red-500">*</span>
                 </label>
-                <select
+                <CustomSelect
                   value={roleId}
-                  onChange={(e) => setRoleId(e.target.value)}
-                  className={`w-full border ${
-                    errors.roleId ? "border-[#dc2626]" : "border-gray-300"
-                  } rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white`}
-                >
-                  <option value="">Select a role</option>
-                  {(roles ?? []).map((role) => (
-                    <option key={role._id} value={role._id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setRoleId}
+                  options={[
+                    { value: "", label: "Select a role" },
+                    ...(roles ?? []).map((role) => ({ value: role._id, label: role.name })),
+                  ]}
+                  placeholder="Select a role"
+                  error={!!errors.roleId}
+                  className="w-full h-10"
+                />
                 {errors.roleId && (
                   <p className="text-[12px] text-[#dc2626] mt-1">
                     {errors.roleId}

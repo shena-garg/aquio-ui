@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 const LIMIT_OPTIONS = [10, 25, 50, 100];
 
@@ -54,20 +55,15 @@ export function PageHeader({
             {/* Rows per page – hidden on very small screens */}
             <div className="hidden sm:flex items-center gap-1.5">
               <span className="text-[13px] text-gray-500">Rows</span>
-              <select
-                value={limit}
-                onChange={(e) => {
-                  onLimitChange(Number(e.target.value));
+              <CustomSelect
+                value={String(limit)}
+                onChange={(val) => {
+                  onLimitChange(Number(val));
                   onPageChange(1);
                 }}
-                className="cursor-pointer rounded-md border border-gray-200 bg-white px-2 py-1 text-[13px] text-[#0F1720] outline-none focus:border-[#0d9488]"
-              >
-                {LIMIT_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+                options={LIMIT_OPTIONS.map((opt) => ({ value: String(opt), label: String(opt) }))}
+                className="h-7 w-16"
+              />
             </div>
 
             {/* Prev / Next arrows */}

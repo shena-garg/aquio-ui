@@ -31,6 +31,7 @@ import {
 } from "@/services/organization-settings";
 import { productsService } from "@/services/products";
 import { UOM_LIST } from "@/lib/uom";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 // ---------------------------------------------------------------------------
 // Searchable select component
@@ -1278,22 +1279,17 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
                               className={`h-10 px-1 ${i > 0 ? "border-l border-[#f3f4f6]" : ""}`}
                             >
                               {row.valueType === "dropdown" && row.dropdownOptions.length > 0 ? (
-                                <select
+                                <CustomSelect
                                   value={val}
-                                  onChange={(e) =>
-                                    updateVariantValue(vc.id, row.id, e.target.value)
-                                  }
-                                  className={`w-full h-8 border border-transparent outline-none bg-transparent focus:bg-[#f0fdfa] focus:border-[#0d9488] rounded-[4px] px-2 py-1 text-[13px] text-[#111827] cursor-pointer hover:border-[#e5e7eb] ${
-                                    valueMissing ? "!border-[#dc2626] bg-[#fef2f2]" : ""
-                                  }`}
-                                >
-                                  <option value="">Select...</option>
-                                  {row.dropdownOptions.map((opt) => (
-                                    <option key={opt} value={opt}>
-                                      {opt}
-                                    </option>
-                                  ))}
-                                </select>
+                                  onChange={(v) => updateVariantValue(vc.id, row.id, v)}
+                                  options={[
+                                    { value: "", label: "Select..." },
+                                    ...row.dropdownOptions.map((opt) => ({ value: opt, label: opt })),
+                                  ]}
+                                  placeholder="Select..."
+                                  error={valueMissing}
+                                  className="w-full h-8 border-transparent bg-transparent hover:border-[#e5e7eb]"
+                                />
                               ) : (
                                 <input
                                   type="text"
