@@ -10,6 +10,7 @@ export interface User {
   name: string;
   email: string;
   roleId?: string;
+  status?: "active" | "inactive";
   accountVerified?: boolean;
 }
 

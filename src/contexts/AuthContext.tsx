@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, useCallback } from "react";
+import React, { createContext, useContext, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { authService, User } from "@/services/auth";
@@ -103,6 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     staleTime: Infinity,
     gcTime: Infinity,
     retry: false,
+    refetchInterval: 2 * 60 * 1000,
+    refetchIntervalInBackground: false,
   });
 
   const {
@@ -115,6 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     staleTime: Infinity,
     gcTime: Infinity,
     retry: false,
+    refetchInterval: 2 * 60 * 1000,
+    refetchIntervalInBackground: false,
   });
 
   const permissions = useMemo(() => {
@@ -150,6 +154,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.clear();
     router.push("/login");
   }, [queryClient, router]);
+
+  // Force logout if user is deactivated
+  useEffect(() => {
+    if (user && user.status === "inactive") {
+      logout();
+    }
+  }, [user?.status, logout]);
 
   const isLoading = isUserLoading || (!!user?.roleId && isRoleLoading);
 
