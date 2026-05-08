@@ -38,6 +38,8 @@ interface SODetailsTabsProps {
 type TabKey = "products" | "shipments" | "linked-orders" | "notifications" | "activity";
 
 export function SODetailsTabs({ order }: SODetailsTabsProps) {
+  const { hasPermission } = useAuth();
+  const canViewAuditLog = hasPermission("sales-order.audit-log");
   const [activeTab, setActiveTab] = useState<TabKey>("products");
   const [activityEvents, setActivityEvents] = useState<AuditEvent[]>([]);
   const [activityUsers, setActivityUsers] = useState<ActivityUser[]>([]);
@@ -79,7 +81,7 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
     { key: "shipments", label: "Shipments", count: shipmentsCount },
     { key: "linked-orders", label: "Linked Orders", count: linkedCount > 0 ? linkedCount : undefined },
     { key: "notifications", label: "Notifications" },
-    { key: "activity", label: "Activity" },
+    ...(canViewAuditLog ? [{ key: "activity" as TabKey, label: "Activity" }] : []),
   ];
 
   return (

@@ -38,6 +38,8 @@ interface PODetailsTabsProps {
 type TabKey = "products" | "receipts" | "linked-orders" | "notifications" | "activity";
 
 export function PODetailsTabs({ order }: PODetailsTabsProps) {
+  const { hasPermission } = useAuth();
+  const canViewAuditLog = hasPermission("purchase-order.audit-log");
   const [activeTab, setActiveTab] = useState<TabKey>("products");
   const [activityEvents, setActivityEvents] = useState<AuditEvent[]>([]);
   const [activityUsers, setActivityUsers] = useState<ActivityUser[]>([]);
@@ -79,7 +81,7 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
     { key: "receipts", label: "Receipts", count: receiptsCount },
     { key: "linked-orders", label: "Linked Orders", count: linkedCount > 0 ? linkedCount : undefined },
     { key: "notifications", label: "Notifications" },
-    { key: "activity", label: "Activity" },
+    ...(canViewAuditLog ? [{ key: "activity" as TabKey, label: "Activity" }] : []),
   ];
 
   return (

@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getUOMAbbreviation } from "@/lib/uom";
 import type { Product } from "@/services/products";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProductDetailsTabsProps {
   product: Product;
@@ -40,6 +41,8 @@ export function ProductDetailsTabs({
   product,
   isEditing,
 }: ProductDetailsTabsProps) {
+  const { hasPermission } = useAuth();
+  const canViewAuditLog = hasPermission("product.audit-log");
   const [activeTab, setActiveTab] = useState<TabKey>("variants");
 
   if (isEditing) return null;
@@ -47,7 +50,7 @@ export function ProductDetailsTabs({
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "variants", label: "Variants", count: product.variants.length },
     { key: "analytics", label: "Analytics" },
-    { key: "activity", label: "Activity" },
+    ...(canViewAuditLog ? [{ key: "activity" as TabKey, label: "Activity" }] : []),
   ];
 
   return (

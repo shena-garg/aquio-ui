@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // All possible permissions per entity — must stay in sync with RoleForm ENTITIES
 const ALL_PERMISSIONS_BY_ENTITY: Record<string, string[]> = {
   category: ["category.view", "category.add", "category.edit"],
-  product: ["product.view", "product.add", "product.edit", "product.archive"],
+  product: ["product.view", "product.add", "product.edit", "product.archive", "product.audit-log"],
   vendor: ["vendor.view", "vendor.add", "vendor.edit"],
   "purchase-order": [
     "purchase-order.view", "purchase-order.add", "purchase-order.edit",
