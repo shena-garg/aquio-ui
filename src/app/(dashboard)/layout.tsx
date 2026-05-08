@@ -16,7 +16,7 @@ export default function DashboardLayout({
         <Sidebar />
         <div className="relative z-0 pt-[56px] lg:pt-0 lg:ml-[240px] flex h-screen flex-col overflow-hidden">
           <VerificationBanner />
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <RouteGuard>{children}</RouteGuard>
           </div>
         </div>
