@@ -16,7 +16,10 @@ export type AuditAction =
   | "receipt_create"
   | "receipt_update"
   | "forcefully_close_item"
-  | "undo_forcefully_close_item";
+  | "undo_forcefully_close_item"
+  | "change_password"
+  | "set_password"
+  | "verify_email";
 
 export interface AuditEvent {
   _id: string;

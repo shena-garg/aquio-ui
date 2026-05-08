@@ -90,9 +90,9 @@ export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: Us
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuItem
-            onClick={() => router.push(`/users/${user._id}/edit`)}
+            onClick={() => router.push(`/users/${user._id}`)}
           >
-            Edit User
+            View Details
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -124,7 +124,8 @@ export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: Us
           users.map((user) => (
             <div
               key={user._id}
-              className="rounded-lg border border-gray-200 bg-white p-4"
+              onClick={() => router.push(`/users/${user._id}`)}
+              className="rounded-lg border border-gray-200 bg-white p-4 cursor-pointer hover:border-[#0d9488]/40 hover:shadow-sm transition-all"
             >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[14px] font-medium text-[#0F1720]">
@@ -141,7 +142,11 @@ export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: Us
                       : user.phoneNumber || "—"}
                   </p>
                 </div>
-                {showActions && <UserActionsMenu user={user} />}
+                {showActions && (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <UserActionsMenu user={user} />
+                  </div>
+                )}
               </div>
             </div>
           ))
@@ -180,10 +185,11 @@ export function UsersTable({ users, roles, isLoading, activeTab, onRefresh }: Us
               users.map((user) => (
                 <TableRow
                   key={user._id}
-                  className="group border-b border-gray-100 hover:bg-gray-50"
+                  onClick={() => router.push(`/users/${user._id}`)}
+                  className="group border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
                 >
                   {showActions && (
-                    <TableCell className="px-3 w-[50px]">
+                    <TableCell className="px-3 w-[50px]" onClick={(e) => e.stopPropagation()}>
                       <UserActionsMenu user={user} />
                     </TableCell>
                   )}

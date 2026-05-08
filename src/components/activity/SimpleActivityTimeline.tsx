@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Clock, Plus, Pencil, Trash2, Archive, UserPlus, CheckCircle } from "lucide-react";
+import { Clock, Plus, Pencil, Trash2, Archive, UserPlus, CheckCircle, KeyRound, ShieldCheck, MailCheck } from "lucide-react";
 import type { AuditEvent, User } from "@/services/activity";
 import { resolveUserName, formatEventDate } from "@/services/activity";
 
@@ -15,7 +15,10 @@ const ACTION_CONFIG: Record<string, { label: string; icon: React.ReactNode; dotC
   delete:    { label: "Deleted",   icon: <Trash2 size={13} />,      dotColor: "bg-red-500",   badgeClass: "bg-red-50 text-red-600 border border-red-200" },
   archive:   { label: "Archived",  icon: <Archive size={13} />,     dotColor: "bg-orange-500",badgeClass: "bg-orange-50 text-orange-700 border border-orange-200" },
   invite:    { label: "Invited",   icon: <UserPlus size={13} />,    dotColor: "bg-purple-500",badgeClass: "bg-purple-50 text-purple-700 border border-purple-200" },
-  activate:  { label: "Activated", icon: <CheckCircle size={13} />, dotColor: "bg-green-500", badgeClass: "bg-green-50 text-green-700 border border-green-200" },
+  activate:       { label: "Activated",        icon: <CheckCircle size={13} />, dotColor: "bg-green-500",  badgeClass: "bg-green-50 text-green-700 border border-green-200" },
+  change_password:{ label: "Changed Password", icon: <KeyRound size={13} />,    dotColor: "bg-slate-500",  badgeClass: "bg-slate-50 text-slate-700 border border-slate-200" },
+  set_password:   { label: "Set Password",     icon: <ShieldCheck size={13} />, dotColor: "bg-teal-600",   badgeClass: "bg-teal-50 text-teal-700 border border-teal-200" },
+  verify_email:   { label: "Verified Email",   icon: <MailCheck size={13} />,   dotColor: "bg-indigo-500", badgeClass: "bg-indigo-50 text-indigo-700 border border-indigo-200" },
 };
 
 const ENTITY_LABELS: Record<string, string> = {
