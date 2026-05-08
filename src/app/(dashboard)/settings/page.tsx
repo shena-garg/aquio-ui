@@ -421,13 +421,39 @@ export default function SettingsPage() {
     return () => document.removeEventListener("click", handleClick, true);
   }, [isDirty]);
 
+  const resetToServer = useCallback(() => {
+    if (!settings) return;
+    setPoCancelReasons(settings.poCancelReasons ?? []);
+    setPaymentTerms(settings.paymentTerms ?? []);
+    setIsPOReferenceIDInternal(settings.isPOReferenceIDInternal ?? false);
+    setGeneratePOAutomatically(settings.generatePOAutomatically ?? false);
+    setPoPrefix(settings.poPrefix ?? "");
+    setPoSeparator(settings.poSeparator ?? "");
+    setNextPONumber(settings.nextPONumber ?? 1);
+    setSoCancelReasons(settings.soCancelReasons ?? []);
+    setSoPaymentTerms(settings.soPaymentTerms ?? []);
+    setIsSOReferenceIDInternal(settings.isSOReferenceIDInternal ?? false);
+    setGenerateSOAutomatically(settings.generateSOAutomatically ?? false);
+    setSoPrefix(settings.soPrefix ?? "");
+    setSoSeparator(settings.soSeparator ?? "");
+    setNextSONumber(settings.nextSONumber ?? 1);
+    setApplicableGst(settings.applicableGst ?? []);
+    setGenerateSKUAutomatically(settings.generateSKUAutomatically ?? false);
+    setSkuPrefix(settings.skuPrefix ?? "");
+    setSkuSeparator(settings.skuSeparator ?? "");
+    setNextSKUNumber(settings.nextSKUNumber ?? 1);
+    setNotifPoDigest(settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true);
+    setNotifSoDigest(settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true);
+  }, [settings]);
+
   const handleDiscardAndLeave = useCallback(() => {
     if (pendingNavUrl) {
       const url = pendingNavUrl;
+      resetToServer();
       setPendingNavUrl(null);
       router.push(url);
     }
-  }, [pendingNavUrl, router]);
+  }, [pendingNavUrl, router, resetToServer]);
 
   // Hydrate from API
   useEffect(() => {
@@ -755,31 +781,7 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    if (settings) {
-                      setPoCancelReasons(settings.poCancelReasons ?? []);
-                      setPaymentTerms(settings.paymentTerms ?? []);
-                      setIsPOReferenceIDInternal(settings.isPOReferenceIDInternal ?? false);
-                      setGeneratePOAutomatically(settings.generatePOAutomatically ?? false);
-                      setPoPrefix(settings.poPrefix ?? "");
-                      setPoSeparator(settings.poSeparator ?? "");
-                      setNextPONumber(settings.nextPONumber ?? 1);
-                      setSoCancelReasons(settings.soCancelReasons ?? []);
-                      setSoPaymentTerms(settings.soPaymentTerms ?? []);
-                      setIsSOReferenceIDInternal(settings.isSOReferenceIDInternal ?? false);
-                      setGenerateSOAutomatically(settings.generateSOAutomatically ?? false);
-                      setSoPrefix(settings.soPrefix ?? "");
-                      setSoSeparator(settings.soSeparator ?? "");
-                      setNextSONumber(settings.nextSONumber ?? 1);
-                      setApplicableGst(settings.applicableGst ?? []);
-                      setGenerateSKUAutomatically(settings.generateSKUAutomatically ?? false);
-                      setSkuPrefix(settings.skuPrefix ?? "");
-                      setSkuSeparator(settings.skuSeparator ?? "");
-                      setNextSKUNumber(settings.nextSKUNumber ?? 1);
-                      setNotifPoDigest(settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true);
-                      setNotifSoDigest(settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true);
-                    }
-                  }}
+                  onClick={resetToServer}
                   className="h-8 text-[13px] border-gray-200 text-gray-600"
                   disabled={isSaving}
                 >
