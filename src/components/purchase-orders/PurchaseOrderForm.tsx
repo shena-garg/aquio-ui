@@ -2058,9 +2058,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                         </div>
                       </div>
 
-                      {/* Row 3: Qty (37.5%) | Price (37.5%) | Total (25%) */}
+                      {/* Row 3: Qty (50%) | Price (50%) */}
                       <div className="flex items-end gap-2">
-                        <div className="w-3/8 min-w-0" style={{ width: "37.5%" }}>
+                        <div className="flex-1 min-w-0">
                           <label className="block text-[10px] text-[#9ca3af] mb-0.5">
                             Qty{uom ? ` (${uom})` : ""}
                           </label>
@@ -2080,7 +2080,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             className="w-full h-8 border border-[#e5e7eb] rounded-[6px] px-2 text-[12px] text-[#111827] text-right outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                         </div>
-                        <div className="min-w-0" style={{ width: "37.5%" }}>
+                        <div className="flex-1 min-w-0">
                           <label className="block text-[10px] text-[#9ca3af] mb-0.5">Price</label>
                           <div className="flex items-center h-8 border border-[#e5e7eb] rounded-[6px] px-2 focus-within:ring-2 focus-within:ring-[#0d9488] focus-within:border-[#0d9488]">
                             <span className="text-[12px] text-[#9ca3af] flex-shrink-0">₹</span>
@@ -2101,17 +2101,17 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             />
                           </div>
                         </div>
-                        <div className="w-1/4 text-right">
-                          <div className="h-8 flex items-center justify-end mt-[14px]">
-                            {lineTotal > 0 ? (
-                              <span className="text-[12px] font-medium text-[#111827]">
-                                ₹{parseFloat(lineTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                            ) : (
-                              <span className="text-[12px] text-[#9ca3af]">—</span>
-                            )}
-                          </div>
-                        </div>
+                      </div>
+
+                      {/* Row 4: Total */}
+                      <div className="flex items-center justify-end pt-0.5">
+                        {lineTotal > 0 ? (
+                          <span className="text-[12px] font-medium text-[#111827]">
+                            ₹{parseFloat(lineTotal.toFixed(2)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        ) : (
+                          <span className="text-[12px] text-[#9ca3af]">—</span>
+                        )}
                       </div>
                     </div>
                   );
