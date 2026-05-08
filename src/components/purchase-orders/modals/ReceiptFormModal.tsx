@@ -325,7 +325,7 @@ export function ReceiptFormModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-xl shadow-xl w-[780px] max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-[780px] mx-4 max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e7eb] flex-shrink-0">
           <h2 className="text-[16px] font-semibold text-[#111827]">
@@ -361,13 +361,15 @@ export function ReceiptFormModal({
             )}
           </div>
 
-          {/* Products table */}
+          {/* Products */}
           <div className="mb-4">
             <div className="text-[11px] font-semibold text-[#6b7280] mb-2 uppercase tracking-[0.5px]">
               Products
             </div>
-            <div className="border border-[#e5e7eb] rounded-lg overflow-hidden">
-              <table className="w-full min-w-[500px]">
+
+            {/* Desktop table */}
+            <div className="hidden sm:block border border-[#e5e7eb] rounded-lg overflow-hidden">
+              <table className="w-full">
                 <colgroup>
                   <col style={{ width: '35%' }} />
                   <col style={{ width: '15%' }} />
@@ -397,101 +399,159 @@ export function ReceiptFormModal({
                 <tbody>
                   {rows.map((row, idx) => {
                     const isActive = row.deliveredQuantity > 0;
+                    const isExcess = row.deliveredQuantity > 0 && row.deliveredQuantity > row.remaining;
+                    const overage = isExcess ? (row.deliveredQuantity - row.remaining) : 0;
                     return (
                       <tr
                         key={`${row.productId}:${row.variantId}`}
                         className={`border-b border-[#e5e7eb] last:border-b-0 ${isActive ? "bg-[#f0fdfa]" : ""}`}
                       >
-                        {/* Product */}
                         <td className="py-2.5 pl-3 pr-2">
                           <div className="flex flex-col gap-[2px]">
-                            <span className="text-[13px] font-medium text-[#111827] leading-[16.9px]">
-                              {row.productName}
-                            </span>
-                            <span className="text-[12px] font-normal text-[#6b7280] leading-[15.6px]">
-                              {row.variantName}
-                            </span>
+                            <span className="text-[13px] font-medium text-[#111827] leading-[16.9px]">{row.productName}</span>
+                            <span className="text-[12px] font-normal text-[#6b7280] leading-[15.6px]">{row.variantName}</span>
                           </div>
                         </td>
-
-                        {/* Price */}
                         <td className="py-2.5 px-2 text-right text-[13px] text-[#6b7280] whitespace-nowrap">
                           ₹ {parseFloat(row.unitPrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} @ {row.taxRate}%
                         </td>
-
-                        {/* Order */}
                         <td className="py-2.5 px-2 text-right text-[13px] text-[#6b7280] whitespace-nowrap">
-                          {row.ordered.toLocaleString("en-IN")}
+                          {row.ordered.toLocaleString("en-IN")} {getUOMAbbreviation(row.uom)}
                         </td>
-
-                        {/* Remaining */}
                         <td className="py-2.5 px-2 text-right text-[13px] text-[#6b7280] whitespace-nowrap">
-                          {row.remaining.toLocaleString("en-IN")}
+                          {row.remaining.toLocaleString("en-IN")} {getUOMAbbreviation(row.uom)}
                         </td>
-
-                        {/* Qty Received input */}
-                        {(() => {
-                          const isExcess = row.deliveredQuantity > 0 && row.deliveredQuantity > row.remaining;
-                          const overage = isExcess ? (row.deliveredQuantity - row.remaining) : 0;
-                          return (
-                            <td className="py-2.5 pl-2 pr-3 align-top">
-                              <div className="flex flex-col gap-1.5">
-                                <div className="flex items-center gap-1">
+                        <td className="py-2.5 pl-2 pr-3 align-top">
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={row.deliveredQuantityStr}
+                                placeholder="0"
+                                onChange={(e) => {
+                                  const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+                                  updateQuantity(idx, raw);
+                                }}
+                                onFocus={(e) => {
+                                  const len = e.target.value.length;
+                                  e.target.setSelectionRange(len, len);
+                                }}
+                                className={`w-full h-8 border rounded-[6px] px-2.5 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => resetQuantity(idx)}
+                                className={`flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors flex-shrink-0 ${isActive ? "visible" : "invisible"}`}
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                            {isExcess && (
+                              <div className="flex flex-col gap-1">
+                                <p className="text-[11px] text-[#ea580c] leading-tight">
+                                  Exceeds remaining by {overage.toLocaleString("en-IN", { maximumFractionDigits: 3 })} {getUOMAbbreviation(row.uom)}
+                                </p>
+                                <label className="flex items-center gap-1.5 cursor-pointer">
                                   <input
-                                    type="text"
-                                    inputMode="decimal"
-                                    value={row.deliveredQuantityStr}
-                                    placeholder="0"
-                                    onChange={(e) => {
-                                      const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
-                                      updateQuantity(idx, raw);
-                                    }}
-                                    onFocus={(e) => {
-                                      const len = e.target.value.length;
-                                      e.target.setSelectionRange(len, len);
-                                    }}
-                                    className={`w-full h-8 border rounded-[6px] px-2.5 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
+                                    type="checkbox"
+                                    checked={row.allowExcess}
+                                    onChange={(e) => updateAllowExcess(idx, e.target.checked)}
+                                    className="h-3.5 w-3.5 rounded border-[#d1d5db] text-[#0d9488] focus:ring-[#0d9488]"
                                   />
-                                  <span className="text-[12px] text-[#6b7280] whitespace-nowrap">
-                                    {getUOMAbbreviation(row.uom)}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => resetQuantity(idx)}
-                                    className={`flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors flex-shrink-0 ${isActive ? "visible" : "invisible"}`}
-                                  >
-                                    <X size={12} />
-                                  </button>
-                                </div>
-                                {isExcess && (
-                                  <div className="flex flex-col gap-1">
-                                    <p className="text-[11px] text-[#ea580c] leading-tight">
-                                      Exceeds remaining by {overage.toLocaleString("en-IN", { maximumFractionDigits: 3 })} {getUOMAbbreviation(row.uom)}
-                                    </p>
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={row.allowExcess}
-                                        onChange={(e) => updateAllowExcess(idx, e.target.checked)}
-                                        className="h-3.5 w-3.5 rounded border-[#d1d5db] text-[#0d9488] focus:ring-[#0d9488]"
-                                      />
-                                      <span className="text-[11px] text-[#374151] whitespace-nowrap">Allow Excess Delivery</span>
-                                    </label>
-                                  </div>
-                                )}
+                                  <span className="text-[11px] text-[#374151] whitespace-nowrap">Allow Excess Delivery</span>
+                                </label>
                               </div>
-                            </td>
-                          );
-                        })()}
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden flex flex-col gap-2">
+              {rows.map((row, idx) => {
+                const isActive = row.deliveredQuantity > 0;
+                const isExcess = row.deliveredQuantity > 0 && row.deliveredQuantity > row.remaining;
+                const overage = isExcess ? (row.deliveredQuantity - row.remaining) : 0;
+                return (
+                  <div
+                    key={`${row.productId}:${row.variantId}`}
+                    className={`border rounded-lg p-3 ${isActive ? "border-[#0d9488] bg-[#f0fdfa]" : "border-[#e5e7eb] bg-white"}`}
+                  >
+                    {/* Product name */}
+                    <div className="mb-2">
+                      <p className="text-[13px] font-medium text-[#111827]">{row.productName}</p>
+                      <p className="text-[12px] text-[#6b7280]">{row.variantName}</p>
+                    </div>
+                    {/* Stats row */}
+                    <div className="flex gap-4 mb-3">
+                      <div>
+                        <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Ordered</p>
+                        <p className="text-[12px] font-medium text-[#374151]">{row.ordered.toLocaleString("en-IN")} {getUOMAbbreviation(row.uom)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#9ca3af] uppercase tracking-wide">Remaining</p>
+                        <p className="text-[12px] font-medium text-[#374151]">{row.remaining.toLocaleString("en-IN")} {getUOMAbbreviation(row.uom)}</p>
+                      </div>
+                    </div>
+                    {/* Quantity input */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-[12px] font-semibold text-[#6b7280] whitespace-nowrap">
+                        {isSales ? "Qty Shipped" : "Qty Received"}
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={row.deliveredQuantityStr}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+                          updateQuantity(idx, raw);
+                        }}
+                        onFocus={(e) => {
+                          const len = e.target.value.length;
+                          e.target.setSelectionRange(len, len);
+                        }}
+                        className={`flex-1 h-10 border rounded-[6px] px-3 text-[14px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
+                      />
+                      {isActive && (
+                        <button
+                          type="button"
+                          onClick={() => resetQuantity(idx)}
+                          className="flex items-center justify-center w-7 h-7 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors flex-shrink-0"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                    {isExcess && (
+                      <div className="mt-2 flex flex-col gap-1">
+                        <p className="text-[11px] text-[#ea580c] leading-tight">
+                          Exceeds remaining by {overage.toLocaleString("en-IN", { maximumFractionDigits: 3 })} {getUOMAbbreviation(row.uom)}
+                        </p>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={row.allowExcess}
+                            onChange={(e) => updateAllowExcess(idx, e.target.checked)}
+                            className="h-4 w-4 rounded border-[#d1d5db] text-[#0d9488] focus:ring-[#0d9488]"
+                          />
+                          <span className="text-[12px] text-[#374151]">Allow Excess Delivery</span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Summary bar — 3 columns */}
+          {/* Summary bar */}
           <div className="grid grid-cols-3 divide-x divide-[#e5e7eb] border border-[#e5e7eb] rounded-lg bg-[#f9fafb] mb-4">
             <div className="px-4 py-3">
               <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">
@@ -519,8 +579,8 @@ export function ReceiptFormModal({
             </div>
           </div>
 
-          {/* Notes & Documents — side by side */}
-          <div className="grid grid-cols-2 gap-6">
+          {/* Notes & Documents */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Notes */}
           <div>
             <label className="flex items-baseline gap-1.5 text-[11px] font-semibold text-[#6b7280] mb-1.5 uppercase tracking-[0.5px]">
