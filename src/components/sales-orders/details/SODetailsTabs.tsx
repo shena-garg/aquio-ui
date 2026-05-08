@@ -83,9 +83,9 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
   ];
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Tab bar */}
-      <div className="flex border-b border-[#e5e7eb] bg-white px-4 sm:px-8">
+      <div className="flex flex-shrink-0 overflow-x-auto border-b border-[#e5e7eb] bg-white px-4 sm:px-8">
         {tabs.map((tab) => {
           const isActive = tab.key === activeTab;
           return (
@@ -118,7 +118,7 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
       </div>
 
       {/* Tab content */}
-      <div className="flex-1">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {activeTab === "products" ? (
           <ProductsTable order={order} products={products} shipped={shipped} />
         ) : activeTab === "shipments" ? (

@@ -122,7 +122,7 @@ export default function PurchaseOrderDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       <ErrorBoundary>
       <PODetailsHeader order={order} onCreateReceipt={() => setCreateReceiptOpen(true)} />
       {/* Parties card: MetaStrip + DateStrip – desktop */}
