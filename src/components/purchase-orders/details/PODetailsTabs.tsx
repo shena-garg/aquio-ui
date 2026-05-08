@@ -28,13 +28,14 @@ import { ReceiptActivityModal } from "@/components/activity/ReceiptActivityModal
 import { usersService } from "@/services/users";
 import { ForceCloseProductModal } from "@/components/purchase-orders/modals/ForceCloseProductModal";
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
+import { LinkedOrdersSection } from "@/components/purchase-orders/details/LinkedOrdersSection";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface PODetailsTabsProps {
   order: PurchaseOrder;
 }
 
-type TabKey = "products" | "receipts" | "notifications" | "activity";
+type TabKey = "products" | "receipts" | "linked-orders" | "notifications" | "activity";
 
 export function PODetailsTabs({ order }: PODetailsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("products");
@@ -71,9 +72,12 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
   const totalReceived = order.receipts?.reduce((sum, r) => sum + r.products.reduce((s, p) => s + p.deliveredQuantity, 0), 0) ?? 0;
   const received = totalQuantity - (order.pendingQuantity ?? (totalQuantity - totalReceived));
 
+  const linkedCount = (order.linkedOrders?.pos.length ?? 0) + (order.linkedOrders?.sos.length ?? 0);
+
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "products", label: "Products", count: products.length },
     { key: "receipts", label: "Receipts", count: receiptsCount },
+    { key: "linked-orders", label: "Linked Orders", count: linkedCount > 0 ? linkedCount : undefined },
     { key: "notifications", label: "Notifications" },
     { key: "activity", label: "Activity" },
   ];
@@ -119,6 +123,12 @@ export function PODetailsTabs({ order }: PODetailsTabsProps) {
           <ProductsTable order={order} products={products} received={received} />
         ) : activeTab === "receipts" ? (
           <ReceiptsTab order={order} />
+        ) : activeTab === "linked-orders" ? (
+          <LinkedOrdersSection
+            order={order}
+            orderType="purchase"
+            queryKey={["purchase-order", order.id ?? order._id]}
+          />
         ) : activeTab === "activity" ? (
           <div className="px-4 sm:px-8 py-4 sm:py-6">
             {/* Activity header */}

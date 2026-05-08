@@ -29,12 +29,13 @@ import { ActivityTimeline } from "@/components/activity";
 import { ReceiptActivityModal } from "@/components/activity/ReceiptActivityModal";
 import { usersService } from "@/services/users";
 import { useAuth } from "@/contexts/AuthContext";
+import { LinkedOrdersSection } from "@/components/purchase-orders/details/LinkedOrdersSection";
 
 interface SODetailsTabsProps {
   order: SalesOrder;
 }
 
-type TabKey = "products" | "shipments" | "notifications" | "activity";
+type TabKey = "products" | "shipments" | "linked-orders" | "notifications" | "activity";
 
 export function SODetailsTabs({ order }: SODetailsTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("products");
@@ -71,9 +72,12 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
   const totalShipped = order.receipts?.reduce((sum, r) => sum + r.products.reduce((s, p) => s + p.deliveredQuantity, 0), 0) ?? 0;
   const shipped = totalQuantity - (order.pendingQuantity ?? (totalQuantity - totalShipped));
 
+  const linkedCount = (order.linkedOrders?.pos.length ?? 0) + (order.linkedOrders?.sos.length ?? 0);
+
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "products", label: "Products", count: products.length },
     { key: "shipments", label: "Shipments", count: shipmentsCount },
+    { key: "linked-orders", label: "Linked Orders", count: linkedCount > 0 ? linkedCount : undefined },
     { key: "notifications", label: "Notifications" },
     { key: "activity", label: "Activity" },
   ];
@@ -119,6 +123,12 @@ export function SODetailsTabs({ order }: SODetailsTabsProps) {
           <ProductsTable order={order} products={products} shipped={shipped} />
         ) : activeTab === "shipments" ? (
           <ShipmentsTab order={order} />
+        ) : activeTab === "linked-orders" ? (
+          <LinkedOrdersSection
+            order={order as unknown as import("@/services/purchase-orders").PurchaseOrder}
+            orderType="sales"
+            queryKey={["sales-order", order.id ?? order._id]}
+          />
         ) : activeTab === "activity" ? (
           <div className="px-4 sm:px-8 py-4 sm:py-6">
             {/* Activity header */}

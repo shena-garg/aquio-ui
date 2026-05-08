@@ -78,6 +78,35 @@ export interface POReceipt {
   createdAt: string;
 }
 
+export interface LinkedOrderSummary {
+  _id: string;
+  poNumber: string;
+  status: string;
+  receiptStatus: string;
+  supplier?: OrderEntity;
+  biller?: OrderEntity;
+  totalQuantity?: number | null;
+  issueDate?: string;
+  deliveryDate?: string;
+}
+
+export interface ClusterSummary {
+  poCount: number;
+  soCount: number;
+  totalPOOrdered: number | null;
+  totalSOCommitted: number | null;
+  supplyGap: number | null;
+  totalPOReceived: number;
+  totalSOShipped: number;
+}
+
+export interface LinkedOrders {
+  clusterId: string;
+  pos: LinkedOrderSummary[];
+  sos: LinkedOrderSummary[];
+  clusterSummary: ClusterSummary;
+}
+
 export interface PurchaseOrder {
   _id: string;
   id: string;
@@ -106,6 +135,7 @@ export interface PurchaseOrder {
   notes?: string;
   termsAndConditions?: string[];
   files?: { id: string; name: string }[];
+  linkedOrders?: LinkedOrders | null;
 }
 
 export interface POStatusCounts {
@@ -176,6 +206,17 @@ export interface ForceCloseItem {
 export const purchaseOrdersService = {
   getById: (id: string) =>
     apiClient.get<PurchaseOrder>(`/purchase-orders/${id}?comprehensive=true`),
+
+  linkOrder: (id: string, targetOrderId: string) =>
+    apiClient.post<{ clusterId: string }>(`/purchase-orders/${id}/link`, { targetOrderId }),
+
+  unlinkOrder: (id: string, targetOrderId: string) =>
+    apiClient.delete(`/purchase-orders/${id}/link/${targetOrderId}`),
+
+  searchForLink: (orderType: "purchase" | "sales", poNumber: string) =>
+    apiClient.get<PurchaseOrdersResponse>("/purchase-orders/list", {
+      params: { orderType, poNumber, page: 1, limit: 10 },
+    }),
 
   cancel: (id: string, body: { cancellationReason: string; cancellationNotes?: string }) =>
     apiClient.patch(`/purchase-orders/${id}/cancel`, body),
