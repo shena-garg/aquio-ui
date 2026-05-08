@@ -1,7 +1,7 @@
 # Aquio — Implemented Features
 
 Complete reference of everything built and live in production.
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ---
 
@@ -114,10 +114,12 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 
 ## Users
 
-- **List** — All org members with role and status.
+- **List** — All org members with role and status. Clicking a row navigates to the User Details page.
 - **Invite** — Send invite email. Invited user sets password via `/set-password`.
-- **Edit** — Change name, role, status.
-- **Soft delete** — Deactivate users without removing data.
+- **Detail page** — `/users/[id]`. Header (name + Active/Inactive badge, Edit/Deactivate actions). Info card: email, phone, role, member since — inline edit mode (no separate edit page). Two tabs:
+  - **Activity** — all audit events where `entityType=user, entityId=thisUserId` (what happened to this user: invite, role change, deactivate, password change, email verify, etc.)
+  - **Own Activity** — all audit events where `userId=thisUserId` (what this user did: POs they created, orders they confirmed, products they updated, etc.) — each event shows the entity type tag since events span multiple entity types.
+- **Soft delete** — Deactivate users without removing data. `/users/[id]/edit` redirects to `/users/[id]`.
 
 ---
 
@@ -178,8 +180,11 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 
 ## Activity / Audit Trail
 
-- **Timeline** — All actions on an order shown chronologically: created, status changed, receipt added, file attached, etc.
+- **Timeline** — All actions on an entity shown chronologically: created, status changed, receipt added, file attached, etc.
 - **Event-driven** — Backend emits events via EventBus; audit module records them. Never called directly from business modules.
+- **User entity coverage** — All user lifecycle events are audited: invite, update, archive (deactivate), change_password, set_password (invited user activates account), verify_email.
+- **Two query axes** — `GET /audit-trail/entity/:entityType/:entityId/changes` (events on an entity) and `GET /audit-trail/by-user/:userId` (events performed by a user). Used by the User Details page tabs.
+- **`SimpleActivityTimeline`** — Shared component in `src/components/activity/`. Handles all action types including `change_password`, `set_password`, `verify_email`. Pass `showEntityType={true}` for cross-entity feeds (e.g. Own Activity tab on User Details).
 
 ---
 
@@ -191,6 +196,7 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 | Custom typeahead dropdown (fixed-position, search, teal create option) | `ProductTypeahead`, `PaymentTermsTypeahead` in `PurchaseOrderForm.tsx` |
 | Inline quick-create modal (`onCreateNew` prop + `initialName` pre-fill) | `QuickCreateProductModal`, `QuickCreatePartnerModal`, `QuickCreateCategoryModal`, `QuickCreateLocationModal` |
 | Partner detail page structure | `src/app/(dashboard)/partners/[id]/page.tsx` + `components/partners/details/` |
+| User detail page structure | `src/app/(dashboard)/users/[id]/page.tsx` — header + inline edit info card + Activity / Own Activity tabs |
 | PDF generate/download on order headers | `PODetailsHeader.tsx`, `SODetailsHeader.tsx` — `purchaseOrderPDF` is `{ id, name }` object |
 | Shared PO/SO form | `PurchaseOrderForm` with `orderType="purchase" \| "sales"` prop |
 | PO modals reused by SO | All modals accept `orderType` prop to switch labels |

@@ -141,7 +141,7 @@ For Vercel deployment, set this in the Vercel project's environment variables da
 - `useAuth().hasPermission("entity.action")` for inline permission checks
 - Permission format: `{entity}.{action}` (e.g., `purchase-order.force-close`)
 
-## Backend Cutover Status (as of 2026-05-06)
+## Backend Cutover Status (as of 2026-05-09)
 
 - **aquio-backend is fully built and deployed on Render** — all modules complete including Notifications
 - **aquio-ui is live and pointing to aquio-backend** — cutover complete
@@ -157,6 +157,7 @@ For Vercel deployment, set this in the Vercel project's environment variables da
 - **Inline quick-create modals** — Pattern: `onCreateNew?: (query: string) => void` prop on typeaheads; parent manages modal open state and `initialName` pre-fill. See `QuickCreateProductModal`, `QuickCreatePartnerModal`, `QuickCreateCategoryModal`, `QuickCreateLocationModal`.
 - **`initialName` prop** — All quick-create modals accept `initialName?: string` to pre-fill the name field when triggered from a search input.
 - **Partner details page** — `src/app/(dashboard)/partners/[id]/page.tsx` uses React Query, edit mode state, `PartnerDetailsHeader` + `PartnerDetailsInfoCard` + `PartnerDetailsTabs`.
+- **User details page** — `src/app/(dashboard)/users/[id]/page.tsx`. Same pattern as Partner Details. Two activity tabs: Activity (on the user) and Own Activity (by the user). `/users/[id]/edit` redirects here.
 - **PDF buttons on order headers** — Both `PODetailsHeader` and `SODetailsHeader` have Generate PDF / Download PDF logic. `purchaseOrderPDF` is `{ id, name }` object (not string). Download opens `${NEXT_PUBLIC_API_BASE_URL}/files/download/${id}` in new tab.
 
 ---
