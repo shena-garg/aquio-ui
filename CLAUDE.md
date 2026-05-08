@@ -152,6 +152,7 @@ For Vercel deployment, set this in the Vercel project's environment variables da
 
 ## Key Component Patterns (Important for Future Work)
 
+- **Custom select dropdowns** — Use `CustomSelect` from `src/components/ui/CustomSelect.tsx` for **every** select/dropdown field. Never use native `<select>`. Props: `value`, `onChange`, `options: { value, label }[]`, `placeholder`, `disabled`, `error` (red border), `className` (controls sizing). Uses fixed positioning via `getBoundingClientRect` — safe inside modals, sticky headers, and overflow containers.
 - **Custom typeahead dropdowns** — Use fixed positioning via `getBoundingClientRect` + `useRef`. See `ProductTypeahead` and `PaymentTermsTypeahead` in `PurchaseOrderForm.tsx` as the canonical pattern. Reposition on scroll/resize while open.
 - **Inline quick-create modals** — Pattern: `onCreateNew?: (query: string) => void` prop on typeaheads; parent manages modal open state and `initialName` pre-fill. See `QuickCreateProductModal`, `QuickCreatePartnerModal`, `QuickCreateCategoryModal`, `QuickCreateLocationModal`.
 - **`initialName` prop** — All quick-create modals accept `initialName?: string` to pre-fill the name field when triggered from a search input.
@@ -162,7 +163,8 @@ For Vercel deployment, set this in the Vercel project's environment variables da
 
 ## Important Rules
 
-1. **PO and SO share the same backend API** (`/purchase-orders`) — differentiated by `orderType: "purchase" | "sales"`
+1. **Never use native `<select>`** — always use `CustomSelect` from `src/components/ui/CustomSelect.tsx`. Zero native `<select>` elements exist in the codebase; keep it that way.
+2. **PO and SO share the same backend API** (`/purchase-orders`) — differentiated by `orderType: "purchase" | "sales"`
 2. **PO modals are reused by SO** — they accept an `orderType` prop to switch labels (Receipt/Shipment, Supplier/Customer, etc.)
 3. **PurchaseOrderForm is reused for SO create/edit** — accepts `orderType` prop
 4. **API field names stay as-is** (`poNumber`, `supplier`, `receiptStatus`, `deliveredQuantity`) — only UI labels change for SO

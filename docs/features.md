@@ -1,7 +1,7 @@
 # Aquio — Implemented Features
 
 Complete reference of everything built and live in production.
-Last updated: 2026-05-06
+Last updated: 2026-05-08
 
 ---
 
@@ -28,6 +28,7 @@ Frontend env var: `NEXT_PUBLIC_API_BASE_URL=<Render backend URL>`
 - **Set password** — `/set-password` for invited users to set their initial password.
 - **JWT refresh** — Axios interceptor auto-refreshes expired access tokens using refresh token.
 - **Logout** — Clears localStorage, calls `POST /auth/logout`.
+- **Session polling** — `AuthContext` refetches `/users/my-own` and the user's role every 2 minutes (tab active only). Permission/role changes propagate without a hard refresh. If the polled user status is `inactive`, the session is force-logged out immediately.
 
 ---
 
@@ -129,6 +130,7 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 - **System role protection** — Admin role cannot be deleted or modified.
 - **`RequirePermission` component** — Wraps UI elements; hides if user lacks permission.
 - **`RouteGuard`** — Blocks navigation to routes the user doesn't have access to.
+- **Audit-log permissions** — `purchase-order.audit-log`, `sales-order.audit-log`, and `product.audit-log` permissions gate the Activity tab on PO, SO, and Product detail pages respectively. Users without the permission do not see the tab.
 
 ---
 
@@ -185,6 +187,7 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 
 | Pattern | Where |
 |---|---|
+| Custom select dropdown (fixed-position, teal highlight, disabled/error states) | `CustomSelect` in `src/components/ui/CustomSelect.tsx` — use for **all** select/dropdown fields, never native `<select>` |
 | Custom typeahead dropdown (fixed-position, search, teal create option) | `ProductTypeahead`, `PaymentTermsTypeahead` in `PurchaseOrderForm.tsx` |
 | Inline quick-create modal (`onCreateNew` prop + `initialName` pre-fill) | `QuickCreateProductModal`, `QuickCreatePartnerModal`, `QuickCreateCategoryModal`, `QuickCreateLocationModal` |
 | Partner detail page structure | `src/app/(dashboard)/partners/[id]/page.tsx` + `components/partners/details/` |
