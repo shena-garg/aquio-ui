@@ -266,33 +266,30 @@ export default function PurchaseOrdersPage() {
 
   // ── Actions toolbar ───────────────────────────────────────────────────────
 
+  const exportDropdownItems = (
+    <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuItem onClick={() => handleExport("basic")}>Basic Export</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => handleExport("comprehensive")}>Comprehensive Export</DropdownMenuItem>
+    </DropdownMenuContent>
+  );
+
   const actions = (
     <>
+      {/* Download — desktop only in header */}
       <RequirePermission permission="purchase-order.download-csv">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
               disabled={isExporting}
-              className="h-9 w-9 min-h-[44px] min-w-[44px] sm:h-8 sm:w-auto sm:min-h-0 sm:min-w-0 sm:px-3 sm:gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
+              className="hidden sm:inline-flex h-8 px-3 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
             >
-              {isExporting ? (
-                <Loader2 className="h-4 w-4 sm:h-3.5 sm:w-3.5 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-              )}
-              <span className="hidden sm:inline">Export</span>
+              {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Export
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => handleExport("basic")}>
-              Basic Export
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport("comprehensive")}>
-              Comprehensive Export
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+          {exportDropdownItems}
         </DropdownMenu>
       </RequirePermission>
 
@@ -321,6 +318,26 @@ export default function PurchaseOrdersPage() {
     </>
   );
 
+  // Download button shown in the filter row on mobile
+  const mobileExport = (
+    <RequirePermission permission="purchase-order.download-csv">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isExporting}
+            className="sm:hidden h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600 hover:text-[#0F1720]"
+          >
+            {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            Export
+          </Button>
+        </DropdownMenuTrigger>
+        {exportDropdownItems}
+      </DropdownMenu>
+    </RequirePermission>
+  );
+
   return (
     <div className="flex flex-1 flex-col">
       <PageHeader
@@ -346,6 +363,7 @@ export default function PurchaseOrdersPage() {
         onSearch={handleSearch}
         onReset={handleReset}
         onRemoveFilter={handleRemoveFilter}
+        toolbarRight={mobileExport}
       />
 
       <ErrorBoundary>

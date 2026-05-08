@@ -439,6 +439,7 @@ interface SOSearchBarProps {
   onSearch: (params: SOActiveFilters) => void;
   onReset: () => void;
   onRemoveFilter: (key: keyof SOActiveFilters) => void;
+  toolbarRight?: React.ReactNode;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -450,6 +451,7 @@ export function SOSearchBar({
   onSearch,
   onReset,
   onRemoveFilter,
+  toolbarRight,
 }: SOSearchBarProps) {
   const [selectedField, setSelectedField] = useState<FieldKey>("poNumber");
 
@@ -804,12 +806,14 @@ export function SOSearchBar({
                 Clear All
               </button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMobileFilterOpen(true)}
-              className="ml-auto h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600"
-            >
+            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+              {toolbarRight}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMobileFilterOpen(true)}
+                className="h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600"
+              >
               <Filter className="h-3.5 w-3.5" />
               Filters
               {hasFilters && (
@@ -818,6 +822,7 @@ export function SOSearchBar({
                 </span>
               )}
             </Button>
+            </div>
           </div>
         )}
         {mobileFilterOpen && (

@@ -440,6 +440,7 @@ interface POSearchBarProps {
   onSearch: (params: POActiveFilters) => void;
   onReset: () => void;
   onRemoveFilter: (key: keyof POActiveFilters) => void;
+  toolbarRight?: React.ReactNode;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -451,6 +452,7 @@ export function POSearchBar({
   onSearch,
   onReset,
   onRemoveFilter,
+  toolbarRight,
 }: POSearchBarProps) {
   const [selectedField, setSelectedField] = useState<FieldKey>("poNumber");
 
@@ -805,20 +807,23 @@ export function POSearchBar({
                 Clear All
               </button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMobileFilterOpen(true)}
-              className="ml-auto h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600"
-            >
-              <Filter className="h-3.5 w-3.5" />
-              Filters
-              {hasFilters && (
-                <span className="ml-1 rounded-full bg-[#0d9488] text-white text-[10px] px-1.5 py-0.5 leading-none">
-                  {activeEntries.length}
-                </span>
-              )}
-            </Button>
+            <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+              {toolbarRight}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMobileFilterOpen(true)}
+                className="h-8 gap-1.5 border-gray-200 text-[13px] text-gray-600"
+              >
+                <Filter className="h-3.5 w-3.5" />
+                Filters
+                {hasFilters && (
+                  <span className="ml-1 rounded-full bg-[#0d9488] text-white text-[10px] px-1.5 py-0.5 leading-none">
+                    {activeEntries.length}
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
         )}
         {mobileFilterOpen && (
