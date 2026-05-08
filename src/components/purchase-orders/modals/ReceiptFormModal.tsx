@@ -553,27 +553,27 @@ export function ReceiptFormModal({
 
           {/* Summary bar */}
           <div className="grid grid-cols-3 divide-x divide-[#e5e7eb] border border-[#e5e7eb] rounded-lg bg-[#f9fafb] mb-4">
-            <div className="px-4 py-3">
-              <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">
+            <div className="px-2 py-1.5 sm:px-4 sm:py-3">
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide leading-tight">
                 Products Included
               </div>
-              <div className="text-[15px] font-semibold text-[#111827] mt-0.5">
+              <div className="text-[13px] sm:text-[15px] font-semibold text-[#111827] mt-0.5">
                 {includedCount} of {rows.length}
               </div>
             </div>
-            <div className="px-4 py-3">
-              <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">
+            <div className="px-2 py-1.5 sm:px-4 sm:py-3">
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide leading-tight">
                 Total Value
               </div>
-              <div className="text-[15px] font-semibold text-[#111827] mt-0.5">
+              <div className="text-[13px] sm:text-[15px] font-semibold text-[#111827] mt-0.5 break-all">
                 ₹ {totalValue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="px-4 py-3">
-              <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">
+            <div className="px-2 py-1.5 sm:px-4 sm:py-3">
+              <div className="text-[10px] sm:text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide leading-tight">
                 {isSales ? "Total Qty Shipped" : "Total Qty Received"}
               </div>
-              <div className="text-[15px] font-semibold text-[#111827] mt-0.5">
+              <div className="text-[13px] sm:text-[15px] font-semibold text-[#111827] mt-0.5">
                 {totalQtyDisplay}
               </div>
             </div>
