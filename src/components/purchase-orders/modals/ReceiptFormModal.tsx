@@ -552,30 +552,34 @@ export function ReceiptFormModal({
           </div>
 
           {/* Summary bar */}
-          <div className="grid grid-cols-3 divide-x divide-[#e5e7eb] border border-[#e5e7eb] rounded-lg bg-[#f9fafb] mb-4">
-            <div className="px-2 py-1.5 sm:px-4 sm:py-3">
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide leading-tight">
-                Products Included
-              </div>
-              <div className="text-[13px] sm:text-[15px] font-semibold text-[#111827] mt-0.5">
-                {includedCount} of {rows.length}
-              </div>
+          {/* Mobile: 3 rows (label left, value right) */}
+          <div className="sm:hidden border border-[#e5e7eb] rounded-lg bg-[#f9fafb] divide-y divide-[#e5e7eb] mb-4">
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">Products Included</span>
+              <span className="text-[13px] font-semibold text-[#111827]">{includedCount} of {rows.length}</span>
             </div>
-            <div className="px-2 py-1.5 sm:px-4 sm:py-3">
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide leading-tight">
-                Total Value
-              </div>
-              <div className="text-[13px] sm:text-[15px] font-semibold text-[#111827] mt-0.5 break-all">
-                ₹ {totalValue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">Total Value</span>
+              <span className="text-[13px] font-semibold text-[#111827]">₹ {totalValue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            <div className="px-2 py-1.5 sm:px-4 sm:py-3">
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide leading-tight">
-                {isSales ? "Total Qty Shipped" : "Total Qty Received"}
-              </div>
-              <div className="text-[13px] sm:text-[15px] font-semibold text-[#111827] mt-0.5">
-                {totalQtyDisplay}
-              </div>
+            <div className="flex items-center justify-between px-3 py-2">
+              <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">{isSales ? "Total Qty Shipped" : "Total Qty Received"}</span>
+              <span className="text-[13px] font-semibold text-[#111827]">{totalQtyDisplay}</span>
+            </div>
+          </div>
+          {/* Desktop: 3 columns */}
+          <div className="hidden sm:grid grid-cols-3 divide-x divide-[#e5e7eb] border border-[#e5e7eb] rounded-lg bg-[#f9fafb] mb-4">
+            <div className="px-4 py-3">
+              <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">Products Included</div>
+              <div className="text-[15px] font-semibold text-[#111827] mt-0.5">{includedCount} of {rows.length}</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">Total Value</div>
+              <div className="text-[15px] font-semibold text-[#111827] mt-0.5">₹ {totalValue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wide">{isSales ? "Total Qty Shipped" : "Total Qty Received"}</div>
+              <div className="text-[15px] font-semibold text-[#111827] mt-0.5">{totalQtyDisplay}</div>
             </div>
           </div>
 
