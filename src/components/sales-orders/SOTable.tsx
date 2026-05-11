@@ -594,16 +594,25 @@ export function SOTable({
   const totalCols = 1 + activeCols.length;
 
   const { hasPermission } = useAuth();
-  const hasSOAction =
-    hasPermission("sales-order.add") ||
-    hasPermission("sales-order.edit") ||
-    hasPermission("sales-order.cancel") ||
-    hasPermission("sales-order.confirm") ||
-    hasPermission("sales-order.force-close");
+
+  function hasActionsForOrder(order: SalesOrder): boolean {
+    const { status, receiptStatus } = order;
+    const canAdd = hasPermission("sales-order.add");
+    const canEdit = hasPermission("sales-order.edit");
+    const canCancel = hasPermission("sales-order.cancel");
+    const canConfirm = hasPermission("sales-order.confirm");
+    const canForceClose = hasPermission("sales-order.force-close");
+
+    if (status === "cancelled" || status === "completed") return canAdd;
+    if (status === "draft") return canEdit || canAdd || canCancel;
+    if (status === "issued") return (canEdit && receiptStatus === "pending") || canAdd || canCancel || canConfirm || canForceClose;
+    if (status === "confirmed") return (canEdit && receiptStatus === "pending") || canAdd || canCancel || canForceClose;
+    return false;
+  }
 
   // Reusable actions trigger for mobile cards
   function CardActionsMenu({ order }: { order: SalesOrder }) {
-    if (!hasSOAction) return null;
+    if (!hasActionsForOrder(order)) return null;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -773,7 +782,7 @@ export function SOTable({
                           <Eye className="h-[15px] w-[15px]" />
                         </button>
 
-                        {hasSOAction && (
+                        {hasActionsForOrder(order) && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button

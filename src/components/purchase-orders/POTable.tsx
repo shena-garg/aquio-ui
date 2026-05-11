@@ -595,16 +595,25 @@ export function POTable({
   const totalCols = 1 + activeCols.length;
 
   const { hasPermission } = useAuth();
-  const hasPOAction =
-    hasPermission("purchase-order.add") ||
-    hasPermission("purchase-order.edit") ||
-    hasPermission("purchase-order.cancel") ||
-    hasPermission("purchase-order.confirm") ||
-    hasPermission("purchase-order.force-close");
+
+  function hasActionsForOrder(order: PurchaseOrder): boolean {
+    const { status, receiptStatus } = order;
+    const canAdd = hasPermission("purchase-order.add");
+    const canEdit = hasPermission("purchase-order.edit");
+    const canCancel = hasPermission("purchase-order.cancel");
+    const canConfirm = hasPermission("purchase-order.confirm");
+    const canForceClose = hasPermission("purchase-order.force-close");
+
+    if (status === "cancelled" || status === "completed") return canAdd;
+    if (status === "draft") return canEdit || canAdd || canCancel;
+    if (status === "issued") return (canEdit && receiptStatus === "pending") || canAdd || canCancel || canConfirm || canForceClose;
+    if (status === "confirmed") return (canEdit && receiptStatus === "pending") || canAdd || canCancel || canForceClose;
+    return false;
+  }
 
   // Reusable actions trigger for mobile cards
   function CardActionsMenu({ order }: { order: PurchaseOrder }) {
-    if (!hasPOAction) return null;
+    if (!hasActionsForOrder(order)) return null;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -774,7 +783,7 @@ export function POTable({
                           <Eye className="h-[15px] w-[15px]" />
                         </button>
 
-                        {hasPOAction && (
+                        {hasActionsForOrder(order) && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
