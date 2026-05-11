@@ -94,6 +94,9 @@ export function UserForm({ mode, userId, initialValues, headerless = false }: Us
         toast.success("User created successfully");
       }
       await queryClient.invalidateQueries({ queryKey: ["users"] });
+      if (mode === "edit" && userId) {
+        await queryClient.invalidateQueries({ queryKey: ["user", userId] });
+      }
       router.push("/users");
     } catch (err: unknown) {
       const message =
