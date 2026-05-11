@@ -119,8 +119,8 @@ export async function getUserActivityLog(userId: string): Promise<AuditEvent[]> 
 }
 
 export async function getUsers(): Promise<User[]> {
-  const { data } = await apiClient.get<{ users: User[] }>("/users");
-  return data.users;
+  const { data } = await apiClient.get<User[]>("/users/names");
+  return data;
 }
 
 export function resolveUserName(users: User[], userId: string): string {
