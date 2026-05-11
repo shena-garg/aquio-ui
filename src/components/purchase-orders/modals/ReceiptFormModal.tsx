@@ -437,13 +437,13 @@ export function ReceiptFormModal({
                                   const len = e.target.value.length;
                                   e.target.setSelectionRange(len, len);
                                 }}
-                                className={`w-full h-8 border rounded-[6px] pr-2.5 pl-6 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
+                                className={`w-full h-8 border rounded-[6px] pl-2.5 pr-6 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
                               />
                               {isActive && (
                                 <button
                                   type="button"
                                   onClick={() => resetQuantity(idx)}
-                                  className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors"
+                                  className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors"
                                 >
                                   <X size={12} />
                                 </button>
