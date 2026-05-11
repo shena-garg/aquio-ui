@@ -423,7 +423,7 @@ export function ReceiptFormModal({
                         </td>
                         <td className="py-2.5 pl-2 pr-3 align-top">
                           <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-1">
+                            <div className="relative">
                               <input
                                 type="text"
                                 inputMode="decimal"
@@ -437,15 +437,17 @@ export function ReceiptFormModal({
                                   const len = e.target.value.length;
                                   e.target.setSelectionRange(len, len);
                                 }}
-                                className={`w-full h-8 border rounded-[6px] px-2.5 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
+                                className={`w-full h-8 border rounded-[6px] pr-2.5 pl-6 text-[13px] text-right text-[#111827] outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] ${isExcess ? "border-[#ea580c]" : "border-[#e5e7eb]"}`}
                               />
-                              <button
-                                type="button"
-                                onClick={() => resetQuantity(idx)}
-                                className={`flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors flex-shrink-0 ${isActive ? "visible" : "invisible"}`}
-                              >
-                                <X size={12} />
-                              </button>
+                              {isActive && (
+                                <button
+                                  type="button"
+                                  onClick={() => resetQuantity(idx)}
+                                  className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-full text-[#9ca3af] hover:text-[#dc2626] hover:bg-[#fee2e2] transition-colors"
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
                             </div>
                             {isExcess && (
                               <div className="flex flex-col gap-1">
