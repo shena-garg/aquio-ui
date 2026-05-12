@@ -455,6 +455,7 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         receiptStatus={order.receiptStatus}
         supplierName={order.supplier?.name ?? ""}
         issueDate={order.issueDate}
+        isLinked={!!order.linkedOrders}
       />
       <ConfirmPOModal
         isOpen={confirmOpen}

@@ -452,6 +452,7 @@ export function SODetailsHeader({ order, onCreateShipment }: SODetailsHeaderProp
         supplierName={order.supplier?.name ?? ""}
         issueDate={order.issueDate}
         orderType="sales"
+        isLinked={!!order.linkedOrders}
       />
       <ConfirmPOModal
         isOpen={confirmOpen}

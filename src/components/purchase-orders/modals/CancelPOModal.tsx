@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner"; // toast.success only
-import { Search, Loader2, X, Plus } from "lucide-react";
+import { Search, Loader2, X, Plus, Link2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ interface CancelPOModalProps {
   supplierName: string;
   issueDate: string;
   orderType?: "purchase" | "sales";
+  isLinked?: boolean;
 }
 
 export function CancelPOModal({
@@ -38,6 +39,7 @@ export function CancelPOModal({
   supplierName,
   issueDate,
   orderType = "purchase",
+  isLinked = false,
 }: CancelPOModalProps) {
   const isSales = orderType === "sales";
   const queryClient = useQueryClient();
@@ -202,6 +204,19 @@ export function CancelPOModal({
             orderType={orderType}
           />
 
+          {/* Linked order warning */}
+          {isLinked && (
+            <div className="flex items-start gap-2.5 rounded-lg bg-amber-50 border border-amber-200 p-3 mb-4">
+              <Link2 size={14} className="text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-[13px] font-semibold text-amber-800">This order is linked to other orders</p>
+                <p className="text-[12px] text-amber-700 mt-0.5">
+                  Please go to the <strong>Linked Orders</strong> tab and unlink this order before cancelling.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Reason combobox */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -340,7 +355,7 @@ export function CancelPOModal({
             No, Don&apos;t Cancel
           </Button>
           <Button
-            disabled={!reason || isSubmitting}
+            disabled={!reason || isSubmitting || isLinked}
             onClick={handleSubmit}
             className="bg-[#DC2626] hover:bg-[#B91C1C] text-white"
           >
