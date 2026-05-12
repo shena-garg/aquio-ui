@@ -365,6 +365,8 @@ function VariantsTab({ product }: { product: Product }) {
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [variantError, setVariantError] = useState("");
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission("product.edit");
 
   // Always fetch subcategory custom attributes so they're ready when dialog opens
   const { data: subCategoryData, isLoading: isSubCatLoading } = useQuery({
@@ -586,7 +588,7 @@ function VariantsTab({ product }: { product: Product }) {
   // ── View mode ──
   const isActive = product.status === "active";
 
-  const addColumnHeader = isActive && (
+  const addColumnHeader = isActive && canEdit && (
     <th className="h-[52px] px-2 bg-white align-middle border-l border-[#f3f4f6]" style={{ width: 52 }}>
       <button
         onClick={handleStartAdd}
@@ -606,7 +608,7 @@ function VariantsTab({ product }: { product: Product }) {
         )}
         <div className="flex items-center justify-center h-48 text-sm text-[#6b7280]">
           No variants defined
-          {isActive && (
+          {isActive && canEdit && (
             <button
               onClick={handleStartAdd}
               className="ml-2 flex items-center gap-1 text-[13px] text-[#0d9488] font-medium hover:text-[#0f766e]"
@@ -659,7 +661,7 @@ function VariantsTab({ product }: { product: Product }) {
                   <td className="py-2.5 px-4 text-[13px] font-medium text-[#111827]">
                     {v.name}
                   </td>
-                  {isActive && (
+                  {isActive && canEdit && (
                     <td className="py-2.5 px-2">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => handleEditVariant(v._id)} className="p-1 text-[#6b7280] hover:text-[#0d9488]">
@@ -671,7 +673,7 @@ function VariantsTab({ product }: { product: Product }) {
                       </div>
                     </td>
                   )}
-                  {isActive && <td />}
+                  {isActive && canEdit && <td />}
                 </tr>
               ))}
             </tbody>
@@ -692,9 +694,9 @@ function VariantsTab({ product }: { product: Product }) {
         <SplitVariantsTable
           variants={variants}
           attributeRows={attributeRows}
-          onEdit={isActive ? handleEditVariant : undefined}
-          onDelete={isActive ? handleDeleteVariant : undefined}
-          onAdd={isActive ? handleStartAdd : undefined}
+          onEdit={isActive && canEdit ? handleEditVariant : undefined}
+          onDelete={isActive && canEdit ? handleDeleteVariant : undefined}
+          onAdd={isActive && canEdit ? handleStartAdd : undefined}
         />
       </>
     );
@@ -721,7 +723,7 @@ function VariantsTab({ product }: { product: Product }) {
                 >
                   <div className="flex items-center gap-2">
                     {v.name}
-                    {isActive && (
+                    {isActive && canEdit && (
                       <div className="flex items-center gap-0.5">
                         <button onClick={() => handleEditVariant(v._id)} className="p-0.5 text-[#9ca3af] hover:text-[#0d9488]">
                           <Pencil size={12} />
@@ -754,7 +756,7 @@ function VariantsTab({ product }: { product: Product }) {
                     </td>
                   );
                 })}
-                {isActive && <td />}
+                {isActive && canEdit && <td />}
               </tr>
             ))}
           </tbody>
