@@ -16,6 +16,7 @@ import {
 import { PageHeader } from "@/components/layout/PageHeader";
 import type { Product } from "@/services/products";
 import { productsService } from "@/services/products";
+import { useAuth } from "@/contexts/AuthContext";
 
 const statusBadgeStyles: Record<string, string> = {
   active: "bg-[#d1fae5] text-[#065f46]",
@@ -50,6 +51,10 @@ export function ProductDetailsHeader({
   const queryClient = useQueryClient();
   const [isArchiving, setIsArchiving] = useState(false);
   const [archiveError, setArchiveError] = useState("");
+  const { hasPermission } = useAuth();
+  const canEdit = hasPermission("product.edit");
+  const canAdd = hasPermission("product.add");
+  const canArchive = hasPermission("product.archive");
 
   async function handleArchive() {
     setIsArchiving(true);
@@ -101,7 +106,7 @@ export function ProductDetailsHeader({
     </div>
   ) : (
     <div className="flex items-center gap-2">
-      {product.status === "active" && (
+      {canEdit && product.status === "active" && (
         <Button
           variant="outline"
           className="h-9 px-3.5 rounded-[6px] text-[13px] font-medium"
@@ -111,32 +116,36 @@ export function ProductDetailsHeader({
         </Button>
       )}
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="h-9 w-9 rounded-[6px] p-0">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem
-            onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
-          >
-            Create Duplicate
-          </DropdownMenuItem>
-          {product.status === "active" && (
-            <>
-              <DropdownMenuSeparator />
+      {(canAdd || (canArchive && product.status === "active")) && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="h-9 w-9 rounded-[6px] p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {canAdd && (
               <DropdownMenuItem
-                onClick={handleArchive}
-                disabled={isArchiving}
-                className="text-[#DC2626] focus:text-[#DC2626]"
+                onClick={() => router.push(`/products/new?duplicateFrom=${product._id}`)}
               >
-                {isArchiving ? "Archiving…" : "Archive"}
+                Create Duplicate
               </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            )}
+            {canArchive && product.status === "active" && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleArchive}
+                  disabled={isArchiving}
+                  className="text-[#DC2626] focus:text-[#DC2626]"
+                >
+                  {isArchiving ? "Archiving…" : "Archive"}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 
