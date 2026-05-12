@@ -441,21 +441,31 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
         </div>
       )}
 
-      {order.delayDays > 0 && order.status !== "draft" && order.status !== "cancelled" && (
-        <div className="flex items-center gap-2 px-6 py-1.5 bg-[#fffbeb] border-b border-[#e5e7eb] border-l-4 border-l-[#f59e0b]">
-          <AlertTriangle size={14} className="text-[#92400e] flex-shrink-0" />
-          <span className="text-[13px] font-medium text-[#92400e]">
-            {order.status === "completed"
-              ? `Delivered ${order.delayDays} ${order.delayDays === 1 ? "day" : "days"} late — Expected `
-              : `Delivery overdue by ${order.delayDays} ${order.delayDays === 1 ? "day" : "days"} — Expected `}
-            {new Date(order.deliveryDate).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })}
-          </span>
-        </div>
-      )}
+      {(() => {
+        if (order.status === "draft" || order.status === "cancelled") return null;
+        const due = new Date(order.deliveryDate);
+        const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+        const today = new Date();
+        const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const liveDelay = Math.floor((todayDay.getTime() - dueDay.getTime()) / 86_400_000);
+        const displayDelay = order.status === "completed" ? order.delayDays : Math.max(liveDelay, 0);
+        if (displayDelay <= 0) return null;
+        return (
+          <div className="flex items-center gap-2 px-6 py-1.5 bg-[#fffbeb] border-b border-[#e5e7eb] border-l-4 border-l-[#f59e0b]">
+            <AlertTriangle size={14} className="text-[#92400e] flex-shrink-0" />
+            <span className="text-[13px] font-medium text-[#92400e]">
+              {order.status === "completed"
+                ? `Delivered ${displayDelay} ${displayDelay === 1 ? "day" : "days"} late — Expected `
+                : `Delivery overdue by ${displayDelay} ${displayDelay === 1 ? "day" : "days"} — Expected `}
+              {new Date(order.deliveryDate).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+        );
+      })()}
 
       {pdfError && (
         <p className="px-6 py-2 text-[13px] text-[#dc2626] bg-red-50 border-b border-red-100">{pdfError}</p>
