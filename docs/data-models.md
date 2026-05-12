@@ -135,6 +135,43 @@ All TypeScript interfaces, types, and enums used across the Aquio frontend. This
 | `receipts` | `Receipt[]` | No | Only in comprehensive response |
 | `notes` | `string` | No | |
 | `termsAndConditions` | `string[]` | No | |
+| `linkedOrders` | `LinkedOrders \| null` | No | Only in comprehensive response; null if not linked |
+
+### LinkedOrders
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `clusterId` | `string` | Yes | Shared cluster ID across all linked orders |
+| `pos` | `LinkedOrderSummary[]` | Yes | All POs in this cluster |
+| `sos` | `LinkedOrderSummary[]` | Yes | All SOs in this cluster |
+| `clusterSummary` | `ClusterSummary` | Yes | Aggregate metrics for the cluster |
+
+### LinkedOrderSummary
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `_id` | `string` | Yes | MongoDB ObjectId |
+| `poNumber` | `string` | Yes | Order number |
+| `status` | `string` | Yes | Order status |
+| `receiptStatus` | `string` | Yes | Fulfillment status |
+| `supplier` | `{ id?: string, name: string }` | No | Supplier (for POs) |
+| `biller` | `{ id?: string, name: string }` | No | Buyer/biller (for SOs) |
+| `totalQuantity` | `number \| null` | No | |
+| `issueDate` | `string` | No | ISO date |
+| `deliveryDate` | `string` | No | ISO date |
+
+### ClusterSummary
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `poCount` | `number` | Yes | Total POs in cluster (all statuses) |
+| `soCount` | `number` | Yes | Total SOs in cluster (all statuses) |
+| `purchaseCommitted` | `number \| null` | Yes | Total quantity on active (non-draft, non-cancelled) POs |
+| `salesCommitted` | `number \| null` | Yes | Total quantity on active SOs |
+| `received` | `number` | Yes | Total quantity received across all PO receipts |
+| `shipped` | `number` | Yes | Total quantity shipped across all SO receipts |
+| `pendingReceipt` | `number \| null` | Yes | `max(0, purchaseCommitted - received)`; null if purchaseCommitted is null |
+| `pendingShipment` | `number \| null` | Yes | `max(0, salesCommitted - shipped)`; null if salesCommitted is null |
 
 ### Supplier (embedded in Order)
 
@@ -508,6 +545,17 @@ type CsvPattern = "basic" | "comprehensive";
 | `page` | `number` | Yes |
 | `limit` | `number` | Yes |
 
+### PaginatedAuditResult
+
+Response wrapper returned by both audit trail endpoints (entity changes + by-user).
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `items` | `AuditEvent[]` | Yes | Events for this page |
+| `total` | `number` | Yes | Total event count |
+| `page` | `number` | Yes | Current page (1-based) |
+| `limit` | `number` | Yes | Page size |
+
 ### AuditEvent
 
 **Service:** `src/services/activity.ts`
@@ -518,7 +566,7 @@ type CsvPattern = "basic" | "comprehensive";
 | `entityType` | `string` | Yes | e.g., "purchase_order" |
 | `entityId` | `string` | Yes | |
 | `subEntityId` | `string` | No | e.g., receipt ID |
-| `action` | `"create" \| "update" \| "cancel" \| "receipt_create" \| "forcefully_close_item"` | Yes | |
+| `action` | `"create" \| "update" \| "cancel" \| "confirm" \| "receipt_create" \| "receipt_update" \| "forcefully_close_item"` | Yes | |
 | `userId` | `string` | Yes | Who performed the action |
 | `organizationId` | `string` | Yes | |
 | `previousValues` | `Record<string, any>` | No | Snapshot before change |

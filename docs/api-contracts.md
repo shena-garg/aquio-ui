@@ -25,12 +25,22 @@ All API calls use Axios via `src/lib/api-client.ts` with automatic Bearer token 
 |--------|----------|---------|---------|----------|
 | GET | `/purchase-orders/list` | List POs with filters | Query: `page, limit, orderType="purchase", status, poNumber, referenceId, supplierReferenceId, receiptStatus, issueDateFrom, issueDateTo, deliveryDateFrom, deliveryDateTo, minDelay, maxDelay` — `minDelay`/`maxDelay` filter by `delayDays` range (Watch=1-2, Warning=3-6, Critical=7+); when `status=delayed` results sort by `delayDays` desc | `PurchaseOrdersResponse { data: PurchaseOrder[], pagination: { total, page, limit }, counts: POStatusCounts }` |
 | GET | `/purchase-orders/list` | Export POs as CSV | Query: `format="csv", csvPattern: "basic"|"comprehensive", orderType="purchase", status, ...filters` | `Blob` |
+| GET | `/purchase-orders/list` | Search orders for linking | Query: `orderType="purchase"|"sales", poNumber, page=1, limit=10` | `PurchaseOrdersResponse` |
 | GET | `/purchase-orders/{id}?comprehensive=true` | Get single PO with full details | — | `PurchaseOrder` |
 | PATCH | `/purchase-orders/{id}/cancel` | Cancel PO | `{ cancellationReason: string, cancellationNotes?: string }` | — |
 | PATCH | `/purchase-orders/{id}/confirm` | Confirm PO | `{ supplierReferenceId?: string }` (optional) | — |
+| PATCH | `/purchase-orders/{id}/pdf` | Generate PDF | — | `PurchaseOrder` (with updated `purchaseOrderPDF`) |
 | PATCH | `/purchase-orders/{id}/forcefully-close-multiple` | Force close products | `{ items: [{ productId: string, variantId: string }] }` | — |
 | PATCH | `/purchase-orders/{id}/undo-forcefully-close` | Undo force close | `{ productId: string, variantId: string }` | — |
 | PATCH | `/purchase-orders/{id}/csv` | Download receipt CSV | `null` | `Blob` |
+| POST | `/purchase-orders/{id}/link` | Link this order to another order | `{ targetOrderId: string }` | `{ clusterId: string }` |
+| DELETE | `/purchase-orders/{id}/link/{targetOrderId}` | Unlink two linked orders | — | — |
+
+**Linking constraints enforced by backend:**
+- Both orders must share at least one matching `product._id:variant._id` key pair
+- Neither order can be `cancelled`
+- The resulting cluster must maintain a one-to-many shape: `min(PO count, SO count) === 1`
+- If either order already belongs to a cluster, that cluster is merged/updated; the one-to-many constraint is checked across all affected clusters before merging
 
 ---
 
@@ -206,8 +216,14 @@ Uses the **same backend endpoints** as Purchase Orders but with `orderType="sale
 
 | Method | Endpoint | Purpose | Request | Response |
 |--------|----------|---------|---------|----------|
-| GET | `/audit-trail/entity/purchase_order/{poId}/changes` | Get activity log for an order | — | `AuditEvent[]` |
+| GET | `/audit-trail/entity/{entityType}/{entityId}/changes` | Get paginated activity log for an entity | Query: `page, limit` | `PaginatedAuditResult { items: AuditEvent[], total: number, page: number, limit: number }` |
+| GET | `/audit-trail/by-user/{userId}` | Get paginated activity performed by a user | Query: `page, limit` | `PaginatedAuditResult` |
 | GET | `/users` | Get users for display names | — | `{ users: User[] }` |
+| GET | `/roles` | Get roles for display names in activity | — | `Role[]` |
+
+**entityType values:** `purchase_order`, `sales_order`, `product`, `user`, `partner`, `category`, `location`
+
+**Activity pagination:** The frontend uses `useInfiniteQuery` with a "Show More" button. `getNextPageParam` uses `(last.page * last.limit) < last.total`.
 
 ---
 

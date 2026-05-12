@@ -1,7 +1,7 @@
 # To-Do List
 
 Pending work, open issues, and planned roadmap items.
-Last updated: 2026-05-07
+Last updated: 2026-05-12
 
 > Completed features have been moved to [docs/features.md](./features.md).
 
@@ -68,8 +68,7 @@ Last updated: 2026-05-07
 11. **Supplier scorecards** — On-time delivery %, price consistency
 12. **Demand forecasting (AI Phase 3)** — Needs 6+ months of SO/PO history
 13. **Cash flow forecast (AI Phase 3)**
-14. **PO → SO linking**
-15. **GST reconciliation + Tally integration**
+14. **GST reconciliation + Tally integration**
 
 ### Long-term (Month 8+)
 16. **Supplier Portal** — Long-term moat
@@ -91,10 +90,10 @@ Last updated: 2026-05-07
 ## Notifications
 
 - [ ] **Build Notifications tab** — Replace "Coming soon" on PO/SO detail pages
-- [ ] **In-app notifications** — Order status changes, receipts, delivery overdue
-- [ ] **Email notifications** — Critical events (cancelled, overdue, approval needed)
+- [x] **In-app notifications** — Fan-out from every audit event to all active Administrator users; `/notifications` page with unread badge, mark-read, mark-all-read, load-more pagination
+- [x] **Email notifications** — Overdue email digest (PO + SO) sent daily at 8:00 AM IST; severity-bucketed (Watch 1–2d / Warning 3–6d / Critical 7+d); all-clear email when no overdue orders
 - [ ] **WhatsApp/SMS** — Twilio/Interakt for Indian market; higher open rates than email
-- [ ] **Notification preferences** — Per-user opt-in/out per event type
+- [x] **Notification preferences** — Org-level toggles on Settings page (Notifications tab) + user-level toggles on Profile page; both must be enabled for a digest to send
 
 ---
 

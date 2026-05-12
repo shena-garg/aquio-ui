@@ -1,7 +1,7 @@
 # Aquio — Implemented Features
 
 Complete reference of everything built and live in production.
-Last updated: 2026-05-09
+Last updated: 2026-05-12
 
 ---
 
@@ -61,9 +61,10 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 - **Duplicate** — Create a copy of any existing order pre-filled with the same data.
 - **Status transitions** — Draft → Issued → Confirmed → Completed. Cancel at any non-completed stage. Force close (permission-gated).
 - **Receipts (GRN)** — Record partial or full receipt per product. Quantity, notes, and file attachments. Attached files shown as clickable download links on receipt cards. Receipt status: pending / partial / completed / force closed / excess delivered.
-- **PDF** — Generate PDF (pdfkit + NotoSans, uploaded to S3). Download from order header. Allowed for issued/confirmed/completed orders.
+- **PDF** — Generate PDF (Puppeteer HTML-to-PDF, IBM Plex Sans/Inter fonts, uploaded to S3). Download from order header. Allowed for issued/confirmed/completed orders.
 - **Delay tracking** — `delayDays` computed from expected delivery date. Overdue banner shown on detail page. Daily cron recalculates all open orders.
-- **CSV export** — Export filtered order list.
+- **CSV export** — Export filtered order list. Comprehensive pattern adds 6 cluster columns at the end when order is linked: Cluster: Purchase Committed, Sales Committed, Received, Shipped, Pending Receipt, Pending Shipment.
+- **Linked Orders** — POs can be linked to one or more SOs (one-to-many: always one PO per cluster or one SO per cluster). Link modal searches by order number with lazy-loaded product sneak peek per result. Backend validates shared product+variant overlap and rejects cancelled orders. Cluster tab on detail page shows all linked orders in a table plus a 6-metric summary card (Purchase Committed, Sales Committed, Received, Shipped, Pending Receipt, Pending Shipment — draft/cancelled orders excluded from metrics). Unlink from the Linked Orders tab. Cancel is blocked with an amber warning if the order is still linked.
 
 ---
 
@@ -73,6 +74,7 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 - **Shipment tracking** — Mirror of PO receipts for outbound shipments. Attached files shown as clickable download links on shipment cards.
 - **PDF** — Same generate/download flow as PO.
 - **Auto-refresh** — List and detail pages both poll every 30 seconds.
+- **Linked Orders** — SOs participate in the same PO-SO linking system as POs. All linking, unlinking, cluster display, and cancel-guard behavior is identical — uses the same backend endpoints and same `CancelPOModal`/`LinkOrderModal`/`LinkedOrdersSection` components with `orderType="sales"`.
 
 ---
 
@@ -185,6 +187,9 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 - **User entity coverage** — All user lifecycle events are audited: invite, update, archive (deactivate), change_password, set_password (invited user activates account), verify_email.
 - **Two query axes** — `GET /audit-trail/entity/:entityType/:entityId/changes` (events on an entity) and `GET /audit-trail/by-user/:userId` (events performed by a user). Used by the User Details page tabs.
 - **`SimpleActivityTimeline`** — Shared component in `src/components/activity/`. Handles all action types including `change_password`, `set_password`, `verify_email`. Pass `showEntityType={true}` for cross-entity feeds (e.g. Own Activity tab on User Details).
+- **Paginated with Show More** — Both endpoints return `PaginatedAuditResult { items, total, page, limit }`. Frontend uses `useInfiniteQuery`; a "Show More" button loads the next page without replacing existing events.
+- **Role names in activity** — Displays role names (not IDs) in audit events. A `roleMap` is built from `/roles` and passed into the timeline to resolve `roleId → name` for invite/role-change events.
+- **Rich event details** — Cancellation events show reason + notes. Confirm events show supplier reference ID when set. Receipt/shipment events show per-product quantities and dates. Clickable event tiles navigate to the related entity.
 
 ---
 
