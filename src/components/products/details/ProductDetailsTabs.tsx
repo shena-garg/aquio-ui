@@ -44,13 +44,14 @@ export function ProductDetailsTabs({
 }: ProductDetailsTabsProps) {
   const { hasPermission } = useAuth();
   const canViewAuditLog = hasPermission("product.audit-log");
+  const canViewAnalytics = hasPermission("product.analytics");
   const [activeTab, setActiveTab] = useState<TabKey>("variants");
 
   if (isEditing) return null;
 
   const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "variants", label: "Variants", count: product.variants.length },
-    { key: "analytics", label: "Analytics" },
+    ...(canViewAnalytics ? [{ key: "analytics" as TabKey, label: "Analytics" }] : []),
     ...(canViewAuditLog ? [{ key: "activity" as TabKey, label: "Activity" }] : []),
   ];
 
@@ -93,7 +94,7 @@ export function ProductDetailsTabs({
       <div className="flex-1">
         {activeTab === "variants" ? (
           <VariantsTab product={product} />
-        ) : activeTab === "analytics" ? (
+        ) : activeTab === "analytics" && canViewAnalytics ? (
           <AnalyticsTab product={product} />
         ) : activeTab === "activity" ? (
           <ActivityTab productId={product._id} />

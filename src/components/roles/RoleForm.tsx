@@ -41,6 +41,7 @@ const ENTITIES: EntityDef[] = [
       { key: "product.add", label: "Add Product", description: "Add new products with category, unit, and variant information." },
       { key: "product.edit", label: "Edit Product", description: "Edit product details including description, category, and variants." },
       { key: "product.archive", label: "Archive Product", description: "Archive products so they are no longer available for use in orders/auctions." },
+      { key: "product.analytics", label: "View Analytics", description: "View procurement and sales analytics charts for a product." },
       { key: "product.audit-log", label: "View Activity Log", description: "View the activity log of actions performed on a product." },
     ],
   },
