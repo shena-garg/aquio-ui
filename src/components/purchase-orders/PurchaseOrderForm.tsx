@@ -17,6 +17,7 @@ import {
   Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Popover,
   PopoverContent,
@@ -868,6 +869,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const isEditMode = !!editId;
   const isDuplicateMode = !!duplicateFromId;
   const router = useRouter();
+  const { hasPermission } = useAuth();
+  const canAddProduct = hasPermission("product.add");
 
   // ── Bootstrap data ──────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
@@ -2006,10 +2009,10 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                           <ProductTypeahead
                             value={row.product}
                             onSelect={(p) => handleProductSelect(row.id, p)}
-                            onCreateNew={(q) => {
+                            onCreateNew={canAddProduct ? (q) => {
                               setCreateProductInitialName(q);
                               setCreateProductForRowId(row.id);
-                            }}
+                            } : undefined}
                             hasError={attempted && !row.product}
                           />
                         </div>
