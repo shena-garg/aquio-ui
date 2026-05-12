@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Clock, Plus, Pencil, Trash2, Archive, UserPlus,
   CheckCircle, CheckCircle2, XCircle, KeyRound, ShieldCheck,
-  MailCheck, Truck, Lock, RotateCcw,
+  MailCheck, Truck, Lock, RotateCcw, Loader2,
 } from "lucide-react";
 import type { AuditEvent, User } from "@/services/activity";
 import { resolveUserName, formatEventDate } from "@/services/activity";
@@ -410,9 +410,12 @@ interface SimpleActivityTimelineProps {
   showEntityType?: boolean;
   /** Map of roleId → role name, used to resolve roleId field values */
   roleMap?: Record<string, string>;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
 }
 
-export function SimpleActivityTimeline({ events, users, showEntityType = false, roleMap }: SimpleActivityTimelineProps) {
+export function SimpleActivityTimeline({ events, users, showEntityType = false, roleMap, hasMore, onLoadMore, isLoadingMore }: SimpleActivityTimelineProps) {
   const parsed = useMemo(() =>
     events.map((event) => ({
       event,
@@ -517,6 +520,25 @@ export function SimpleActivityTimeline({ events, users, showEntityType = false, 
           );
         })}
       </div>
+
+      {(hasMore || isLoadingMore) && (
+        <div className="flex justify-center pt-2 pb-2">
+          <button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            className="flex items-center gap-1.5 text-[13px] font-medium text-[#0d9488] hover:text-[#0f766e] disabled:opacity-50 transition-colors"
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Loading…
+              </>
+            ) : (
+              "Show More"
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

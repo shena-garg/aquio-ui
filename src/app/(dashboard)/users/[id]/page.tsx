@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -208,16 +209,40 @@ function ActivityContent({
   activeTab: ActivityTab;
   roleMap: Record<string, string>;
 }) {
-  const { data: onUserEvents = [], isLoading: loadingOn, refetch: refetchOn } = useQuery({
+  const {
+    data: onUserData,
+    fetchNextPage: fetchMoreOnUser,
+    hasNextPage: hasMoreOnUser,
+    isFetchingNextPage: loadingMoreOnUser,
+    isLoading: loadingOn,
+    refetch: refetchOn,
+  } = useInfiniteQuery({
     queryKey: ["activity", "user", userId],
-    queryFn: () => getEntityActivityLog("user", userId),
+    queryFn: ({ pageParam }) => getEntityActivityLog("user", userId, pageParam as number),
+    initialPageParam: 1,
+    getNextPageParam: (last) => {
+      const loaded = last.page * last.limit;
+      return loaded < last.total ? last.page + 1 : undefined;
+    },
     staleTime: 0,
     enabled: activeTab === "activity",
   });
 
-  const { data: byUserEvents = [], isLoading: loadingBy, refetch: refetchBy } = useQuery({
+  const {
+    data: byUserData,
+    fetchNextPage: fetchMoreByUser,
+    hasNextPage: hasMoreByUser,
+    isFetchingNextPage: loadingMoreByUser,
+    isLoading: loadingBy,
+    refetch: refetchBy,
+  } = useInfiniteQuery({
     queryKey: ["activity", "by-user", userId],
-    queryFn: () => getUserActivityLog(userId),
+    queryFn: ({ pageParam }) => getUserActivityLog(userId, pageParam as number),
+    initialPageParam: 1,
+    getNextPageParam: (last) => {
+      const loaded = last.page * last.limit;
+      return loaded < last.total ? last.page + 1 : undefined;
+    },
     staleTime: 0,
     enabled: activeTab === "own-activity",
   });
@@ -231,7 +256,12 @@ function ActivityContent({
   const isLoading =
     (activeTab === "activity" ? loadingOn : loadingBy) || loadingUsers;
 
-  const events = activeTab === "activity" ? onUserEvents : byUserEvents;
+  const events = activeTab === "activity"
+    ? (onUserData?.pages.flatMap((p) => p.items) ?? [])
+    : (byUserData?.pages.flatMap((p) => p.items) ?? []);
+  const hasMore = activeTab === "activity" ? hasMoreOnUser : hasMoreByUser;
+  const isLoadingMore = activeTab === "activity" ? loadingMoreOnUser : loadingMoreByUser;
+  const fetchMore = activeTab === "activity" ? fetchMoreOnUser : fetchMoreByUser;
   const refetch = activeTab === "activity" ? refetchOn : refetchBy;
 
   return (
@@ -260,6 +290,9 @@ function ActivityContent({
           users={users}
           showEntityType={activeTab === "own-activity"}
           roleMap={roleMap}
+          hasMore={hasMore}
+          onLoadMore={fetchMore}
+          isLoadingMore={isLoadingMore}
         />
       )}
     </div>

@@ -97,6 +97,13 @@ export interface DiffResult {
 // API functions
 // ---------------------------------------------------------------------------
 
+export interface PaginatedAuditResult {
+  items: AuditEvent[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export async function getActivityLog(poId: string): Promise<AuditEvent[]> {
   const { data } = await apiClient.get<AuditEvent[]>(
     `/audit-trail/entity/purchase_order/${poId}/changes`
@@ -104,16 +111,27 @@ export async function getActivityLog(poId: string): Promise<AuditEvent[]> {
   return data;
 }
 
-export async function getEntityActivityLog(entityType: string, entityId: string): Promise<AuditEvent[]> {
-  const { data } = await apiClient.get<AuditEvent[]>(
-    `/audit-trail/entity/${entityType}/${entityId}/changes`
+export async function getEntityActivityLog(
+  entityType: string,
+  entityId: string,
+  page = 1,
+  limit = 25,
+): Promise<PaginatedAuditResult> {
+  const { data } = await apiClient.get<PaginatedAuditResult>(
+    `/audit-trail/entity/${entityType}/${entityId}/changes`,
+    { params: { page, limit } },
   );
   return data;
 }
 
-export async function getUserActivityLog(userId: string): Promise<AuditEvent[]> {
-  const { data } = await apiClient.get<AuditEvent[]>(
-    `/audit-trail/by-user/${userId}`
+export async function getUserActivityLog(
+  userId: string,
+  page = 1,
+  limit = 25,
+): Promise<PaginatedAuditResult> {
+  const { data } = await apiClient.get<PaginatedAuditResult>(
+    `/audit-trail/by-user/${userId}`,
+    { params: { page, limit } },
   );
   return data;
 }

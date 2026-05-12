@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Pencil, Plus, Trash2, X, Clock, RefreshCw } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -958,11 +958,25 @@ function computeDateRange(
 }
 
 function ActivityTab({ productId }: { productId: string }) {
-  const { data: events = [], isLoading: loadingEvents, refetch } = useQuery({
+  const {
+    data: activityData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: loadingEvents,
+    refetch,
+  } = useInfiniteQuery({
     queryKey: ["activity", "product", productId],
-    queryFn: () => getEntityActivityLog("product", productId),
+    queryFn: ({ pageParam }) => getEntityActivityLog("product", productId, pageParam as number),
+    initialPageParam: 1,
+    getNextPageParam: (last) => {
+      const loaded = last.page * last.limit;
+      return loaded < last.total ? last.page + 1 : undefined;
+    },
     staleTime: 0,
   });
+  const events = activityData?.pages.flatMap((p) => p.items) ?? [];
+
   const { data: users = [], isLoading: loadingUsers } = useQuery({
     queryKey: ["audit-users"],
     queryFn: getUsers,
@@ -992,7 +1006,13 @@ function ActivityTab({ productId }: { productId: string }) {
           <Loader2 className="animate-spin text-gray-400" size={20} />
         </div>
       ) : (
-        <SimpleActivityTimeline events={events} users={users} />
+        <SimpleActivityTimeline
+          events={events}
+          users={users}
+          hasMore={hasNextPage}
+          onLoadMore={fetchNextPage}
+          isLoadingMore={isFetchingNextPage}
+        />
       )}
     </div>
   );

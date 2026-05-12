@@ -28,11 +28,12 @@ export function ReceiptActivityModal({
 }: ReceiptActivityModalProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  const { data: events = [], isLoading: eventsLoading } = useQuery({
+  const { data: activityData, isLoading: eventsLoading } = useQuery({
     queryKey: ["receipt-activity", receiptId],
     queryFn: () => getEntityActivityLog("receipt", receiptId),
     staleTime: 0,
   });
+  const events = activityData?.items ?? [];
 
   const { data: users = [] } = useQuery({
     queryKey: ["users"],

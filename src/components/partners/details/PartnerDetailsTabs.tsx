@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, MapPin, Clock, RefreshCw } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -214,12 +214,25 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
     { key: "activity", label: "Activity" },
   ];
 
-  const { data: activityEvents = [], isLoading: loadingActivity, refetch: refetchActivity } = useQuery({
+  const {
+    data: activityData,
+    fetchNextPage: fetchMoreActivity,
+    hasNextPage: hasMoreActivity,
+    isFetchingNextPage: loadingMoreActivity,
+    isLoading: loadingActivity,
+    refetch: refetchActivity,
+  } = useInfiniteQuery({
     queryKey: ["activity", "partner", partner._id],
-    queryFn: () => getEntityActivityLog("partner", partner._id),
+    queryFn: ({ pageParam }) => getEntityActivityLog("partner", partner._id, pageParam as number),
+    initialPageParam: 1,
+    getNextPageParam: (last) => {
+      const loaded = last.page * last.limit;
+      return loaded < last.total ? last.page + 1 : undefined;
+    },
     staleTime: 0,
     enabled: activeTab === "activity",
   });
+  const activityEvents = activityData?.pages.flatMap((p) => p.items) ?? [];
   const { data: activityUsers = [], isLoading: loadingUsers } = useQuery({
     queryKey: ["audit-users"],
     queryFn: getUsers,
@@ -323,7 +336,13 @@ export function PartnerDetailsTabs({ partner }: PartnerDetailsTabsProps) {
                 <Loader2 className="animate-spin text-gray-400" size={20} />
               </div>
             ) : (
-              <SimpleActivityTimeline events={activityEvents} users={activityUsers} />
+              <SimpleActivityTimeline
+                events={activityEvents}
+                users={activityUsers}
+                hasMore={hasMoreActivity}
+                onLoadMore={fetchMoreActivity}
+                isLoadingMore={loadingMoreActivity}
+              />
             )}
           </div>
         )}
