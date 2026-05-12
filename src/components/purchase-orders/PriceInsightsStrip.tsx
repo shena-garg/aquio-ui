@@ -9,7 +9,6 @@ import {
   ThumbsUp,
   History,
   ExternalLink,
-  X,
 } from "lucide-react";
 import {
   priceInsightsService,
@@ -68,27 +67,6 @@ function formatDaysAgo(daysAgo: number): { text: string; muted: boolean } {
   if (daysAgo <= 90) return { text: `${daysAgo}d ago`, muted: false };
   const months = Math.round(daysAgo / 30);
   return { text: `${months} months ago`, muted: true };
-}
-
-// ── Onboarding tooltip ────────────────────────────────────────────────────────
-
-const TOOLTIP_KEY = "price-insights-onboarding-shown";
-
-function useOnboardingTooltip() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const count = parseInt(localStorage.getItem(TOOLTIP_KEY) ?? "0", 10);
-    if (count < 3) setVisible(true);
-  }, []);
-
-  function dismiss() {
-    setVisible(false);
-    const count = parseInt(localStorage.getItem(TOOLTIP_KEY) ?? "0", 10);
-    localStorage.setItem(TOOLTIP_KEY, String(count + 1));
-  }
-
-  return { visible, dismiss };
 }
 
 // ── History drawer ────────────────────────────────────────────────────────────
@@ -257,8 +235,6 @@ export function PriceInsightsStrip({
   const [feedbackGiven, setFeedbackGiven] = useState<
     "thumbs_up" | "thumbs_down" | null
   >(null);
-  const { visible: tooltipVisible, dismiss: dismissTooltip } =
-    useOnboardingTooltip();
 
   // Debounced price for signal computation
   const [debouncedPrice, setDebouncedPrice] = useState(enteredPrice);
@@ -407,26 +383,7 @@ export function PriceInsightsStrip({
 
   return (
     <>
-      <div className="relative w-full bg-[#f8fafc] dark:bg-[#1e293b] rounded-md px-3 py-2 text-[12px] flex flex-wrap items-center gap-x-3 gap-y-1.5 border border-[#e2e8f0] dark:border-[#334155]">
-        {/* Onboarding tooltip */}
-        {tooltipVisible && (
-          <div className="absolute bottom-full left-0 mb-2 z-50 bg-[#0d9488] text-white rounded-lg px-3 py-2 shadow-lg max-w-xs text-[11px] leading-snug">
-            <div className="flex items-start gap-2">
-              <span className="flex-1">
-                New: pricing context as you create orders. Based on your past
-                orders. Tell us what&apos;s useful.
-              </span>
-              <button
-                onClick={dismissTooltip}
-                className="flex-shrink-0 opacity-80 hover:opacity-100"
-              >
-                <X size={12} />
-              </button>
-            </div>
-            <div className="absolute top-full left-4 border-4 border-transparent border-t-[#0d9488]" />
-          </div>
-        )}
-
+      <div className="w-full bg-[#f8fafc] dark:bg-[#1e293b] rounded-md px-3 py-2 text-[12px] flex flex-wrap items-center gap-x-3 gap-y-1.5 border border-[#e2e8f0] dark:border-[#334155]">
         {/* Left label */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <Sparkles size={12} className="text-[#7c3aed]" />
