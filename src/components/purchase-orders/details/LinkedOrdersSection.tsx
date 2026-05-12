@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Link2, Unlink, ExternalLink, TrendingUp, TrendingDown, Minus, ShoppingCart, PackageCheck } from "lucide-react";
+import { Link2, Unlink, ExternalLink, ShoppingCart, PackageCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,60 +44,44 @@ function fmtNum(n: number | null | undefined) {
 
 interface ClusterSummaryCardProps {
   linked: LinkedOrders;
-  orderType: "purchase" | "sales";
 }
 
-function ClusterSummaryCard({ linked, orderType }: ClusterSummaryCardProps) {
+function ClusterSummaryCard({ linked }: ClusterSummaryCardProps) {
   const { clusterSummary: s } = linked;
-
-  const gapVal = s.supplyGap;
-  const gapColor =
-    gapVal == null ? "text-gray-500" :
-    gapVal > 0 ? "text-amber-600" :
-    gapVal < 0 ? "text-blue-600" :
-    "text-green-600";
-
-  const GapIcon =
-    gapVal == null ? Minus :
-    gapVal > 0 ? TrendingDown :
-    gapVal < 0 ? TrendingUp :
-    Minus;
-
-  const gapLabel =
-    gapVal == null ? "N/A" :
-    gapVal > 0 ? `+${fmtNum(gapVal)} under-covered` :
-    gapVal < 0 ? `${fmtNum(Math.abs(gapVal))} surplus` :
-    "Balanced";
 
   return (
     <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 mb-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.8px] text-gray-400 mb-2.5">
         Cluster Overview — {s.poCount} PO{s.poCount !== 1 ? "s" : ""}, {s.soCount} SO{s.soCount !== 1 ? "s" : ""}
       </p>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3">
         <div>
-          <p className="text-[10px] text-gray-400 mb-0.5">PO Ordered</p>
-          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.totalPOOrdered)}</p>
+          <p className="text-[10px] text-gray-400 mb-0.5">Purchase Committed</p>
+          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.purchaseCommitted)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-gray-400 mb-0.5">SO Committed</p>
-          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.totalSOCommitted)}</p>
+          <p className="text-[10px] text-gray-400 mb-0.5">Sales Committed</p>
+          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.salesCommitted)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-gray-400 mb-0.5">Supply Gap</p>
-          <div className={cn("flex items-center gap-1", gapColor)}>
-            <GapIcon size={12} />
-            <p className="text-[13px] font-semibold">{gapLabel}</p>
-          </div>
-        </div>
-        <div className="col-span-1" />
-        <div>
-          <p className="text-[10px] text-gray-400 mb-0.5">PO Received</p>
-          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.totalPOReceived)}</p>
+          <p className="text-[10px] text-gray-400 mb-0.5">Received</p>
+          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.received)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-gray-400 mb-0.5">SO Shipped</p>
-          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.totalSOShipped)}</p>
+          <p className="text-[10px] text-gray-400 mb-0.5">Shipped</p>
+          <p className="text-[13px] font-semibold text-gray-800">{fmtNum(s.shipped)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-gray-400 mb-0.5">Pending Receipt</p>
+          <p className={cn("text-[13px] font-semibold", (s.pendingReceipt ?? 0) > 0 ? "text-amber-600" : "text-gray-800")}>
+            {fmtNum(s.pendingReceipt)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] text-gray-400 mb-0.5">Pending Shipment</p>
+          <p className={cn("text-[13px] font-semibold", (s.pendingShipment ?? 0) > 0 ? "text-amber-600" : "text-gray-800")}>
+            {fmtNum(s.pendingShipment)}
+          </p>
         </div>
       </div>
     </div>
@@ -230,7 +214,7 @@ export function LinkedOrdersSection({ order, orderType, queryKey }: LinkedOrders
 
       {/* Cluster summary */}
       {linked && hasLinked && (
-        <ClusterSummaryCard linked={linked} orderType={orderType} />
+        <ClusterSummaryCard linked={linked} />
       )}
 
       {/* Linked POs */}

@@ -93,11 +93,12 @@ export interface LinkedOrderSummary {
 export interface ClusterSummary {
   poCount: number;
   soCount: number;
-  totalPOOrdered: number | null;
-  totalSOCommitted: number | null;
-  supplyGap: number | null;
-  totalPOReceived: number;
-  totalSOShipped: number;
+  purchaseCommitted: number | null;
+  salesCommitted: number | null;
+  received: number;
+  shipped: number;
+  pendingReceipt: number | null;
+  pendingShipment: number | null;
 }
 
 export interface LinkedOrders {
