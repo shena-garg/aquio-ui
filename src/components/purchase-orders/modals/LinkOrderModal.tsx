@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Link2, Calendar, CheckCircle2, Clock } from "lucide-react";
+import { Search, X, Link2, Calendar, CheckCircle2, ChevronDown, ChevronRight, Package } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { purchaseOrdersService, type PurchaseOrder } from "@/services/purchase-orders";
+import { purchaseOrdersService, type PurchaseOrder, type POProduct } from "@/services/purchase-orders";
 
 interface LinkOrderModalProps {
   isOpen: boolean;
@@ -35,6 +35,9 @@ export function LinkOrderModal({
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<PurchaseOrder | null>(null);
   const [linking, setLinking] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [productCache, setProductCache] = useState<Record<string, POProduct[]>>({});
+  const [loadingProducts, setLoadingProducts] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -46,9 +49,31 @@ export function LinkOrderModal({
       setQuery("");
       setResults([]);
       setSelected(null);
+      setExpandedId(null);
+      setProductCache({});
+      setLoadingProducts(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
+
+  async function handleToggleExpand(id: string) {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(id);
+    if (!productCache[id]) {
+      setLoadingProducts(id);
+      try {
+        const res = await purchaseOrdersService.getById(id);
+        setProductCache((prev) => ({ ...prev, [id]: res.data.products ?? [] }));
+      } catch {
+        setProductCache((prev) => ({ ...prev, [id]: [] }));
+      } finally {
+        setLoadingProducts(null);
+      }
+    }
+  }
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -149,47 +174,90 @@ export function LinkOrderModal({
               {results.map((order) => {
                 const id = order._id ?? order.id;
                 const isSelected = selected?._id === id || selected?.id === id;
+                const isExpanded = expandedId === id;
                 const counterparty = targetType === "purchase"
                   ? order.supplier?.name
                   : order.biller?.name;
+                const cachedProducts = productCache[id];
 
                 return (
-                  <button
+                  <div
                     key={id}
-                    onClick={() => setSelected(isSelected ? null : order)}
                     className={cn(
-                      "w-full text-left px-3 py-2.5 rounded-lg border transition-all",
+                      "rounded-lg border transition-all",
                       isSelected
                         ? "border-teal-500 bg-teal-50/60"
-                        : "border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                        : "border-gray-100 hover:border-gray-200"
                     )}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {isSelected && <CheckCircle2 size={14} className="text-teal-600 flex-shrink-0" />}
-                        <span className="text-[13px] font-semibold text-gray-900 truncate">
-                          {order.poNumber}
-                        </span>
-                        <span className={cn(
-                          "text-[10px] font-medium px-1.5 py-0.5 rounded capitalize",
-                          STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-600"
-                        )}>
-                          {order.status}
-                        </span>
+                    <button
+                      onClick={() => setSelected(isSelected ? null : order)}
+                      className="w-full text-left px-3 py-2.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isSelected && <CheckCircle2 size={14} className="text-teal-600 flex-shrink-0" />}
+                          <span className="text-[13px] font-semibold text-gray-900 truncate">
+                            {order.poNumber}
+                          </span>
+                          <span className={cn(
+                            "text-[10px] font-medium px-1.5 py-0.5 rounded capitalize",
+                            STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-600"
+                          )}>
+                            {order.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[11px] text-gray-400 flex-shrink-0">
+                          <Calendar size={10} />
+                          {order.deliveryDate
+                            ? new Date(order.deliveryDate).toLocaleDateString("en-GB", {
+                                day: "2-digit", month: "short", year: "numeric",
+                              })
+                            : "—"}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-gray-400 flex-shrink-0">
-                        <Calendar size={10} />
-                        {order.deliveryDate
-                          ? new Date(order.deliveryDate).toLocaleDateString("en-GB", {
-                              day: "2-digit", month: "short", year: "numeric",
-                            })
-                          : "—"}
+                      {counterparty && (
+                        <p className="text-[11px] text-gray-500 mt-0.5 ml-5 truncate">{counterparty}</p>
+                      )}
+                    </button>
+
+                    {/* Products sneak peek toggle */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); void handleToggleExpand(id); }}
+                      className="w-full flex items-center gap-1 px-3 pb-2 text-[11px] text-gray-400 hover:text-teal-600 transition-colors"
+                    >
+                      {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                      <Package size={10} />
+                      <span>Products</span>
+                    </button>
+
+                    {/* Products list */}
+                    {isExpanded && (
+                      <div className="px-3 pb-2.5 border-t border-gray-100">
+                        {loadingProducts === id ? (
+                          <div className="flex items-center gap-1.5 py-2 text-[11px] text-gray-400">
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin" />
+                            Loading products…
+                          </div>
+                        ) : cachedProducts && cachedProducts.length > 0 ? (
+                          <ul className="mt-1.5 space-y-0.5">
+                            {cachedProducts.map((p, i) => (
+                              <li key={i} className="text-[11px] text-gray-600 flex items-center gap-1.5">
+                                <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                                <span className="font-medium">{p.metadata.product.name}</span>
+                                <span className="text-gray-400">({p.metadata.variant.name})</span>
+                                <span className="text-gray-400 ml-auto flex-shrink-0">
+                                  {p.quantity.value} {p.quantity.postfix}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="mt-1.5 text-[11px] text-gray-400">No products found.</p>
+                        )}
                       </div>
-                    </div>
-                    {counterparty && (
-                      <p className="text-[11px] text-gray-500 mt-0.5 ml-5 truncate">{counterparty}</p>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
