@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, X, Plus, ShoppingCart, TrendingUp, Package, Bell } from "lucide-react";
+import { Loader2, X, Plus, ShoppingCart, TrendingUp, Package, Bell, FlaskConical } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,12 @@ const TABS = [
     value: "notifications" as const,
     icon: <Bell className="h-4 w-4" />,
     short: "Notifs",
+  },
+  {
+    label: "Labs",
+    value: "labs" as const,
+    icon: <FlaskConical className="h-4 w-4" />,
+    short: "Labs",
   },
 ];
 
@@ -359,6 +365,9 @@ export default function SettingsPage() {
   const [notifPoDigest, setNotifPoDigest] = useState(true);
   const [notifSoDigest, setNotifSoDigest] = useState(true);
 
+  // Labs
+  const [priceInsightsBetaEnabled, setPriceInsightsBetaEnabled] = useState(false);
+
   const [saveError, setSaveError] = useState("");
 
   // ── Dirty check ──
@@ -393,7 +402,8 @@ export default function SettingsPage() {
       skuSeparator !== (settings.skuSeparator ?? "") ||
       nextSKUNumber !== (settings.nextSKUNumber ?? 1) ||
       notifPoDigest !== (settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true) ||
-      notifSoDigest !== (settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true));
+      notifSoDigest !== (settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true) ||
+      priceInsightsBetaEnabled !== (settings.priceInsightsBetaEnabled ?? false));
 
   // Warn on browser close / refresh
   useEffect(() => {
@@ -444,6 +454,7 @@ export default function SettingsPage() {
     setNextSKUNumber(settings.nextSKUNumber ?? 1);
     setNotifPoDigest(settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true);
     setNotifSoDigest(settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true);
+    setPriceInsightsBetaEnabled(settings.priceInsightsBetaEnabled ?? false);
   }, [settings]);
 
   const handleDiscardAndLeave = useCallback(() => {
@@ -479,6 +490,7 @@ export default function SettingsPage() {
     setNextSKUNumber(settings.nextSKUNumber ?? 1);
     setNotifPoDigest(settings.notificationPreferences?.overdueDigest?.po?.enabled ?? true);
     setNotifSoDigest(settings.notificationPreferences?.overdueDigest?.so?.enabled ?? true);
+    setPriceInsightsBetaEnabled(settings.priceInsightsBetaEnabled ?? false);
   }, [settings]);
 
   async function handleSave() {
@@ -511,6 +523,7 @@ export default function SettingsPage() {
             so: { enabled: notifSoDigest },
           },
         },
+        priceInsightsBetaEnabled,
       });
       toast.success("Settings saved successfully");
       queryClient.invalidateQueries({ queryKey: ["organization-settings"] });
@@ -751,6 +764,29 @@ export default function SettingsPage() {
                         onChange={setNotifSoDigest}
                       />
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Labs ── */}
+              {activeTab === "labs" && (
+                <div className="rounded-[10px] border border-[#e5e7eb] bg-white px-5 sm:px-6 divide-y divide-[#f3f4f6]">
+                  <div className="py-5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-[13px] font-semibold text-[#374151]">Beta Features</p>
+                      <span className="px-1.5 py-0.5 rounded-full bg-[#7c3aed]/10 text-[#7c3aed] text-[9px] font-semibold uppercase tracking-wide">
+                        Beta
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-[#6b7280] mb-4">
+                      These features are in active development. Enable them to try early access and share your feedback.
+                    </p>
+                    <Toggle
+                      label="Price Insights"
+                      description="Shows pricing history inline as you create orders. Based on your organisation's past confirmed orders. We're testing this — your feedback helps shape it."
+                      checked={priceInsightsBetaEnabled}
+                      onChange={setPriceInsightsBetaEnabled}
+                    />
                   </div>
                 </div>
               )}

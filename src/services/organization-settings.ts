@@ -32,6 +32,8 @@ export interface OrganizationSettings {
       so: { enabled: boolean };
     };
   };
+  // Labs / Beta features
+  priceInsightsBetaEnabled?: boolean;
   // Meta
   logo?: { id: string; name: string };
   createdAt: string;

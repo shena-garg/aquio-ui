@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -46,6 +46,7 @@ import {
   type ProductVariant,
 } from "@/services/purchaseOrderForm";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { PriceInsightsStrip } from "@/components/purchase-orders/PriceInsightsStrip";
 
 // ---------------------------------------------------------------------------
 // Product row type
@@ -2110,6 +2111,16 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                           <span className="text-[12px] text-[#9ca3af]">—</span>
                         )}
                       </div>
+
+                      {/* Price Insights Strip — mobile */}
+                      <PriceInsightsStrip
+                        productId={row.product?._id}
+                        variantId={row.variant?._id ?? null}
+                        hasVariants={(row.product?.variants?.length ?? 0) > 0}
+                        partnerId={orderType === "sales" ? buyerCompanyId : supplierCompanyId}
+                        orderType={orderType}
+                        enteredPrice={row.price}
+                      />
                     </div>
                   );
                 })}
@@ -2194,8 +2205,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             : 0;
 
                         return (
+                          <React.Fragment key={row.id}>
                           <tr
-                            key={row.id}
                             className={`border-b hover:bg-[#fafafa] transition-colors divide-x divide-[#e5e7eb] ${
                               incompleteRowIds.has(row.id)
                                 ? "border border-red-400 bg-[#fef2f2]"
@@ -2323,6 +2334,20 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                               </button>
                             </td>
                           </tr>
+                          {/* Price Insights Strip — desktop */}
+                          <tr>
+                            <td colSpan={7} className="px-2 pb-1">
+                              <PriceInsightsStrip
+                                productId={row.product?._id}
+                                variantId={row.variant?._id ?? null}
+                                hasVariants={(row.product?.variants?.length ?? 0) > 0}
+                                partnerId={orderType === "sales" ? buyerCompanyId : supplierCompanyId}
+                                orderType={orderType}
+                                enteredPrice={row.price}
+                              />
+                            </td>
+                          </tr>
+                          </React.Fragment>
                         );
                       })}
                       {/* Add Product row */}
