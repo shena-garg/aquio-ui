@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import apiClient from "@/lib/api-client";
 import { validateFile, getFileAccept } from "@/lib/file-validation";
@@ -453,6 +454,8 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
   const isEditMode = !!editId;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { hasPermission } = useAuth();
+  const canAddCategory = hasPermission("category.add");
 
   // ── Bootstrap data ──────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
@@ -981,7 +984,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
                   onChange={(val) => handleCategoryChange(val)}
                   placeholder="Search category..."
                   hasError={attempted && !!fieldErrors.categoryId}
-                  onCreateNew={() => setCreateCategoryModal({ mode: "category" })}
+                  onCreateNew={canAddCategory ? () => setCreateCategoryModal({ mode: "category" }) : undefined}
                   createNewLabel="Create New Category"
                 />
               </div>
@@ -998,7 +1001,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
                   placeholder={categoryId ? "Search subcategory..." : "Select a category first"}
                   disabled={!categoryId}
                   hasError={attempted && !!fieldErrors.subCategoryId}
-                  onCreateNew={categoryId ? () => setCreateCategoryModal({
+                  onCreateNew={canAddCategory && categoryId ? () => setCreateCategoryModal({
                     mode: "subcategory",
                     parentId: categoryId,
                     parentName: selectedCategory?.name ?? "",
