@@ -25,6 +25,7 @@ import { ConfirmPOModal } from "@/components/purchase-orders/modals/ConfirmPOMod
 import { ForceClosePOModal } from "@/components/purchase-orders/modals/ForceClosePOModal";
 import type { PurchaseOrder } from "@/services/purchase-orders";
 import { RequirePermission } from "@/components/auth/RequirePermission";
+import { useAuth } from "@/contexts/AuthContext";
 
 const statusBadgeStyles: Record<string, string> = {
   issued: "bg-[#e0f2fe] text-[#0369a1]",
@@ -64,6 +65,12 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   const [pdfError, setPdfError] = useState("");
 
   const { status } = order;
+  const { hasPermission } = useAuth();
+  const canAdd = hasPermission("purchase-order.add");
+  const canEdit = hasPermission("purchase-order.edit");
+  const canCancel = hasPermission("purchase-order.cancel");
+  const canConfirm = hasPermission("purchase-order.confirm");
+  const canForceClose = hasPermission("purchase-order.force-close");
 
   function handleModalSuccess() {
     setCancelOpen(false);
@@ -115,12 +122,20 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
 
   const hasNotes = order.notes && order.notes.trim() !== "";
   const hasTerms = order.termsAndConditions && order.termsAndConditions.length > 0;
-  const showCreateReceipt = status === "issued" || status === "confirmed";
+  const showCreateReceipt = (status === "issued" || status === "confirmed") && canEdit;
   const hasSecondaryActions = hasNotes || hasTerms || showCreateReceipt;
 
   const canRegenerate = hasPdf;
 
-  const dropdownMenu = (
+  const hasDropdownItems = canRegenerate || (() => {
+    if (status === "cancelled" || status === "completed") return canAdd;
+    if (status === "draft") return canEdit || canAdd || canCancel;
+    if (status === "issued") return (canEdit && order.receiptStatus === "pending") || canAdd || canCancel || canConfirm || canForceClose;
+    if (status === "confirmed") return (canEdit && order.receiptStatus === "pending") || canAdd || canCancel || canForceClose;
+    return false;
+  })();
+
+  const dropdownMenu = hasDropdownItems ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="h-9 w-9 rounded-[6px] p-0">
@@ -137,124 +152,91 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
           </>
         )}
         {status === "cancelled" || status === "completed" ? (
-          <DropdownMenuItem
-            onClick={() =>
-              router.push(
-                `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
-              )
-            }
-          >
-            Create Duplicate
-          </DropdownMenuItem>
-        ) : status === "draft" ? (
-          <>
+          canAdd && (
             <DropdownMenuItem
-              onClick={() =>
-                router.push(`/purchase-orders/${order._id ?? order.id}/edit`)
-              }
-            >
-              Edit Order
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(
-                  `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
-                )
-              }
+              onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`)}
             >
               Create Duplicate
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setCancelOpen(true)}
-              className="text-[#DC2626] focus:text-[#DC2626]"
-            >
-              Cancel Order
-            </DropdownMenuItem>
+          )
+        ) : status === "draft" ? (
+          <>
+            {canEdit && (
+              <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order._id ?? order.id}/edit`)}>
+                Edit Order
+              </DropdownMenuItem>
+            )}
+            {canAdd && (
+              <DropdownMenuItem onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`)}>
+                Create Duplicate
+              </DropdownMenuItem>
+            )}
+            {canCancel && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setCancelOpen(true)} className="text-[#DC2626] focus:text-[#DC2626]">
+                  Cancel Order
+                </DropdownMenuItem>
+              </>
+            )}
           </>
         ) : status === "issued" ? (
           <>
-            {order.receiptStatus === "pending" && (
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/purchase-orders/${order._id ?? order.id}/edit`)
-                }
-              >
+            {canEdit && order.receiptStatus === "pending" && (
+              <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order._id ?? order.id}/edit`)}>
                 Edit Order
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(
-                  `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
-                )
-              }
-            >
-              Create Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {order.receiptStatus !== "partial" && (
-              <DropdownMenuItem
-                onClick={() => setCancelOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
+            {canAdd && (
+              <DropdownMenuItem onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`)}>
+                Create Duplicate
+              </DropdownMenuItem>
+            )}
+            {(canCancel || canConfirm || canForceClose) && <DropdownMenuSeparator />}
+            {canCancel && order.receiptStatus !== "partial" && (
+              <DropdownMenuItem onClick={() => setCancelOpen(true)} className="text-[#DC2626] focus:text-[#DC2626]">
                 Cancel Order
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
-              Mark as Confirmed
-            </DropdownMenuItem>
-            <RequirePermission permission="purchase-order.force-close">
-              <DropdownMenuItem
-                onClick={() => setForceCloseOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
+            {canConfirm && (
+              <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
+                Mark as Confirmed
+              </DropdownMenuItem>
+            )}
+            {canForceClose && (
+              <DropdownMenuItem onClick={() => setForceCloseOpen(true)} className="text-[#DC2626] focus:text-[#DC2626]">
                 Force Close
               </DropdownMenuItem>
-            </RequirePermission>
+            )}
           </>
         ) : status === "confirmed" ? (
           <>
-            {order.receiptStatus === "pending" && (
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/purchase-orders/${order._id ?? order.id}/edit`)
-                }
-              >
+            {canEdit && order.receiptStatus === "pending" && (
+              <DropdownMenuItem onClick={() => router.push(`/purchase-orders/${order._id ?? order.id}/edit`)}>
                 Edit Order
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(
-                  `/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`,
-                )
-              }
-            >
-              Create Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {order.receiptStatus !== "partial" && (
-              <DropdownMenuItem
-                onClick={() => setCancelOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
+            {canAdd && (
+              <DropdownMenuItem onClick={() => router.push(`/purchase-orders/create?duplicateFrom=${order._id ?? order.id}`)}>
+                Create Duplicate
+              </DropdownMenuItem>
+            )}
+            {(canCancel || canForceClose) && <DropdownMenuSeparator />}
+            {canCancel && order.receiptStatus !== "partial" && (
+              <DropdownMenuItem onClick={() => setCancelOpen(true)} className="text-[#DC2626] focus:text-[#DC2626]">
                 Cancel Order
               </DropdownMenuItem>
             )}
-            <RequirePermission permission="purchase-order.force-close">
-              <DropdownMenuItem
-                onClick={() => setForceCloseOpen(true)}
-                className="text-[#DC2626] focus:text-[#DC2626]"
-              >
+            {canForceClose && (
+              <DropdownMenuItem onClick={() => setForceCloseOpen(true)} className="text-[#DC2626] focus:text-[#DC2626]">
                 Force Close
               </DropdownMenuItem>
-            </RequirePermission>
+            )}
           </>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  ) : null;
 
   /* ── Desktop: everything in one row ── */
   const rightContent = (
