@@ -65,12 +65,14 @@ export function PODetailsHeader({ order, onCreateReceipt }: PODetailsHeaderProps
   const [pdfError, setPdfError] = useState("");
 
   const { status } = order;
-  const { hasPermission } = useAuth();
+  const { hasPermission, permissions, role } = useAuth();
   const canAdd = hasPermission("purchase-order.add");
   const canEdit = hasPermission("purchase-order.edit");
   const canCancel = hasPermission("purchase-order.cancel");
   const canConfirm = hasPermission("purchase-order.confirm");
   const canForceClose = hasPermission("purchase-order.force-close");
+
+  console.log("[PODetailsHeader] role:", role?.name, "| permissions:", [...permissions].filter(p => p.startsWith("purchase-order")), "| canEdit:", canEdit, "canAdd:", canAdd, "canCancel:", canCancel, "canConfirm:", canConfirm);
 
   function handleModalSuccess() {
     setCancelOpen(false);
