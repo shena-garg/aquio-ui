@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ export function CustomSelect({
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const wrapperRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedLabel = options.find((o) => o.value === value)?.label;
 
@@ -50,9 +52,11 @@ export function CustomSelect({
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (
+        wrapperRef.current?.contains(e.target as Node) ||
+        dropdownRef.current?.contains(e.target as Node)
+      ) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -77,8 +81,8 @@ export function CustomSelect({
         disabled={disabled}
         onClick={() => {
           if (!disabled) {
+            if (!open) updatePosition();
             setOpen((o) => !o);
-            updatePosition();
           }
         }}
         className={cn(
@@ -101,8 +105,9 @@ export function CustomSelect({
           )}
         />
       </button>
-      {open && !disabled && (
+      {open && !disabled && createPortal(
         <div
+          ref={dropdownRef}
           style={dropdownStyle}
           className="bg-white border border-[#e5e7eb] rounded-md shadow-lg overflow-y-auto max-h-64"
         >
@@ -127,7 +132,8 @@ export function CustomSelect({
               {opt.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
