@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -202,9 +202,11 @@ type ActivityTab = "activity" | "own-activity";
 function ActivityContent({
   userId,
   activeTab,
+  roleMap,
 }: {
   userId: string;
   activeTab: ActivityTab;
+  roleMap: Record<string, string>;
 }) {
   const { data: onUserEvents = [], isLoading: loadingOn, refetch: refetchOn } = useQuery({
     queryKey: ["activity", "user", userId],
@@ -257,6 +259,7 @@ function ActivityContent({
           events={events}
           users={users}
           showEntityType={activeTab === "own-activity"}
+          roleMap={roleMap}
         />
       )}
     </div>
@@ -298,6 +301,10 @@ export default function UserDetailPage() {
 
   const roleOptions = roles.map((r) => ({ value: r._id, label: r.name }));
   const roleName = roles.find((r) => r._id === user?.roleId)?.name ?? "—";
+  const roleMap = useMemo(
+    () => Object.fromEntries(roles.map((r) => [r._id, r.name])),
+    [roles]
+  );
 
   function handleEditStart() {
     if (!user) return;
@@ -493,7 +500,7 @@ export default function UserDetailPage() {
 
         {/* Tab content */}
         <div className="flex-1 overflow-auto px-4 sm:px-8 py-4">
-          <ActivityContent userId={id} activeTab={activeTab} />
+          <ActivityContent userId={id} activeTab={activeTab} roleMap={roleMap} />
         </div>
 
         <DeactivateUserModal

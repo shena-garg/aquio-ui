@@ -408,9 +408,11 @@ interface SimpleActivityTimelineProps {
   users: User[];
   /** If true, each event shows the entity type label and entity link (for user-centric feeds) */
   showEntityType?: boolean;
+  /** Map of roleId → role name, used to resolve roleId field values */
+  roleMap?: Record<string, string>;
 }
 
-export function SimpleActivityTimeline({ events, users, showEntityType = false }: SimpleActivityTimelineProps) {
+export function SimpleActivityTimeline({ events, users, showEntityType = false, roleMap }: SimpleActivityTimelineProps) {
   const parsed = useMemo(() =>
     events.map((event) => ({
       event,
@@ -438,7 +440,14 @@ export function SimpleActivityTimeline({ events, users, showEntityType = false }
         {parsed.map(({ event, userName, formattedDate }) => {
           const cfg = ACTION_CONFIG[event.action] ?? ACTION_CONFIG["update"];
           const title = actionTitle(event);
-          const changes = getEventChanges(event);
+          const rawChanges = getEventChanges(event);
+          const changes = roleMap
+            ? rawChanges.map((ch) =>
+                ch.field === "Role"
+                  ? { ...ch, from: roleMap[ch.from] ?? ch.from, to: roleMap[ch.to] ?? ch.to }
+                  : ch
+              )
+            : rawChanges;
           const url = showEntityType ? getEntityUrl(event.entityType, event.entityId, event) : null;
 
           const cardContent = (
