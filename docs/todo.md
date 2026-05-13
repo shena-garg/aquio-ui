@@ -1,7 +1,7 @@
 # To-Do List
 
 Pending work, open issues, and planned roadmap items.
-Last updated: 2026-05-12
+Last updated: 2026-05-13
 
 > Completed features have been moved to [docs/features.md](./features.md).
 
@@ -81,7 +81,7 @@ Last updated: 2026-05-12
 
 - [x] **Onboarding wizard** — 5-step checklist on Dashboard (Location → Settings → Category → Partner → Product)
 - [x] **Setup banner on Dashboard** — Shows incomplete steps with direct links
-- [ ] **Contextual help icons** — `?` icons on complex features (Force Close, Payment Terms, GST)
+- [ ] **Contextual help icons** — `?` icons on complex features (Force Close, Payment Terms, GST Rate)
 - [ ] **In-app knowledge base** — Slide-out FAQ panel
 - [ ] **Contextual prompts** — e.g. creating PO with no partners → "Add a partner first"
 

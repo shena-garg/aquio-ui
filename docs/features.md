@@ -1,7 +1,7 @@
 # Aquio — Implemented Features
 
 Complete reference of everything built and live in production.
-Last updated: 2026-05-12
+Last updated: 2026-05-13
 
 ---
 
@@ -226,3 +226,5 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 | PDF | `PATCH /purchase-orders/:id/pdf` — generates PDF, uploads to S3, returns file metadata |
 | Audit | Event-driven, no direct endpoints; emits `audit.event.written` after each flush |
 | Notifications | `GET/PATCH /notifications`, `GET /notifications/unread-count`, `POST /notifications/internal/trigger-digest` |
+| Price Insights | `GET /price-insights/lookup`, `GET /price-insights/history`, `POST /price-insights/feedback`, `POST /price-insights/telemetry` |
+| Platform Admin | `POST /platform/auth/login\|logout\|refresh\|forgot-password\|set-password`, `GET /platform/orgs`, `POST /platform/orgs/:id/support-token`, `POST /platform/support-session/use`, `GET\|POST /platform/admins`, `PATCH /platform/admins/:id/status` |
