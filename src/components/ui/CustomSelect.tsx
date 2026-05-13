@@ -41,11 +41,12 @@ export function CustomSelect({
   function updatePosition() {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
+    const maxWidth = window.innerWidth - rect.left - 8;
     setDropdownStyle({
       position: "fixed",
       top: rect.bottom + 4,
       left: rect.left,
-      minWidth: rect.width,
+      width: Math.min(rect.width, maxWidth),
       zIndex: 9999,
     });
   }
@@ -122,7 +123,7 @@ export function CustomSelect({
                 setOpen(false);
               }}
               className={cn(
-                "w-full text-left px-3 py-2 text-[13px] transition-colors",
+                "w-full text-left px-3 py-2 text-[13px] transition-colors truncate",
                 opt.value === value
                   ? "bg-[#f0fdfa] text-[#0d9488] font-medium"
                   : "text-[#0F1720] hover:bg-[#f3f4f6]",
