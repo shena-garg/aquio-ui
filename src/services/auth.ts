@@ -10,8 +10,10 @@ export interface User {
   name: string;
   email: string;
   roleId?: string;
+  organizationId?: string;
   status?: "active" | "inactive";
   accountVerified?: boolean;
+  isOrgSupport?: boolean;
 }
 
 export interface AuthResponse {
@@ -68,4 +70,5 @@ export const authService = {
     apiClient.post<User>("/users/verify-code", { email, code }),
   resendVerificationCode: (email: string) =>
     apiClient.post<{ message: string }>("/users/resend-verification-code", { email }),
+  logout: () => apiClient.post("/auth/logout"),
 };
