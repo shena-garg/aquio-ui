@@ -1,14 +1,8 @@
 const ALLOWED_TYPES = {
   "order": {
-    mimes: [
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ],
-    accept: ".pdf,.jpg,.jpeg,.png,.xlsx,.docx",
-    label: "PDF, JPG, PNG, XLSX or DOCX",
+    mimes: ["application/pdf"],
+    accept: ".pdf",
+    label: "PDF",
     maxBytes: 10 * 1024 * 1024,
     maxLabel: "10 MB",
   },
