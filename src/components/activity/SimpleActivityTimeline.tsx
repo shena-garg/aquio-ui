@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Clock, Plus, Pencil, Trash2, Archive, UserPlus,
   CheckCircle, CheckCircle2, XCircle, KeyRound, ShieldCheck,
-  MailCheck, Truck, Lock, RotateCcw, Loader2,
+  MailCheck, Truck, Lock, RotateCcw, Loader2, ShieldOff,
 } from "lucide-react";
 import type { AuditEvent, User } from "@/services/activity";
 import { resolveUserName, formatEventDate } from "@/services/activity";
@@ -30,6 +30,7 @@ const ACTION_CONFIG: Record<string, { label: string; icon: React.ReactNode; dotC
   change_password: { label: "Changed Password", icon: <KeyRound size={13} />,    dotColor: "bg-slate-500",  badgeClass: "bg-slate-50 text-slate-700 border border-slate-200" },
   set_password:    { label: "Set Password",     icon: <ShieldCheck size={13} />, dotColor: "bg-teal-600",   badgeClass: "bg-teal-50 text-teal-700 border border-teal-200" },
   verify_email:    { label: "Verified Email",   icon: <MailCheck size={13} />,   dotColor: "bg-indigo-500", badgeClass: "bg-indigo-50 text-indigo-700 border border-indigo-200" },
+  deactivate:      { label: "Deactivated",      icon: <ShieldOff size={13} />,   dotColor: "bg-red-400",    badgeClass: "bg-red-50 text-red-600 border border-red-200" },
 };
 
 // ---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ const ENTITY_LABELS: Record<string, string> = {
   partner:        "Partner",
   purchase_order: "Purchase Order",
   receipt:        "Receipt",
+  role:           "Role",
 };
 
 function entityLabel(entityType: string): string {
@@ -73,6 +75,7 @@ function getEntityUrl(entityType: string, entityId: string, event: AuditEvent): 
     case "partner":    return `/partners/${entityId}`;
     case "category":   return "/categories";
     case "location":   return "/locations";
+    case "role":       return `/roles/${entityId}/edit`;
     default:           return null;
   }
 }
