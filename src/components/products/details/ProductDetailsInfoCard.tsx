@@ -254,7 +254,7 @@ export function ProductDetailsInfoCard({
             </div>
             <div className="grid grid-cols-3 gap-4 border-t border-[#e5e7eb] pt-2 mt-2">
               <Cell label="HSN Code" value={product.hsnCode} />
-              <Cell label="GST" value={`${product.gst}%`} />
+              <Cell label="GST Rate" value={`${product.gst}%`} />
               <Cell label="Unit of Measurement" value={product.unitOfMeasurement} />
             </div>
           </div>
@@ -269,7 +269,7 @@ export function ProductDetailsInfoCard({
               <Cell label="Subcategory" value={product.subCategoryName} />
             </div>
             <div className="grid grid-cols-2 gap-4 border-t border-[#e5e7eb] pt-2 mt-2">
-              <Cell label="GST" value={`${product.gst}%`} />
+              <Cell label="GST Rate" value={`${product.gst}%`} />
               <Cell label="Unit of Measurement" value={product.unitOfMeasurement} />
             </div>
           </div>
@@ -337,7 +337,7 @@ export function ProductDetailsInfoCard({
     </EditCell>
   );
   const gstField = (
-    <EditCell label="GST" required>
+    <EditCell label="GST Rate" required>
       <SearchableSelect
         value={String(editState.gst)}
         options={gstOptions}

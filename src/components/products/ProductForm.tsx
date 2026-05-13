@@ -1079,7 +1079,7 @@ export function ProductForm({ editId, initialData }: ProductFormProps) {
               {/* GST */}
               <div>
                 <label className="block text-[13px] font-medium text-[#111827] mb-1.5">
-                  GST <span className="text-[#dc2626]">*</span>
+                  GST Rate <span className="text-[#dc2626]">*</span>
                 </label>
                 <SearchableSelect
                   value={gst}
