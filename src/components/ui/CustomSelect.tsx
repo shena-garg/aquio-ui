@@ -46,7 +46,8 @@ export function CustomSelect({
       position: "fixed",
       top: rect.bottom + 4,
       left: rect.left,
-      width: Math.min(rect.width, maxWidth),
+      minWidth: rect.width,
+      maxWidth,
       zIndex: 9999,
     });
   }
@@ -123,7 +124,7 @@ export function CustomSelect({
                 setOpen(false);
               }}
               className={cn(
-                "w-full text-left px-3 py-2 text-[13px] transition-colors truncate",
+                "w-full text-left px-3 py-2 text-[13px] transition-colors whitespace-normal break-words",
                 opt.value === value
                   ? "bg-[#f0fdfa] text-[#0d9488] font-medium"
                   : "text-[#0F1720] hover:bg-[#f3f4f6]",
