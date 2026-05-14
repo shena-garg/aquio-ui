@@ -25,9 +25,7 @@ import {
   Moon,
   Sun,
   Bell,
-  Sparkles,
 } from "lucide-react";
-import { useAqira } from "@/contexts/AqiraContext";
 import { notificationsService } from "@/services/notifications";
 import { cn } from "@/lib/utils";
 import {
@@ -92,7 +90,6 @@ export function Sidebar() {
   const router = useRouter();
   const { user, hasPermission, isLoading, logout } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isOpen: isAqiraOpen, toggle: toggleAqira } = useAqira();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const canViewNotifications = !isLoading && hasPermission("notification.view");
@@ -249,30 +246,6 @@ export function Sidebar() {
               </Fragment>
             );
           })}
-          {/* Aqira */}
-          <div className="pt-3 pb-1">
-            <button
-              onClick={toggleAqira}
-              className={cn(
-                "flex w-full items-center gap-[10px] rounded-[6px] border-l-[3px] px-3 py-2 text-[13px] font-medium transition-colors",
-                isAqiraOpen
-                  ? "bg-[#1f2937] border-l-[#0d9488] text-white"
-                  : "border-l-transparent text-[#e5e7eb] hover:bg-[#1f2937]"
-              )}
-            >
-              <Sparkles
-                className={cn(
-                  "h-[18px] w-[18px] flex-shrink-0",
-                  isAqiraOpen ? "text-[#0d9488]" : "text-[#e5e7eb]"
-                )}
-                strokeWidth={1.5}
-              />
-              <span className="flex-1">Aqira</span>
-              <span className="rounded-full bg-[#0d9488]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#0d9488]">
-                BETA
-              </span>
-            </button>
-          </div>
         </div>
       </nav>
 

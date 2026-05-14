@@ -368,6 +368,31 @@ function HomeState() {
   );
 }
 
+// ─── floating action button ───────────────────────────────────────────────────
+
+function AqiraFAB() {
+  const { isOpen, toggle } = useAqira();
+  return (
+    <button
+      onClick={toggle}
+      aria-label={isOpen ? "Close Aqira" : "Open Aqira"}
+      className={cn(
+        "fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200",
+        "hover:scale-105 active:scale-95",
+        isOpen
+          ? "bg-[#0f766e] shadow-[#0d9488]/30 shadow-lg"
+          : "bg-[#0d9488] shadow-[#0d9488]/25 shadow-lg hover:bg-[#0f766e]"
+      )}
+    >
+      {isOpen ? (
+        <X className="h-5 w-5 text-white" strokeWidth={2} />
+      ) : (
+        <Sparkles className="h-5 w-5 text-white" strokeWidth={1.75} />
+      )}
+    </button>
+  );
+}
+
 // ─── main panel ──────────────────────────────────────────────────────────────
 
 export function AqiraPanel() {
@@ -387,6 +412,8 @@ export function AqiraPanel() {
 
   return (
     <>
+      <AqiraFAB />
+
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/30 lg:hidden"
