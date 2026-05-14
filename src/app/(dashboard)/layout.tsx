@@ -5,6 +5,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { RouteGuard } from "@/components/auth/RouteGuard";
 import { VerificationBanner } from "@/components/auth/VerificationBanner";
 import { SupportSessionBannerWrapper } from "@/components/platform/SupportSessionBannerWrapper";
+import { AqiraProvider } from "@/contexts/AqiraContext";
+import { AqiraPanel } from "@/components/aqira/AqiraPanel";
 
 export default function DashboardLayout({
   children,
@@ -13,16 +15,19 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthProvider>
-      <SupportSessionBannerWrapper />
-      <div className="min-h-screen bg-[#f9fafb]">
-        <Sidebar />
-        <div className="relative z-0 pt-[56px] lg:pt-0 lg:ml-[240px] flex min-h-screen flex-col">
-          <VerificationBanner />
-          <div className="flex-1 min-h-0 flex flex-col">
-            <RouteGuard>{children}</RouteGuard>
+      <AqiraProvider>
+        <SupportSessionBannerWrapper />
+        <div className="min-h-screen bg-[#f9fafb]">
+          <Sidebar />
+          <div className="relative z-0 pt-[56px] lg:pt-0 lg:ml-[240px] flex min-h-screen flex-col">
+            <VerificationBanner />
+            <div className="flex-1 min-h-0 flex flex-col">
+              <RouteGuard>{children}</RouteGuard>
+            </div>
           </div>
         </div>
-      </div>
+        <AqiraPanel />
+      </AqiraProvider>
     </AuthProvider>
   );
 }
