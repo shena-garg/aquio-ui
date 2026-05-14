@@ -2249,7 +2249,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                       </tr>
                     </thead>
                     <tbody>
-                      {productRows.map((row) => {
+                      {productRows.map((row, idx) => {
                         if (row.isUnavailable) {
                           return (
                             <tr key={row.id} className="border-b border-[#fde68a] bg-[#fffbeb]">
@@ -2283,13 +2283,14 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             ? calculateLineTotal(row.quantity, row.price, gst)
                             : 0;
 
+                        const stripeBg = idx % 2 === 1 ? "bg-[#f9fafb]" : "bg-white";
                         return (
                           <React.Fragment key={row.id}>
                           <tr
-                            className={`border-b hover:bg-[#fafafa] transition-colors divide-x divide-[#e5e7eb] ${
+                            className={`border-b transition-colors divide-x divide-[#e5e7eb] ${
                               incompleteRowIds.has(row.id)
                                 ? "border border-red-400 bg-[#fef2f2]"
-                                : "border-[#f3f4f6]"
+                                : `border-[#f3f4f6] ${stripeBg}`
                             }`}
                           >
                             {/* Product */}
@@ -2414,7 +2415,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             </td>
                           </tr>
                           {/* Price Insights Strip — desktop */}
-                          <tr className="border-b border-[#e5e7eb]">
+                          <tr className={`border-b border-[#e5e7eb] ${incompleteRowIds.has(row.id) ? "bg-[#fef2f2]" : stripeBg}`}>
                             <td colSpan={7} className="px-2 pt-0 pb-2">
                               <PriceInsightsStrip
                                 productId={row.product?._id}
