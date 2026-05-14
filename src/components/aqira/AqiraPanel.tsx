@@ -537,7 +537,7 @@ function AqiraFAB() {
       aria-label={isOpen ? "Close Aqira" : "Open Aqira"}
       className={cn(
         "fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200",
-        "hover:scale-105 active:scale-95",
+        "hover:scale-105 active:scale-95 lg:hidden",
         isOpen ? "bg-[#0f766e]" : "bg-[#0d9488] hover:bg-[#0f766e]"
       )}
     >

@@ -25,6 +25,7 @@ import {
   Moon,
   Sun,
   Bell,
+  Sparkles,
 } from "lucide-react";
 import { notificationsService } from "@/services/notifications";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
+import { useAqira } from "@/contexts/AqiraContext";
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -90,6 +92,7 @@ export function Sidebar() {
   const router = useRouter();
   const { user, hasPermission, isLoading, logout } = useAuth();
   const { theme, toggle: toggleTheme } = useTheme();
+  const { isOpen: aqiraOpen, toggle: toggleAqira } = useAqira();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const canViewNotifications = !isLoading && hasPermission("notification.view");
@@ -251,6 +254,26 @@ export function Sidebar() {
 
       {/* Bottom section – pinned, never scrolls */}
       <div className="flex-shrink-0">
+        {/* Aqira AI button */}
+        <div className="px-2 pb-2">
+          <button
+            onClick={() => { setMobileOpen(false); toggleAqira(); }}
+            className={cn(
+              "w-full flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-[13px] font-medium transition-colors",
+              aqiraOpen
+                ? "border-[#0d9488]/50 bg-[#0d9488]/20 text-[#2dd4bf]"
+                : "border-[#0d9488]/25 bg-[#0d9488]/10 text-[#5eead4] hover:bg-[#0d9488]/20 hover:border-[#0d9488]/40"
+            )}
+          >
+            <Sparkles
+              className={cn("h-[18px] w-[18px] flex-shrink-0", aqiraOpen ? "text-[#2dd4bf]" : "text-[#0d9488]")}
+              strokeWidth={1.5}
+            />
+            <span className="flex-1 text-left">Aqira</span>
+            <span className="rounded-full bg-[#0d9488]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#2dd4bf]">BETA</span>
+          </button>
+        </div>
+
         {/* Divider */}
         <div className="border-t border-[#e5e7eb]" />
 
