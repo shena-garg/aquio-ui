@@ -476,20 +476,67 @@ function HealthSection({ data }: { data: AqiraHomeData["healthDigest"] }) {
   const router = useRouter();
   const { close } = useAqira();
 
-  const items = [
-    { label: "Overdue", count: data.overdueCount, icon: <AlertTriangle size={13} />, color: data.overdueCount > 0 ? "text-red-600 bg-red-50" : "text-[#6b7280] bg-[#f3f4f6]", onClick: () => { close(); router.push("/purchase-orders?status=confirmed"); } },
-    { label: "Drafts", count: data.draftCount, icon: <Clock size={13} />, color: data.draftCount > 0 ? "text-amber-600 bg-amber-50" : "text-[#6b7280] bg-[#f3f4f6]", onClick: () => { close(); router.push("/purchase-orders?status=draft"); } },
-    { label: "Due this week", count: data.dueThisWeekCount, icon: <Bell size={13} />, color: data.dueThisWeekCount > 0 ? "text-blue-600 bg-blue-50" : "text-[#6b7280] bg-[#f3f4f6]", onClick: () => { close(); router.push("/purchase-orders"); } },
+  const rows = [
+    {
+      label: "Overdue",
+      icon: <AlertTriangle size={12} />,
+      po: data.po.overdueCount,
+      so: data.so.overdueCount,
+      poColor: data.po.overdueCount > 0 ? "text-red-600 font-bold" : "text-[#9ca3af]",
+      soColor: data.so.overdueCount > 0 ? "text-red-600 font-bold" : "text-[#9ca3af]",
+      poHref: "/purchase-orders?status=confirmed",
+      soHref: "/sales-orders?status=confirmed",
+    },
+    {
+      label: "Drafts",
+      icon: <Clock size={12} />,
+      po: data.po.draftCount,
+      so: data.so.draftCount,
+      poColor: data.po.draftCount > 0 ? "text-amber-600 font-bold" : "text-[#9ca3af]",
+      soColor: data.so.draftCount > 0 ? "text-amber-600 font-bold" : "text-[#9ca3af]",
+      poHref: "/purchase-orders?status=draft",
+      soHref: "/sales-orders?status=draft",
+    },
+    {
+      label: "Due this week",
+      icon: <Bell size={12} />,
+      po: data.po.dueThisWeekCount,
+      so: data.so.dueThisWeekCount,
+      poColor: data.po.dueThisWeekCount > 0 ? "text-blue-600 font-bold" : "text-[#9ca3af]",
+      soColor: data.so.dueThisWeekCount > 0 ? "text-blue-600 font-bold" : "text-[#9ca3af]",
+      poHref: "/purchase-orders",
+      soHref: "/sales-orders",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
-      {items.map((item) => (
-        <button key={item.label} onClick={item.onClick} className="flex flex-col items-center gap-1.5 rounded-lg border border-[#e5e7eb] p-3 hover:bg-[#f9fafb] transition-colors">
-          <span className={cn("flex h-8 w-8 items-center justify-center rounded-full", item.color)}>{item.icon}</span>
-          <span className="text-[18px] font-bold text-[#111827]">{item.count}</span>
-          <span className="text-[10px] text-[#6b7280] text-center leading-tight">{item.label}</span>
-        </button>
+    <div className="rounded-lg border border-[#e5e7eb] overflow-hidden">
+      {/* Header row */}
+      <div className="grid grid-cols-[1fr_auto_auto] items-center px-3 py-2 bg-[#f9fafb] border-b border-[#e5e7eb]">
+        <span className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase"></span>
+        <span className="w-16 text-center text-[10px] font-semibold text-[#6b7280]">Purchase</span>
+        <span className="w-16 text-center text-[10px] font-semibold text-[#6b7280]">Sales</span>
+      </div>
+      {/* Data rows */}
+      {rows.map((row) => (
+        <div key={row.label} className="grid grid-cols-[1fr_auto_auto] items-center px-3 py-2.5 border-b border-[#f3f4f6] last:border-0">
+          <div className="flex items-center gap-1.5 text-[#374151]">
+            <span className="text-[#9ca3af]">{row.icon}</span>
+            <span className="text-[12px]">{row.label}</span>
+          </div>
+          <button
+            onClick={() => { close(); router.push(row.poHref); }}
+            className={cn("w-16 text-center text-[15px] hover:underline transition-colors", row.poColor)}
+          >
+            {row.po}
+          </button>
+          <button
+            onClick={() => { close(); router.push(row.soHref); }}
+            className={cn("w-16 text-center text-[15px] hover:underline transition-colors", row.soColor)}
+          >
+            {row.so}
+          </button>
+        </div>
       ))}
     </div>
   );
@@ -804,15 +851,19 @@ function HomeMenu({
   firstName: string;
   onSelect: (s: AqiraSection) => void;
 }) {
-  const overdueCount = homeData?.healthDigest.overdueCount ?? 0;
-  const draftCount = homeData?.healthDigest.draftCount ?? 0;
+  const poOverdue = homeData?.healthDigest.po.overdueCount ?? 0;
+  const soOverdue = homeData?.healthDigest.so.overdueCount ?? 0;
+  const poDraft = homeData?.healthDigest.po.draftCount ?? 0;
+  const soDraft = homeData?.healthDigest.so.draftCount ?? 0;
+  const totalOverdue = poOverdue + soOverdue;
+  const totalDraft = poDraft + soDraft;
   const remindersCount = homeData?.followUpReminders.length ?? 0;
   const reordersCount = homeData?.reorderSuggestions.length ?? 0;
 
   function healthSublabel() {
     if (homeLoading) return "Loading…";
-    if (overdueCount > 0) return `${overdueCount} overdue · ${draftCount} draft`;
-    if (draftCount > 0) return `${draftCount} draft`;
+    if (totalOverdue > 0) return `${totalOverdue} overdue · ${totalDraft} draft`;
+    if (totalDraft > 0) return `${totalDraft} draft`;
     return "All clear";
   }
 
@@ -840,11 +891,11 @@ function HomeMenu({
       {/* Menu items */}
       <div className="flex flex-col">
         <MenuItem
-          icon={<Heart size={15} className={overdueCount > 0 ? "text-red-500" : "text-[#0d9488]"} />}
-          iconBg={overdueCount > 0 ? "bg-red-50" : "bg-[#f0fdfa]"}
+          icon={<Heart size={15} className={totalOverdue > 0 ? "text-red-500" : "text-[#0d9488]"} />}
+          iconBg={totalOverdue > 0 ? "bg-red-50" : "bg-[#f0fdfa]"}
           label="Order Health"
           sublabel={healthSublabel()}
-          sublabelColor={overdueCount > 0 ? "text-red-500" : undefined}
+          sublabelColor={totalOverdue > 0 ? "text-red-500" : undefined}
           onClick={() => onSelect("health")}
         />
         <MenuItem
@@ -950,13 +1001,22 @@ export function AqiraPanel() {
           {activeSection === "health" && homeData && <HealthSection data={homeData.healthDigest} />}
           {activeSection === "health" && !homeData && homeLoading && <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" />}
           {activeSection === "reminders" && (
-            homeLoading ? <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" /> :
-            (homeData?.followUpReminders.length ?? 0) === 0 ? (
-              <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3">
-                <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
-                <p className="text-[12px] text-emerald-700">No follow-ups needed — all confirmed orders are on track.</p>
+            <>
+              <div className="flex items-center gap-1.5">
+                <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[10px] font-semibold text-[#6b7280]">Purchase Orders only</span>
+                <span className="text-[11px] text-[#9ca3af]">· confirmed, past due, no receipt</span>
               </div>
-            ) : homeData!.followUpReminders.map((r) => <FollowUpCard key={r.orderId} reminder={r} />)
+              {homeLoading ? (
+                <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" />
+              ) : (homeData?.followUpReminders.length ?? 0) === 0 ? (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3">
+                  <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
+                  <p className="text-[12px] text-emerald-700">No follow-ups needed — all confirmed orders are on track.</p>
+                </div>
+              ) : (
+                homeData!.followUpReminders.map((r) => <FollowUpCard key={r.orderId} reminder={r} />)
+              )}
+            </>
           )}
           {activeSection === "reorders" && (
             homeLoading ? <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" /> :

@@ -17,10 +17,15 @@ export interface AskResult {
   items?: AskResultItem[];
 }
 
-export interface AqiraHealthDigest {
+export interface AqiraOrderTypeHealth {
   overdueCount: number;
   draftCount: number;
   dueThisWeekCount: number;
+}
+
+export interface AqiraHealthDigest {
+  po: AqiraOrderTypeHealth;
+  so: AqiraOrderTypeHealth;
 }
 
 export interface AqiraFollowUpReminder {
