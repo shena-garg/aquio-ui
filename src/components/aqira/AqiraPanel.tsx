@@ -1,12 +1,23 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Sparkles, CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react";
+import {
+  X,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  XCircle,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 import { useAqira } from "@/contexts/AqiraContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { aqiraService } from "@/services/aqira";
 import { cn } from "@/lib/utils";
-import type { PurchaseOrder, POProduct } from "@/services/purchase-orders";
+import type { PurchaseOrder } from "@/services/purchase-orders";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -69,11 +80,10 @@ function buildSummary(order: PurchaseOrder, orderType: "purchase" | "sales"): st
   return parts.join(" ");
 }
 
-// ─── sub-components ───────────────────────────────────────────────────────────
+// ─── order summary sub-components ────────────────────────────────────────────
 
 function StatusBadge({ order }: { order: PurchaseOrder }) {
   const delayed = (order.delayDays ?? 0) > 0;
-
   if (order.status === "cancelled")
     return <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600"><XCircle size={10} /> Cancelled</span>;
   if (order.receiptStatus === "completed")
@@ -107,10 +117,9 @@ function ProgressBar({ pct }: { pct: number }) {
   );
 }
 
-function LineItemRow({ product, receipts, orderType }: {
-  product: POProduct;
+function LineItemRow({ product, receipts }: {
+  product: NonNullable<PurchaseOrder["products"]>[number];
   receipts: PurchaseOrder["receipts"];
-  orderType: "purchase" | "sales";
 }) {
   const productId = product.product._id;
   const variantId = product.variant._id;
@@ -148,7 +157,6 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
-      {/* Order identity */}
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase mb-0.5">
@@ -159,19 +167,16 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
         <StatusBadge order={order} />
       </div>
 
-      {/* Summary paragraph */}
       <div className="rounded-lg bg-[#f0fdfa] border border-[#ccfbf1] px-3 py-2.5">
         <p className="text-[12px] text-[#0f766e] leading-relaxed">
           {buildSummary(order, orderType)}
         </p>
       </div>
 
-      {/* Progress bar — only if active */}
       {order.status !== "draft" && order.status !== "cancelled" && (
         <ProgressBar pct={pct} />
       )}
 
-      {/* Key details */}
       <div>
         <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase mb-2">Key Details</p>
         <div className="flex flex-col gap-1.5">
@@ -184,10 +189,7 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
           {order.deliveryDate && (
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-[#6b7280]">{deliveryLabel}</span>
-              <span className={cn(
-                "text-[12px] font-medium",
-                (order.delayDays ?? 0) > 0 ? "text-red-600" : "text-[#111827]"
-              )}>
+              <span className={cn("text-[12px] font-medium", (order.delayDays ?? 0) > 0 ? "text-red-600" : "text-[#111827]")}>
                 {fmtDate(order.deliveryDate)}
                 {(order.delayDays ?? 0) > 0 && ` (${order.delayDays}d late)`}
               </span>
@@ -208,7 +210,6 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
         </div>
       </div>
 
-      {/* Line items */}
       {(order.products?.length ?? 0) > 0 && (
         <div>
           <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase mb-1.5">
@@ -220,7 +221,6 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
                 key={`${p.product._id}-${p.variant._id}-${i}`}
                 product={p}
                 receipts={order.receipts}
-                orderType={orderType}
               />
             ))}
           </div>
@@ -230,21 +230,140 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
   );
 }
 
+// ─── draft input ──────────────────────────────────────────────────────────────
+
+function DraftInput() {
+  const router = useRouter();
+  const { setPendingDraft, close } = useAqira();
+  const [orderType, setOrderType] = useState<"purchase" | "sales">("purchase");
+  const [prompt, setPrompt] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleDraft() {
+    if (!prompt.trim()) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await aqiraService.draftOrder({ prompt: prompt.trim(), orderType });
+      setPendingDraft({ ...res.data.data, orderType });
+      close();
+      router.push(orderType === "purchase" ? "/purchase-orders/create" : "/sales-orders/create");
+    } catch {
+      setError("Aqira couldn't process that request. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Draft a new order</p>
+
+      {/* Order type toggle */}
+      <div className="flex rounded-lg border border-[#e5e7eb] overflow-hidden">
+        <button
+          onClick={() => setOrderType("purchase")}
+          className={cn(
+            "flex-1 py-1.5 text-[12px] font-medium transition-colors",
+            orderType === "purchase"
+              ? "bg-[#0d9488] text-white"
+              : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
+          )}
+        >
+          Purchase Order
+        </button>
+        <button
+          onClick={() => setOrderType("sales")}
+          className={cn(
+            "flex-1 py-1.5 text-[12px] font-medium transition-colors border-l border-[#e5e7eb]",
+            orderType === "sales"
+              ? "bg-[#0d9488] text-white"
+              : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
+          )}
+        >
+          Sales Order
+        </button>
+      </div>
+
+      {/* Text input */}
+      <textarea
+        value={prompt}
+        onChange={(e) => { setPrompt(e.target.value); setError(""); }}
+        onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleDraft(); }}
+        placeholder={
+          orderType === "purchase"
+            ? "e.g. 300 Aquaguard filters from AquaTech, delivery by June 30, Net 30 payment"
+            : "e.g. ship 200 units of Widget A to Acme Corp by May 20"
+        }
+        rows={3}
+        disabled={loading}
+        className="w-full resize-none rounded-lg border border-[#e5e7eb] px-3 py-2 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488] transition-colors disabled:opacity-50"
+      />
+
+      {error && (
+        <p className="text-[11px] text-red-600">{error}</p>
+      )}
+
+      <button
+        onClick={handleDraft}
+        disabled={loading || !prompt.trim()}
+        className="flex items-center justify-center gap-1.5 rounded-lg bg-[#0d9488] px-4 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-[#0f766e] disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? (
+          <>
+            <Loader2 size={13} className="animate-spin" />
+            Drafting…
+          </>
+        ) : (
+          <>
+            <Sparkles size={13} />
+            Draft Order
+            <ArrowRight size={13} />
+          </>
+        )}
+      </button>
+
+      <p className="text-[10px] text-[#9ca3af] text-center">⌘↵ to submit</p>
+    </div>
+  );
+}
+
+// ─── home state ───────────────────────────────────────────────────────────────
+
 function HomeState() {
   const { user } = useAuth();
   const firstName = user?.name?.split(" ")[0] ?? "there";
+
   return (
-    <div className="flex flex-col items-center justify-center flex-1 px-6 text-center gap-3">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f0fdfa]">
-        <Sparkles className="h-6 w-6 text-[#0d9488]" strokeWidth={1.5} />
+    <div className="flex flex-col gap-6 px-4 py-4">
+      {/* Greeting */}
+      <div className="flex flex-col items-center text-center gap-2 pt-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f0fdfa]">
+          <Sparkles className="h-5 w-5 text-[#0d9488]" strokeWidth={1.5} />
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold text-[#111827]">Hi {firstName}, I&apos;m Aqira</p>
+          <p className="text-[11px] text-[#6b7280] mt-0.5">
+            I summarize orders and draft new ones from plain text.
+          </p>
+        </div>
       </div>
-      <div>
-        <p className="text-[14px] font-semibold text-[#111827]">Hi {firstName}, I&apos;m Aqira</p>
-        <p className="text-[12px] text-[#6b7280] mt-1 leading-relaxed">
-          Open a purchase order or sales order to get an instant AI summary of its status, progress, and line items.
+
+      <div className="border-t border-[#f3f4f6]" />
+
+      {/* Draft input */}
+      <DraftInput />
+
+      <div className="border-t border-[#f3f4f6]" />
+
+      {/* Order summaries hint */}
+      <div className="flex flex-col items-center text-center gap-1">
+        <p className="text-[11px] font-medium text-[#6b7280]">Order summaries</p>
+        <p className="text-[11px] text-[#9ca3af]">
+          Open any purchase order or sales order to see an instant AI summary.
         </p>
       </div>
-      <p className="text-[11px] text-[#9ca3af]">More features coming soon.</p>
     </div>
   );
 }
@@ -256,7 +375,6 @@ export function AqiraPanel() {
   const pathname = usePathname();
   const qc = useQueryClient();
 
-  // Detect which order page we're on
   const poMatch = pathname.match(/^\/purchase-orders\/([^/]+)$/);
   const soMatch = pathname.match(/^\/sales-orders\/([^/]+)$/);
   const orderId = poMatch?.[1] ?? soMatch?.[1] ?? null;
@@ -269,7 +387,6 @@ export function AqiraPanel() {
 
   return (
     <>
-      {/* Backdrop — mobile only */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/30 lg:hidden"
@@ -277,7 +394,6 @@ export function AqiraPanel() {
         />
       )}
 
-      {/* Panel */}
       <div
         className={cn(
           "fixed inset-y-0 right-0 z-50 flex flex-col bg-white border-l border-[#e5e7eb] shadow-xl transition-transform duration-300 ease-in-out",
@@ -304,10 +420,16 @@ export function AqiraPanel() {
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {orderId && order ? (
-            <OrderSummary order={order} orderType={orderType} />
+            <>
+              <OrderSummary order={order} orderType={orderType} />
+              <div className="border-t border-[#f3f4f6] mx-4" />
+              <div className="px-4 py-4">
+                <DraftInput />
+              </div>
+            </>
           ) : orderId && !order ? (
-            <div className="flex flex-col items-center justify-center flex-1 h-full px-6 text-center gap-2">
-              <p className="text-[13px] text-[#6b7280]">Loading order details…</p>
+            <div className="flex flex-col items-center justify-center h-32 px-6 text-center">
+              <p className="text-[12px] text-[#6b7280]">Loading order details…</p>
             </div>
           ) : (
             <HomeState />

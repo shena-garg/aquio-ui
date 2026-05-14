@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAqira } from "@/contexts/AqiraContext";
+import type { AqiraDraft } from "@/contexts/AqiraContext";
 import {
   Popover,
   PopoverContent,
@@ -872,6 +874,10 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const router = useRouter();
   const { hasPermission } = useAuth();
   const canAddProduct = hasPermission("product.add");
+  const { pendingDraft, setPendingDraft } = useAqira();
+  // Capture pendingDraft at mount time — the bootstrap effect runs once and
+  // the context value may clear before the async data load finishes.
+  const pendingDraftRef = useRef<AqiraDraft | null>(pendingDraft);
 
   // ── Bootstrap data ──────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
@@ -905,6 +911,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
           populateFromOrder(sourceOrder, v, org);
         } else if (sourceOrder && duplicateFromId) {
           populateForDuplicate(sourceOrder, v, org);
+        } else if (!editId && !duplicateFromId && pendingDraftRef.current?.orderType === orderType) {
+          applyAqiraDraft(pendingDraftRef.current, v, org);
+          setPendingDraft(null);
         }
       })
       .catch(() => {
@@ -1218,6 +1227,59 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
     // Leave blank: PO Number, Issue Date (already today), Delivery Date (already default),
     // Reference ID, Supplier Reference ID, Internal Notes
+  }
+
+  // ── Apply Aqira AI draft ─────────────────────────────────────────────────
+  function applyAqiraDraft(
+    draft: AqiraDraft,
+    _vendorList: VendorCompany[],
+    _org: Organization
+  ) {
+    const allCompanies: CompanyOption[] = _org
+      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._vendorList.map((v) => ({ ...v, _type: "vendor" as const }))]
+      : _vendorList.map((v) => ({ ...v, _type: "vendor" as const }));
+
+    if (draft.supplierId) {
+      const company = allCompanies.find((c) => c._id === draft.supplierId);
+      if (company) {
+        setSupplierCompanyId(draft.supplierId);
+        const defaultLoc = company.locations?.[0]?._id ?? "";
+        if (defaultLoc) setSupplierLocationId(defaultLoc);
+      }
+    }
+    didPreselect.current = true;
+
+    if (draft.deliveryDate) setDeliveryDate(draft.deliveryDate);
+    if (draft.paymentTerms) setPaymentTerms(draft.paymentTerms);
+    if (draft.notes) setNotes(draft.notes);
+
+    if (draft.products?.length > 0) {
+      const newRows: ProductRow[] = draft.products.map((item) => {
+        const variant: ProductVariant = {
+          _id: item.variantId ?? "",
+          name: item.variantName ?? "",
+        };
+        const product: ProductSearchResult = {
+          _id: item.productId ?? "",
+          name: item.productName,
+          unitOfMeasurement: item.uom ?? "",
+          gst: item.gst ?? 0,
+          variants: item.variantId ? [variant] : [],
+        };
+        const qty = item.quantity ?? 0;
+        const price = item.price ?? 0;
+        return {
+          id: nextRowId(),
+          product: item.productId ? product : null,
+          variant: item.variantId ? variant : null,
+          quantity: qty,
+          price,
+          quantityStr: qty > 0 ? formatNumericInput(String(qty), 3) : "",
+          priceStr: price > 0 ? formatNumericInput(String(price), 2) : "",
+        };
+      });
+      setProductRows(newRows);
+    }
   }
 
   // ── Order details state ─────────────────────────────────────────────────
