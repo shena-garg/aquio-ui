@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAqira } from "@/contexts/AqiraContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { aqiraService } from "@/services/aqira";
+import { aqiraService, type AskResult } from "@/services/aqira";
 import { cn } from "@/lib/utils";
 import type { PurchaseOrder } from "@/services/purchase-orders";
 
@@ -65,22 +65,19 @@ function buildSummary(order: PurchaseOrder, orderType: "purchase" | "sales"): st
   parts.push(
     `This ${orderType === "purchase" ? "purchase order" : "sales order"} for ${itemCount} line item${itemCount !== 1 ? "s" : ""}${party ? ` ${partyLabel} ${party}` : ""} is ${statusDesc}.`
   );
-
   if (order.status !== "draft" && order.status !== "cancelled" && totalAmt > 0) {
     if (pct > 0 && pct < 100) {
-      const received = (totalAmt * pct) / 100;
-      parts.push(`${fmtAmount(received)} of ${fmtAmount(totalAmt)} worth of goods ${orderType === "purchase" ? "received" : "shipped"} (${pct}%).`);
+      parts.push(`${fmtAmount((totalAmt * pct) / 100)} of ${fmtAmount(totalAmt)} ${orderType === "purchase" ? "received" : "shipped"} (${pct}%).`);
     } else if (pct === 100) {
       parts.push(`Full value of ${fmtAmount(totalAmt)} ${orderType === "purchase" ? "received" : "shipped"}.`);
     } else {
       parts.push(`Total order value: ${fmtAmount(totalAmt)}.`);
     }
   }
-
   return parts.join(" ");
 }
 
-// ─── order summary sub-components ────────────────────────────────────────────
+// ─── order summary ────────────────────────────────────────────────────────────
 
 function StatusBadge({ order }: { order: PurchaseOrder }) {
   const delayed = (order.delayDays ?? 0) > 0;
@@ -95,59 +92,6 @@ function StatusBadge({ order }: { order: PurchaseOrder }) {
   if (order.status === "draft")
     return <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"><Clock size={10} /> Draft</span>;
   return <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-600"><Clock size={10} /> Active</span>;
-}
-
-function ProgressBar({ pct }: { pct: number }) {
-  return (
-    <div className="mt-1">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] text-[#6b7280]">Receipt progress</span>
-        <span className="text-[10px] font-semibold text-[#111827]">{pct}%</span>
-      </div>
-      <div className="h-1.5 w-full rounded-full bg-[#f3f4f6]">
-        <div
-          className={cn(
-            "h-1.5 rounded-full transition-all",
-            pct === 100 ? "bg-emerald-500" : pct > 0 ? "bg-[#0d9488]" : "bg-[#e5e7eb]"
-          )}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function LineItemRow({ product, receipts }: {
-  product: NonNullable<PurchaseOrder["products"]>[number];
-  receipts: PurchaseOrder["receipts"];
-}) {
-  const productId = product.product._id;
-  const variantId = product.variant._id;
-  const ordered = product.quantity.value;
-  const received = (receipts ?? []).reduce((sum, r) => {
-    const match = r.products.find((p) => p.productId === productId && p.variantId === variantId);
-    return sum + (match?.deliveredQuantity ?? 0);
-  }, 0);
-  const done = received >= ordered;
-  const name = product.metadata?.product?.name ?? "Product";
-  const variant = product.metadata?.variant?.name;
-  const uom = product.quantity.postfix;
-
-  return (
-    <div className="flex items-start justify-between gap-2 py-1.5 border-b border-[#f3f4f6] last:border-0">
-      <div className="min-w-0">
-        <p className="text-[12px] font-medium text-[#111827] truncate">{name}</p>
-        {variant && <p className="text-[11px] text-[#6b7280] truncate">{variant}</p>}
-      </div>
-      <div className="flex-shrink-0 text-right">
-        <span className={cn("text-[12px] font-medium", done ? "text-emerald-600" : "text-[#111827]")}>
-          {received}/{ordered}
-        </span>
-        <span className="text-[11px] text-[#6b7280] ml-0.5">{uom}</span>
-        {done && <CheckCircle2 size={10} className="inline ml-1 text-emerald-500" />}
-      </div>
-    </div>
-  );
 }
 
 function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "purchase" | "sales" }) {
@@ -166,17 +110,20 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
         </div>
         <StatusBadge order={order} />
       </div>
-
       <div className="rounded-lg bg-[#f0fdfa] border border-[#ccfbf1] px-3 py-2.5">
-        <p className="text-[12px] text-[#0f766e] leading-relaxed">
-          {buildSummary(order, orderType)}
-        </p>
+        <p className="text-[12px] text-[#0f766e] leading-relaxed">{buildSummary(order, orderType)}</p>
       </div>
-
       {order.status !== "draft" && order.status !== "cancelled" && (
-        <ProgressBar pct={pct} />
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-[#6b7280]">Receipt progress</span>
+            <span className="text-[10px] font-semibold text-[#111827]">{pct}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-[#f3f4f6]">
+            <div className={cn("h-1.5 rounded-full", pct === 100 ? "bg-emerald-500" : "bg-[#0d9488]")} style={{ width: `${pct}%` }} />
+          </div>
+        </div>
       )}
-
       <div>
         <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase mb-2">Key Details</p>
         <div className="flex flex-col gap-1.5">
@@ -190,8 +137,7 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-[#6b7280]">{deliveryLabel}</span>
               <span className={cn("text-[12px] font-medium", (order.delayDays ?? 0) > 0 ? "text-red-600" : "text-[#111827]")}>
-                {fmtDate(order.deliveryDate)}
-                {(order.delayDays ?? 0) > 0 && ` (${order.delayDays}d late)`}
+                {fmtDate(order.deliveryDate)}{(order.delayDays ?? 0) > 0 && ` (${order.delayDays}d late)`}
               </span>
             </div>
           )}
@@ -209,28 +155,171 @@ function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "
           )}
         </div>
       </div>
-
       {(order.products?.length ?? 0) > 0 && (
         <div>
           <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase mb-1.5">
             Line Items ({order.products!.length})
           </p>
-          <div>
-            {order.products!.map((p, i) => (
-              <LineItemRow
-                key={`${p.product._id}-${p.variant._id}-${i}`}
-                product={p}
-                receipts={order.receipts}
-              />
-            ))}
-          </div>
+          {order.products!.map((p, i) => {
+            const received = (order.receipts ?? []).reduce((s, r) => {
+              const m = r.products.find((rp) => rp.productId === p.product._id && rp.variantId === p.variant._id);
+              return s + (m?.deliveredQuantity ?? 0);
+            }, 0);
+            const done = received >= p.quantity.value;
+            return (
+              <div key={`${p.product._id}-${i}`} className="flex items-start justify-between gap-2 py-1.5 border-b border-[#f3f4f6] last:border-0">
+                <div className="min-w-0">
+                  <p className="text-[12px] font-medium text-[#111827] truncate">{p.metadata?.product?.name ?? "Product"}</p>
+                  {p.metadata?.variant?.name && <p className="text-[11px] text-[#6b7280] truncate">{p.metadata.variant.name}</p>}
+                </div>
+                <div className="flex-shrink-0 text-right">
+                  <span className={cn("text-[12px] font-medium", done ? "text-emerald-600" : "text-[#111827]")}>{received}/{p.quantity.value}</span>
+                  <span className="text-[11px] text-[#6b7280] ml-0.5">{p.quantity.postfix}</span>
+                  {done && <CheckCircle2 size={10} className="inline ml-1 text-emerald-500" />}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
+// ─── ask answer bubble ────────────────────────────────────────────────────────
+
+function AnswerBubble({ result }: { result: AskResult }) {
+  return (
+    <div className="rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-3">
+      <div className="flex items-start gap-2 mb-2">
+        <Sparkles size={13} className="text-[#0d9488] flex-shrink-0 mt-0.5" strokeWidth={1.75} />
+        <p className="text-[12px] text-[#111827] leading-relaxed">{result.answer}</p>
+      </div>
+      {result.items && result.items.length > 0 && (
+        <div className="mt-2 flex flex-col gap-1 pl-5">
+          {result.items.map((item, i) => (
+            <div key={i} className="flex items-center justify-between gap-2">
+              <span className="text-[12px] text-[#374151] truncate">{item.label}</span>
+              <div className="flex-shrink-0 text-right">
+                <span className="text-[12px] font-semibold text-[#111827]">{item.value}</span>
+                {item.sub && <span className="text-[11px] text-[#6b7280] ml-1.5">{item.sub}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── mode tabs ────────────────────────────────────────────────────────────────
+
+function ModeTabs({ mode, onChange }: { mode: "draft" | "ask"; onChange: (m: "draft" | "ask") => void }) {
+  return (
+    <div className="flex rounded-lg border border-[#e5e7eb] overflow-hidden">
+      {(["draft", "ask"] as const).map((m) => (
+        <button
+          key={m}
+          onClick={() => onChange(m)}
+          className={cn(
+            "flex-1 py-1.5 text-[12px] font-medium transition-colors",
+            m === "ask" && "border-l border-[#e5e7eb]",
+            mode === m ? "bg-[#0d9488] text-white" : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
+          )}
+        >
+          {m === "draft" ? "Draft Order" : "Ask Aqira"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ─── draft input ──────────────────────────────────────────────────────────────
+
+const SUGGESTIONS = [
+  "Total spend this month",
+  "Top 5 suppliers",
+  "Overdue orders",
+  "Top products this quarter",
+  "Orders by status",
+];
+
+function AskInput({
+  result,
+  onResult,
+}: {
+  result: AskResult | null;
+  onResult: (r: AskResult | null) => void;
+}) {
+  const [question, setQuestion] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(q: string) {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setError("");
+    onResult(null);
+    try {
+      const res = await aqiraService.ask(trimmed);
+      onResult(res.data.data);
+    } catch {
+      setError("Couldn't get an answer. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Suggestion chips */}
+      {!result && (
+        <div className="flex flex-wrap gap-1.5">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => { setQuestion(s); submit(s); }}
+              disabled={loading}
+              className="rounded-full border border-[#e5e7eb] bg-white px-2.5 py-1 text-[11px] text-[#374151] hover:bg-[#f0fdfa] hover:border-[#0d9488] hover:text-[#0d9488] transition-colors disabled:opacity-50"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="flex gap-2">
+        <input
+          value={question}
+          onChange={(e) => { setQuestion(e.target.value); setError(""); }}
+          onKeyDown={(e) => { if (e.key === "Enter") submit(question); }}
+          placeholder="Ask anything about your orders…"
+          disabled={loading}
+          className="flex-1 rounded-lg border border-[#e5e7eb] px-3 py-2 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488] transition-colors disabled:opacity-50"
+        />
+        <button
+          onClick={() => submit(question)}
+          disabled={loading || !question.trim()}
+          className="flex-shrink-0 flex items-center justify-center rounded-lg bg-[#0d9488] px-3 py-2 text-white transition-colors hover:bg-[#0f766e] disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
+        </button>
+      </div>
+
+      {error && <p className="text-[11px] text-red-600">{error}</p>}
+
+      {/* Answer */}
+      {result && <AnswerBubble result={result} />}
+      {result && (
+        <button onClick={() => { onResult(null); setQuestion(""); }} className="text-[11px] text-[#9ca3af] hover:text-[#6b7280] text-center transition-colors">
+          Ask another question
+        </button>
+      )}
+    </div>
+  );
+}
 
 function DraftInput() {
   const router = useRouter();
@@ -250,7 +339,7 @@ function DraftInput() {
       close();
       router.push(orderType === "purchase" ? "/purchase-orders/create" : "/sales-orders/create");
     } catch {
-      setError("Aqira couldn't process that request. Please try again.");
+      setError("Aqira couldn't process that. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -258,112 +347,43 @@ function DraftInput() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Draft a new order</p>
-
-      {/* Order type toggle */}
       <div className="flex rounded-lg border border-[#e5e7eb] overflow-hidden">
-        <button
-          onClick={() => setOrderType("purchase")}
-          className={cn(
-            "flex-1 py-1.5 text-[12px] font-medium transition-colors",
-            orderType === "purchase"
-              ? "bg-[#0d9488] text-white"
-              : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
-          )}
-        >
-          Purchase Order
-        </button>
-        <button
-          onClick={() => setOrderType("sales")}
-          className={cn(
-            "flex-1 py-1.5 text-[12px] font-medium transition-colors border-l border-[#e5e7eb]",
-            orderType === "sales"
-              ? "bg-[#0d9488] text-white"
-              : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
-          )}
-        >
-          Sales Order
-        </button>
+        {(["purchase", "sales"] as const).map((t, i) => (
+          <button
+            key={t}
+            onClick={() => setOrderType(t)}
+            className={cn(
+              "flex-1 py-1.5 text-[12px] font-medium transition-colors",
+              i > 0 && "border-l border-[#e5e7eb]",
+              orderType === t ? "bg-[#0d9488] text-white" : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
+            )}
+          >
+            {t === "purchase" ? "Purchase Order" : "Sales Order"}
+          </button>
+        ))}
       </div>
-
-      {/* Text input */}
       <textarea
         value={prompt}
         onChange={(e) => { setPrompt(e.target.value); setError(""); }}
         onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleDraft(); }}
         placeholder={
           orderType === "purchase"
-            ? "e.g. 300 Aquaguard filters from AquaTech, delivery by June 30, Net 30 payment"
+            ? "e.g. 300 Aquaguard filters from AquaTech, delivery by June 30, Net 30"
             : "e.g. ship 200 units of Widget A to Acme Corp by May 20"
         }
         rows={3}
         disabled={loading}
         className="w-full resize-none rounded-lg border border-[#e5e7eb] px-3 py-2 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488] transition-colors disabled:opacity-50"
       />
-
-      {error && (
-        <p className="text-[11px] text-red-600">{error}</p>
-      )}
-
+      {error && <p className="text-[11px] text-red-600">{error}</p>}
       <button
         onClick={handleDraft}
         disabled={loading || !prompt.trim()}
         className="flex items-center justify-center gap-1.5 rounded-lg bg-[#0d9488] px-4 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-[#0f766e] disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? (
-          <>
-            <Loader2 size={13} className="animate-spin" />
-            Drafting…
-          </>
-        ) : (
-          <>
-            <Sparkles size={13} />
-            Draft Order
-            <ArrowRight size={13} />
-          </>
-        )}
+        {loading ? <><Loader2 size={13} className="animate-spin" /> Drafting…</> : <><Sparkles size={13} /> Draft Order <ArrowRight size={13} /></>}
       </button>
-
       <p className="text-[10px] text-[#9ca3af] text-center">⌘↵ to submit</p>
-    </div>
-  );
-}
-
-// ─── home state ───────────────────────────────────────────────────────────────
-
-function HomeState() {
-  const { user } = useAuth();
-  const firstName = user?.name?.split(" ")[0] ?? "there";
-
-  return (
-    <div className="flex flex-col gap-6 px-4 py-4">
-      {/* Greeting */}
-      <div className="flex flex-col items-center text-center gap-2 pt-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f0fdfa]">
-          <Sparkles className="h-5 w-5 text-[#0d9488]" strokeWidth={1.5} />
-        </div>
-        <div>
-          <p className="text-[13px] font-semibold text-[#111827]">Hi {firstName}, I&apos;m Aqira</p>
-          <p className="text-[11px] text-[#6b7280] mt-0.5">
-            I summarize orders and draft new ones from plain text.
-          </p>
-        </div>
-      </div>
-
-      <div className="border-t border-[#f3f4f6]" />
-
-      {/* Draft input */}
-      <DraftInput />
-
-      <div className="border-t border-[#f3f4f6]" />
-
-      {/* Order summaries hint */}
-      <div className="flex flex-col items-center text-center gap-1">
-        <p className="text-[11px] font-medium text-[#6b7280]">Order summaries</p>
-        <p className="text-[11px] text-[#9ca3af]">
-          Open any purchase order or sales order to see an instant AI summary.
-        </p>
-      </div>
     </div>
   );
 }
@@ -379,16 +399,10 @@ function AqiraFAB() {
       className={cn(
         "fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200",
         "hover:scale-105 active:scale-95",
-        isOpen
-          ? "bg-[#0f766e] shadow-[#0d9488]/30 shadow-lg"
-          : "bg-[#0d9488] shadow-[#0d9488]/25 shadow-lg hover:bg-[#0f766e]"
+        isOpen ? "bg-[#0f766e]" : "bg-[#0d9488] hover:bg-[#0f766e]"
       )}
     >
-      {isOpen ? (
-        <X className="h-5 w-5 text-white" strokeWidth={2} />
-      ) : (
-        <Sparkles className="h-5 w-5 text-white" strokeWidth={1.75} />
-      )}
+      {isOpen ? <X className="h-5 w-5 text-white" strokeWidth={2} /> : <Sparkles className="h-5 w-5 text-white" strokeWidth={1.75} />}
     </button>
   );
 }
@@ -397,28 +411,28 @@ function AqiraFAB() {
 
 export function AqiraPanel() {
   const { isOpen, close } = useAqira();
+  const { user } = useAuth();
   const pathname = usePathname();
   const qc = useQueryClient();
+
+  const [mode, setMode] = useState<"draft" | "ask">("ask");
+  const [askResult, setAskResult] = useState<AskResult | null>(null);
 
   const poMatch = pathname.match(/^\/purchase-orders\/([^/]+)$/);
   const soMatch = pathname.match(/^\/sales-orders\/([^/]+)$/);
   const orderId = poMatch?.[1] ?? soMatch?.[1] ?? null;
   const orderType: "purchase" | "sales" = soMatch ? "sales" : "purchase";
-  const queryKey = orderId
-    ? [soMatch ? "sales-order" : "purchase-order", orderId]
-    : null;
-
+  const queryKey = orderId ? [soMatch ? "sales-order" : "purchase-order", orderId] : null;
   const order = queryKey ? (qc.getQueryData<PurchaseOrder>(queryKey) ?? null) : null;
+
+  const firstName = user?.name?.split(" ")[0] ?? "there";
 
   return (
     <>
       <AqiraFAB />
 
       {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-          onClick={close}
-        />
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={close} />
       )}
 
       <div
@@ -435,11 +449,7 @@ export function AqiraPanel() {
             <span className="text-[14px] font-semibold text-[#111827]">Aqira</span>
             <span className="rounded-full bg-[#f0fdfa] px-1.5 py-0.5 text-[10px] font-semibold text-[#0d9488]">BETA</span>
           </div>
-          <button
-            onClick={close}
-            className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors"
-            aria-label="Close Aqira"
-          >
+          <button onClick={close} className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors" aria-label="Close Aqira">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -447,19 +457,49 @@ export function AqiraPanel() {
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {orderId && order ? (
-            <>
+            /* ── Order detail view ── */
+            <div className="flex flex-col gap-0">
               <OrderSummary order={order} orderType={orderType} />
-              <div className="border-t border-[#f3f4f6] mx-4" />
-              <div className="px-4 py-4">
-                <DraftInput />
+              <div className="border-t border-[#f3f4f6]" />
+              <div className="px-4 py-4 flex flex-col gap-4">
+                <ModeTabs mode={mode} onChange={setMode} />
+                {mode === "draft" ? <DraftInput /> : <AskInput result={askResult} onResult={setAskResult} />}
               </div>
-            </>
-          ) : orderId && !order ? (
-            <div className="flex flex-col items-center justify-center h-32 px-6 text-center">
-              <p className="text-[12px] text-[#6b7280]">Loading order details…</p>
             </div>
           ) : (
-            <HomeState />
+            /* ── Home view ── */
+            <div className="flex flex-col gap-5 px-4 py-4">
+              {/* Greeting */}
+              <div className="flex items-center gap-2.5 pt-1">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#f0fdfa]">
+                  <Sparkles className="h-4 w-4 text-[#0d9488]" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-[#111827]">Hi {firstName}</p>
+                  <p className="text-[11px] text-[#6b7280]">How can I help you today?</p>
+                </div>
+              </div>
+
+              {/* Mode tabs */}
+              <ModeTabs mode={mode} onChange={(m) => { setMode(m); if (m === "ask") setAskResult(null); }} />
+
+              {/* Content */}
+              {mode === "draft" ? (
+                <DraftInput />
+              ) : (
+                <AskInput result={askResult} onResult={setAskResult} />
+              )}
+
+              {/* Order summaries hint */}
+              {mode === "ask" && !askResult && (
+                <>
+                  <div className="border-t border-[#f3f4f6]" />
+                  <p className="text-[11px] text-[#9ca3af] text-center">
+                    Open a PO or SO for an instant order summary.
+                  </p>
+                </>
+              )}
+            </div>
           )}
         </div>
 
