@@ -84,9 +84,11 @@ function formatTrend(
 /* ── Currency formatter ──────────────────────────────────────────────────── */
 
 function formatCrore(value: number): string {
-  if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
-  if (value >= 100000) return `₹${(value / 100000).toFixed(2)} L`;
-  return `₹${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmt = (n: number, decimals = 2) =>
+    n.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  if (value >= 10000000) return `₹${fmt(value / 10000000)} Cr`;
+  if (value >= 100000) return `₹${fmt(value / 100000)} L`;
+  return `₹${fmt(value)}`;
 }
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -917,9 +919,9 @@ function SpendRevenueMarginChart({
               axisLine={{ stroke: "#e5e7eb" }}
               tickLine={false}
               tickFormatter={(v: number) => {
-                if (v >= 10000000) return `₹${(v / 10000000).toFixed(0)}Cr`;
-                if (v >= 100000) return `₹${(v / 100000).toFixed(0)}L`;
-                return `₹${v}`;
+                if (v >= 10000000) return `₹${(v / 10000000).toLocaleString("en-IN", { maximumFractionDigits: 0 })}Cr`;
+                if (v >= 100000) return `₹${(v / 100000).toLocaleString("en-IN", { maximumFractionDigits: 0 })}L`;
+                return `₹${v.toLocaleString("en-IN")}`;
               }}
             />
             {hasBothSides && (
@@ -1001,9 +1003,9 @@ function SingleMetricChart({
               axisLine={{ stroke: "#e5e7eb" }}
               tickLine={false}
               tickFormatter={(v: number) => {
-                if (v >= 10000000) return `₹${(v / 10000000).toFixed(0)}Cr`;
-                if (v >= 100000) return `₹${(v / 100000).toFixed(0)}L`;
-                return `₹${v}`;
+                if (v >= 10000000) return `₹${(v / 10000000).toLocaleString("en-IN", { maximumFractionDigits: 0 })}Cr`;
+                if (v >= 100000) return `₹${(v / 100000).toLocaleString("en-IN", { maximumFractionDigits: 0 })}L`;
+                return `₹${v.toLocaleString("en-IN")}`;
               }}
             />
             <Tooltip
