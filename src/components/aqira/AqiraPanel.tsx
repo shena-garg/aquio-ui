@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   X,
   Sparkles,
@@ -12,11 +12,31 @@ import {
   XCircle,
   ArrowRight,
   Loader2,
+  RefreshCcw,
+  Bell,
+  Heart,
+  Wallet,
+  Copy,
+  Check,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import { useAqira, type AqiraFormContext } from "@/contexts/AqiraContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { aqiraService, type AskResult } from "@/services/aqira";
-import { computePriceSignal, priceInsightsService, type PriceInsightsLookup, type PriceSignal, type SupplierComparisonResult } from "@/services/price-insights";
+import {
+  aqiraService,
+  type AskResult,
+  type AqiraHomeData,
+  type AqiraBudgetItem,
+  type BudgetStatusResult,
+} from "@/services/aqira";
+import {
+  computePriceSignal,
+  priceInsightsService,
+  type PriceInsightsLookup,
+  type PriceSignal,
+  type SupplierComparisonResult,
+} from "@/services/price-insights";
 import { cn } from "@/lib/utils";
 import type { PurchaseOrder } from "@/services/purchase-orders";
 
@@ -464,6 +484,349 @@ function SupplierComparisonSection({ formContext }: { formContext: AqiraFormCont
   );
 }
 
+// ─── budget warning (form page) ───────────────────────────────────────────────
+
+function BudgetWarningSection({ formContext }: { formContext: AqiraFormContext }) {
+  const { data, isLoading } = useQuery<BudgetStatusResult>({
+    queryKey: ["budget-status", formContext.partnerId, formContext.orderType],
+    queryFn: () =>
+      aqiraService
+        .getBudgetStatus(formContext.partnerId!, formContext.orderType)
+        .then((r) => r.data.data),
+    enabled: !!formContext.partnerId,
+    staleTime: 60 * 1000,
+  });
+
+  if (!formContext.partnerId) return null;
+  if (isLoading) return <div className="h-12 rounded-lg bg-[#f3f4f6] animate-pulse" />;
+  if (!data?.hasBudget) return null;
+
+  const { monthlyLimit, spent, pct, isOver, currency } = data;
+
+  return (
+    <div className={cn(
+      "rounded-lg border px-3 py-2.5",
+      isOver
+        ? "border-red-200 bg-red-50"
+        : pct >= 80
+        ? "border-amber-200 bg-amber-50"
+        : "border-[#e5e7eb] bg-[#f9fafb]"
+    )}>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Wallet size={12} className={isOver ? "text-red-500" : pct >= 80 ? "text-amber-500" : "text-[#6b7280]"} />
+        <p className={cn("text-[12px] font-semibold", isOver ? "text-red-800" : pct >= 80 ? "text-amber-800" : "text-[#374151]")}>
+          {isOver ? "Monthly budget exceeded" : pct >= 80 ? "Approaching monthly budget" : "Monthly budget"}
+        </p>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-white/70 mb-1.5">
+        <div
+          className={cn("h-1.5 rounded-full transition-all", isOver ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-[#0d9488]")}
+          style={{ width: `${Math.min(pct, 100)}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between">
+        <span className={cn("text-[11px]", isOver ? "text-red-700" : pct >= 80 ? "text-amber-700" : "text-[#6b7280]")}>
+          {fmtAmount(spent)} spent of {fmtAmount(monthlyLimit!)} ({currency})
+        </span>
+        <span className={cn("text-[11px] font-semibold", isOver ? "text-red-700" : pct >= 80 ? "text-amber-700" : "text-[#0d9488]")}>
+          {pct}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── health digest ────────────────────────────────────────────────────────────
+
+function HealthDigestCard({ data }: { data: AqiraHomeData["healthDigest"] }) {
+  const router = useRouter();
+  const { close } = useAqira();
+
+  const items = [
+    {
+      label: "Overdue",
+      count: data.overdueCount,
+      icon: <AlertTriangle size={13} />,
+      color: data.overdueCount > 0 ? "text-red-600 bg-red-50" : "text-[#6b7280] bg-[#f3f4f6]",
+      onClick: () => { close(); router.push("/purchase-orders?status=confirmed"); },
+    },
+    {
+      label: "Drafts",
+      count: data.draftCount,
+      icon: <Clock size={13} />,
+      color: data.draftCount > 0 ? "text-amber-600 bg-amber-50" : "text-[#6b7280] bg-[#f3f4f6]",
+      onClick: () => { close(); router.push("/purchase-orders?status=draft"); },
+    },
+    {
+      label: "Due this week",
+      count: data.dueThisWeekCount,
+      icon: <Bell size={13} />,
+      color: data.dueThisWeekCount > 0 ? "text-blue-600 bg-blue-50" : "text-[#6b7280] bg-[#f3f4f6]",
+      onClick: () => { close(); router.push("/purchase-orders"); },
+    },
+  ];
+
+  return (
+    <div className="rounded-lg border border-[#e5e7eb] overflow-hidden">
+      <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase px-3 py-2 border-b border-[#f3f4f6] bg-[#f9fafb]">
+        Order Health
+      </p>
+      <div className="grid grid-cols-3 divide-x divide-[#f3f4f6]">
+        {items.map((item) => (
+          <button
+            key={item.label}
+            onClick={item.onClick}
+            className="flex flex-col items-center gap-1 px-2 py-3 hover:bg-[#f9fafb] transition-colors"
+          >
+            <span className={cn("flex h-7 w-7 items-center justify-center rounded-full", item.color)}>
+              {item.icon}
+            </span>
+            <span className="text-[15px] font-bold text-[#111827]">{item.count}</span>
+            <span className="text-[10px] text-[#6b7280] text-center leading-tight">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── follow-up reminders ──────────────────────────────────────────────────────
+
+function FollowUpCard({ reminder }: { reminder: AqiraHomeData["followUpReminders"][0] }) {
+  const router = useRouter();
+  const { close } = useAqira();
+  const [copied, setCopied] = useState(false);
+
+  const message = `Hi, I wanted to follow up on Purchase Order ${reminder.poNumber} from ${fmtDate(reminder.deliveryDate)}. It was due ${reminder.daysOverdue} day${reminder.daysOverdue !== 1 ? "s" : ""} ago and we haven't received the goods yet. Could you please provide an update on the delivery status? Thank you.`;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(message).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2.5">
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <div className="min-w-0">
+          <p className="text-[12px] font-semibold text-red-800 truncate">{reminder.poNumber}</p>
+          <p className="text-[11px] text-red-600 truncate">{reminder.supplierName}</p>
+        </div>
+        <span className="flex-shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+          {reminder.daysOverdue}d overdue
+        </span>
+      </div>
+      <p className="text-[11px] text-red-600 mb-2">Due: {fmtDate(reminder.deliveryDate)} · No goods received</p>
+      <div className="flex gap-1.5">
+        <button
+          onClick={() => { close(); router.push(`/purchase-orders/${reminder.orderId}`); }}
+          className="flex-1 flex items-center justify-center gap-1 rounded-md bg-white border border-red-200 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-100 transition-colors"
+        >
+          <ArrowRight size={10} /> View PO
+        </button>
+        <button
+          onClick={handleCopy}
+          className="flex items-center justify-center gap-1 rounded-md bg-white border border-red-200 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-100 transition-colors"
+        >
+          {copied ? <Check size={10} /> : <Copy size={10} />}
+          {copied ? "Copied" : "Copy message"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── reorder suggestions ──────────────────────────────────────────────────────
+
+function ReorderSuggestionCard({ suggestion }: { suggestion: AqiraHomeData["reorderSuggestions"][0] }) {
+  const { setPendingDraft, close } = useAqira();
+  const router = useRouter();
+
+  function handleDraftReorder() {
+    setPendingDraft({
+      orderType: "purchase",
+      supplierId: suggestion.lastSupplierId || null,
+      supplierName: suggestion.lastSupplierName || null,
+      products: [
+        {
+          productId: suggestion.productId,
+          productName: suggestion.productName,
+          variantId: null,
+          variantName: "",
+          quantity: suggestion.lastOrderedQty,
+          price: null,
+          uom: suggestion.lastUom,
+          gst: 0,
+        },
+      ],
+      deliveryDate: null,
+      paymentTerms: null,
+      notes: null,
+    });
+    close();
+    router.push("/purchase-orders/create");
+  }
+
+  return (
+    <div className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2.5">
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <p className="text-[12px] font-semibold text-[#111827] truncate flex-1">{suggestion.productName}</p>
+        <span className="flex-shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+          {suggestion.daysOverdue}d overdue
+        </span>
+      </div>
+      <p className="text-[11px] text-[#6b7280] mb-1">
+        Avg every {suggestion.avgIntervalDays}d · Last: {suggestion.lastSupplierName}
+      </p>
+      <p className="text-[11px] text-[#9ca3af] mb-2">{suggestion.daysSinceLastOrder}d since last order</p>
+      <button
+        onClick={handleDraftReorder}
+        className="w-full flex items-center justify-center gap-1.5 rounded-md bg-[#0d9488] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#0f766e] transition-colors"
+      >
+        <RefreshCcw size={10} /> Draft Reorder
+      </button>
+    </div>
+  );
+}
+
+// ─── budgets manager ──────────────────────────────────────────────────────────
+
+function BudgetsSection() {
+  const qc = useQueryClient();
+  const [showAdd, setShowAdd] = useState(false);
+  const [addId, setAddId] = useState("");
+  const [addName, setAddName] = useState("");
+  const [addLimit, setAddLimit] = useState("");
+  const [addError, setAddError] = useState("");
+
+  const { data: budgetsData, isLoading } = useQuery<AqiraBudgetItem[]>({
+    queryKey: ["aqira-budgets"],
+    queryFn: () => aqiraService.getBudgets().then((r) => r.data.data),
+    staleTime: 60 * 1000,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (entityId: string) => aqiraService.deleteBudget(entityId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["aqira-budgets"] }),
+  });
+
+  const addMutation = useMutation({
+    mutationFn: () => aqiraService.setBudget(addId.trim(), addName.trim(), parseFloat(addLimit)),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["aqira-budgets"] });
+      setShowAdd(false);
+      setAddId("");
+      setAddName("");
+      setAddLimit("");
+      setAddError("");
+    },
+  });
+
+  function handleAdd() {
+    if (!addId.trim() || !addName.trim()) { setAddError("Partner ID and name are required."); return; }
+    const limit = parseFloat(addLimit);
+    if (isNaN(limit) || limit <= 0) { setAddError("Enter a valid monthly limit."); return; }
+    setAddError("");
+    addMutation.mutate();
+  }
+
+  const budgets = budgetsData ?? [];
+
+  return (
+    <div className="flex flex-col gap-2">
+      {isLoading && <div className="h-12 rounded-lg bg-[#f3f4f6] animate-pulse" />}
+
+      {!isLoading && budgets.length === 0 && !showAdd && (
+        <p className="text-[12px] text-[#9ca3af] text-center py-1">
+          No supplier budgets set. Add one to track monthly spend.
+        </p>
+      )}
+
+      {budgets.map((b) => (
+        <div key={b.entityId} className="rounded-lg border border-[#e5e7eb] px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <p className={cn("text-[12px] font-semibold truncate", b.isOver ? "text-red-700" : "text-[#111827]")}>
+              {b.entityName}
+            </p>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {b.isOver && <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">Over</span>}
+              <button
+                onClick={() => deleteMutation.mutate(b.entityId)}
+                disabled={deleteMutation.isPending}
+                className="text-[#9ca3af] hover:text-red-500 transition-colors disabled:opacity-50"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-[#f3f4f6] mb-1.5">
+            <div
+              className={cn("h-1.5 rounded-full", b.isOver ? "bg-red-500" : b.pct >= 80 ? "bg-amber-500" : "bg-[#0d9488]")}
+              style={{ width: `${Math.min(b.pct, 100)}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-[#6b7280]">{fmtAmount(b.spent)} / {fmtAmount(b.monthlyLimit)}</span>
+            <span className={cn("text-[11px] font-semibold", b.isOver ? "text-red-600" : b.pct >= 80 ? "text-amber-600" : "text-[#0d9488]")}>
+              {b.pct}%
+            </span>
+          </div>
+        </div>
+      ))}
+
+      {showAdd ? (
+        <div className="rounded-lg border border-[#e5e7eb] px-3 py-3 flex flex-col gap-2">
+          <p className="text-[11px] font-semibold text-[#374151]">Add supplier budget</p>
+          <input
+            value={addId}
+            onChange={(e) => setAddId(e.target.value)}
+            placeholder="Supplier ID (MongoDB _id)"
+            className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]"
+          />
+          <input
+            value={addName}
+            onChange={(e) => setAddName(e.target.value)}
+            placeholder="Supplier name"
+            className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]"
+          />
+          <input
+            value={addLimit}
+            onChange={(e) => setAddLimit(e.target.value)}
+            placeholder="Monthly limit (₹)"
+            type="number"
+            min="1"
+            className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]"
+          />
+          {addError && <p className="text-[11px] text-red-600">{addError}</p>}
+          <div className="flex gap-2">
+            <button
+              onClick={handleAdd}
+              disabled={addMutation.isPending}
+              className="flex-1 rounded-md bg-[#0d9488] py-1.5 text-[11px] font-semibold text-white hover:bg-[#0f766e] disabled:opacity-50"
+            >
+              {addMutation.isPending ? "Saving…" : "Save Budget"}
+            </button>
+            <button
+              onClick={() => { setShowAdd(false); setAddError(""); }}
+              className="rounded-md border border-[#e5e7eb] px-3 py-1.5 text-[11px] text-[#6b7280] hover:bg-[#f3f4f6]"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowAdd(true)}
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#d1d5db] py-2 text-[12px] text-[#6b7280] hover:border-[#0d9488] hover:text-[#0d9488] transition-colors"
+        >
+          <Plus size={12} /> Add supplier budget
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── mode tabs ────────────────────────────────────────────────────────────────
 
 function ModeTabs({ mode, onChange }: { mode: "draft" | "ask"; onChange: (m: "draft" | "ask") => void }) {
@@ -525,7 +888,6 @@ function AskInput({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Suggestion chips */}
       {!result && (
         <div className="flex flex-wrap gap-1.5">
           {SUGGESTIONS.map((s) => (
@@ -541,7 +903,6 @@ function AskInput({
         </div>
       )}
 
-      {/* Input */}
       <div className="flex gap-2">
         <input
           value={question}
@@ -562,7 +923,6 @@ function AskInput({
 
       {error && <p className="text-[11px] text-red-600">{error}</p>}
 
-      {/* Answer */}
       {result && <AnswerBubble result={result} />}
       {result && (
         <button onClick={() => { onResult(null); setQuestion(""); }} className="text-[11px] text-[#9ca3af] hover:text-[#6b7280] text-center transition-colors">
@@ -659,6 +1019,115 @@ function AqiraFAB() {
   );
 }
 
+// ─── home view sections ───────────────────────────────────────────────────────
+
+function AqiraHomeView({ mode, setMode, askResult, setAskResult, firstName }: {
+  mode: "draft" | "ask";
+  setMode: (m: "draft" | "ask") => void;
+  askResult: AskResult | null;
+  setAskResult: (r: AskResult | null) => void;
+  firstName: string;
+}) {
+  const { data: homeData, isLoading: homeLoading } = useQuery<AqiraHomeData>({
+    queryKey: ["aqira-home"],
+    queryFn: () => aqiraService.homeData().then((r) => r.data.data),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const hasReminders = (homeData?.followUpReminders.length ?? 0) > 0;
+  const hasSuggestions = (homeData?.reorderSuggestions.length ?? 0) > 0;
+  const hasHealthAlerts =
+    homeData &&
+    (homeData.healthDigest.overdueCount > 0 ||
+      homeData.healthDigest.draftCount > 0 ||
+      homeData.healthDigest.dueThisWeekCount > 0);
+
+  return (
+    <div className="flex flex-col gap-5 px-4 py-4">
+      {/* Greeting */}
+      <div className="flex items-center gap-2.5 pt-1">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#f0fdfa]">
+          <Sparkles className="h-4 w-4 text-[#0d9488]" strokeWidth={1.5} />
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold text-[#111827]">Hi {firstName}</p>
+          <p className="text-[11px] text-[#6b7280]">How can I help you today?</p>
+        </div>
+      </div>
+
+      {/* Health digest */}
+      {homeLoading ? (
+        <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" />
+      ) : homeData ? (
+        <HealthDigestCard data={homeData.healthDigest} />
+      ) : null}
+
+      {/* Follow-up reminders */}
+      {hasReminders && (
+        <>
+          <div className="border-t border-[#f3f4f6]" />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1.5">
+              <Bell size={12} className="text-red-500" />
+              <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Follow-up Needed</p>
+            </div>
+            {homeData!.followUpReminders.map((r) => (
+              <FollowUpCard key={r.orderId} reminder={r} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Reorder suggestions */}
+      {hasSuggestions && (
+        <>
+          <div className="border-t border-[#f3f4f6]" />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1.5">
+              <RefreshCcw size={12} className="text-amber-500" />
+              <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Reorder Suggestions</p>
+            </div>
+            {homeData!.reorderSuggestions.map((s) => (
+              <ReorderSuggestionCard key={s.productId} suggestion={s} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Budgets */}
+      <>
+        <div className="border-t border-[#f3f4f6]" />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-1.5">
+            <Wallet size={12} className="text-[#0d9488]" />
+            <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Supplier Budgets</p>
+          </div>
+          <BudgetsSection />
+        </div>
+      </>
+
+      {/* Mode tabs + AI tools */}
+      <div className="border-t border-[#f3f4f6]" />
+      <ModeTabs mode={mode} onChange={(m) => { setMode(m); if (m === "ask") setAskResult(null); }} />
+
+      {mode === "draft" ? (
+        <DraftInput />
+      ) : (
+        <AskInput result={askResult} onResult={setAskResult} />
+      )}
+
+      {mode === "ask" && !askResult && !hasHealthAlerts && !hasReminders && !hasSuggestions && (
+        <>
+          <div className="border-t border-[#f3f4f6]" />
+          <p className="text-[11px] text-[#9ca3af] text-center">
+            Open a PO or SO for an instant order summary.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── main panel ──────────────────────────────────────────────────────────────
 
 export function AqiraPanel() {
@@ -715,15 +1184,13 @@ export function AqiraPanel() {
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {isFormPage ? (
-            /* ── Form page view (price alerts + supplier comparison) ── */
+            /* ── Form page view ── */
             <div className="flex flex-col gap-4 px-4 py-4">
               <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Price Alerts</p>
               {formContext ? (
                 <PriceAlertsSection formContext={formContext} />
               ) : (
-                <p className="text-[12px] text-[#9ca3af] text-center py-2">
-                  Add products to get started.
-                </p>
+                <p className="text-[12px] text-[#9ca3af] text-center py-2">Add products to get started.</p>
               )}
 
               <div className="border-t border-[#f3f4f6]" />
@@ -732,9 +1199,15 @@ export function AqiraPanel() {
               {formContext ? (
                 <SupplierComparisonSection formContext={formContext} />
               ) : (
-                <p className="text-[12px] text-[#9ca3af] text-center py-2">
-                  Add products to compare supplier prices.
-                </p>
+                <p className="text-[12px] text-[#9ca3af] text-center py-2">Add products to compare supplier prices.</p>
+              )}
+
+              {formContext?.partnerId && (
+                <>
+                  <div className="border-t border-[#f3f4f6]" />
+                  <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Budget Status</p>
+                  <BudgetWarningSection formContext={formContext} />
+                </>
               )}
 
               <div className="border-t border-[#f3f4f6]" />
@@ -752,38 +1225,13 @@ export function AqiraPanel() {
             </div>
           ) : (
             /* ── Home view ── */
-            <div className="flex flex-col gap-5 px-4 py-4">
-              {/* Greeting */}
-              <div className="flex items-center gap-2.5 pt-1">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#f0fdfa]">
-                  <Sparkles className="h-4 w-4 text-[#0d9488]" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-[13px] font-semibold text-[#111827]">Hi {firstName}</p>
-                  <p className="text-[11px] text-[#6b7280]">How can I help you today?</p>
-                </div>
-              </div>
-
-              {/* Mode tabs */}
-              <ModeTabs mode={mode} onChange={(m) => { setMode(m); if (m === "ask") setAskResult(null); }} />
-
-              {/* Content */}
-              {mode === "draft" ? (
-                <DraftInput />
-              ) : (
-                <AskInput result={askResult} onResult={setAskResult} />
-              )}
-
-              {/* Order summaries hint */}
-              {mode === "ask" && !askResult && (
-                <>
-                  <div className="border-t border-[#f3f4f6]" />
-                  <p className="text-[11px] text-[#9ca3af] text-center">
-                    Open a PO or SO for an instant order summary.
-                  </p>
-                </>
-              )}
-            </div>
+            <AqiraHomeView
+              mode={mode}
+              setMode={setMode}
+              askResult={askResult}
+              setAskResult={setAskResult}
+              firstName={firstName}
+            />
           )}
         </div>
 
