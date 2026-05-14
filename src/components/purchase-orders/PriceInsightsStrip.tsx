@@ -359,8 +359,18 @@ export function PriceInsightsStrip({
     });
   }, [productId, variantId, orderType]);
 
-  // Hide strip conditions
-  if (!enabled || !data?.enabled || !data?.hasData || isError) return null;
+  // Feature disabled in org settings, or not enough context yet — stay silent
+  if (!enabled || !data?.enabled || isError) return null;
+
+  // Feature enabled, product+partner selected, but no price history yet
+  if (!data?.hasData) {
+    return (
+      <div className="w-full flex items-center gap-1.5 px-1 py-1 text-[11px] text-[#9ca3af]">
+        <Sparkles size={10} className="text-[#9ca3af]" />
+        No price history yet for this product with this partner.
+      </div>
+    );
+  }
 
   const last = data.lastFromPartner;
   const r90 = data.rolling90d!;

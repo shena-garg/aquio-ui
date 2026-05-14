@@ -2335,8 +2335,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
                             </td>
                           </tr>
                           {/* Price Insights Strip — desktop */}
-                          <tr>
-                            <td colSpan={7} className="px-2 pb-1">
+                          <tr className="border-b border-[#e5e7eb]">
+                            <td colSpan={7} className="px-2 pt-0 pb-2">
                               <PriceInsightsStrip
                                 productId={row.product?._id}
                                 variantId={row.variant?._id ?? null}
