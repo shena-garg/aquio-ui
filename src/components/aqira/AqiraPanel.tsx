@@ -14,12 +14,14 @@ import {
   Loader2,
   RefreshCcw,
   Bell,
-  Heart,
   Wallet,
   Copy,
   Check,
   Trash2,
   Plus,
+  ChevronRight,
+  ChevronLeft,
+  Heart,
 } from "lucide-react";
 import { useAqira, type AqiraFormContext } from "@/contexts/AqiraContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +42,19 @@ import {
 import { cn } from "@/lib/utils";
 import type { PurchaseOrder } from "@/services/purchase-orders";
 
+// ─── section type ─────────────────────────────────────────────────────────────
+
+type AqiraSection = "health" | "reminders" | "reorders" | "budgets" | "draft" | "ask";
+
+const SECTION_LABELS: Record<AqiraSection, string> = {
+  health: "Order Health",
+  reminders: "Follow-up Needed",
+  reorders: "Reorder Suggestions",
+  budgets: "Supplier Budgets",
+  draft: "Draft Order",
+  ask: "Ask Aqira",
+};
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function toNumber(v: number | { $numberDecimal: string } | undefined): number {
@@ -59,6 +74,10 @@ function fmtAmount(value: number): string {
 function fmtDate(iso: string | undefined): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function fmtPrice(n: number) {
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function buildSummary(order: PurchaseOrder, orderType: "purchase" | "sales"): string {
@@ -235,10 +254,6 @@ function AnswerBubble({ result }: { result: AskResult }) {
 
 // ─── price alerts ─────────────────────────────────────────────────────────────
 
-function fmtPrice(n: number) {
-  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 function pctDiff(entered: number, avg: number) {
   return Math.round(((entered - avg) / avg) * 100);
 }
@@ -264,13 +279,9 @@ function AlertCard({ row }: { row: AlertRowData }) {
           <p className="text-[12px] font-semibold text-amber-800 truncate">{row.productName}</p>
         </div>
         <p className="text-[12px] text-amber-700 leading-relaxed">
-          {fmtPrice(row.enteredPrice)}/unit entered — <span className="font-semibold">+{diff}%</span> above your 90-day avg of {fmtPrice(avg)}.
+          {fmtPrice(row.enteredPrice)}/unit — <span className="font-semibold">+{diff}%</span> above your 90-day avg of {fmtPrice(avg)}.
         </p>
-        {last && (
-          <p className="text-[11px] text-amber-600 mt-0.5">
-            Last ordered at {fmtPrice(last.unitPrice)}/unit ({last.daysAgo}d ago)
-          </p>
-        )}
+        {last && <p className="text-[11px] text-amber-600 mt-0.5">Last ordered at {fmtPrice(last.unitPrice)}/unit ({last.daysAgo}d ago)</p>}
         <p className="text-[10px] text-amber-500 mt-0.5">Based on {samples} order{samples !== 1 ? "s" : ""} · 90 days</p>
       </div>
     );
@@ -285,7 +296,7 @@ function AlertCard({ row }: { row: AlertRowData }) {
           <p className="text-[12px] font-semibold text-emerald-800 truncate">{row.productName}</p>
         </div>
         <p className="text-[12px] text-emerald-700 leading-relaxed">
-          {fmtPrice(row.enteredPrice)}/unit — <span className="font-semibold">{diff}% below</span> your 90-day avg of {fmtPrice(avg)}. Looks like a good deal.
+          {fmtPrice(row.enteredPrice)}/unit — <span className="font-semibold">{diff}% below</span> your 90-day avg of {fmtPrice(avg)}. Good deal.
         </p>
         <p className="text-[10px] text-emerald-500 mt-0.5">Based on {samples} order{samples !== 1 ? "s" : ""} · 90 days</p>
       </div>
@@ -299,9 +310,7 @@ function AlertCard({ row }: { row: AlertRowData }) {
           <CheckCircle2 size={12} className="text-[#0d9488] flex-shrink-0 mt-0.5" />
           <p className="text-[12px] font-semibold text-[#111827] truncate">{row.productName}</p>
         </div>
-        <p className="text-[12px] text-[#374151]">
-          {fmtPrice(row.enteredPrice)}/unit — matches your last order price.
-        </p>
+        <p className="text-[12px] text-[#374151]">{fmtPrice(row.enteredPrice)}/unit — matches your last order price.</p>
       </div>
     );
   }
@@ -313,12 +322,8 @@ function AlertCard({ row }: { row: AlertRowData }) {
           <Sparkles size={12} className="text-blue-400 flex-shrink-0 mt-0.5" />
           <p className="text-[12px] font-semibold text-blue-800 truncate">{row.productName}</p>
         </div>
-        <p className="text-[12px] text-blue-700">
-          No previous orders of this product with this supplier. Can&apos;t benchmark price.
-        </p>
-        {avg > 0 && (
-          <p className="text-[11px] text-blue-600 mt-0.5">Market avg (all suppliers): {fmtPrice(avg)}/unit</p>
-        )}
+        <p className="text-[12px] text-blue-700">No previous orders with this supplier. Can&apos;t benchmark price.</p>
+        {avg > 0 && <p className="text-[11px] text-blue-600 mt-0.5">Market avg (all suppliers): {fmtPrice(avg)}/unit</p>}
       </div>
     );
   }
@@ -330,22 +335,14 @@ function PriceAlertsSection({ formContext }: { formContext: AqiraFormContext }) 
   const qc = useQueryClient();
 
   if (!formContext.partnerId) {
-    return (
-      <p className="text-[12px] text-[#9ca3af] text-center py-2">
-        Select a supplier to see price alerts.
-      </p>
-    );
+    return <p className="text-[12px] text-[#9ca3af] text-center py-2">Select a supplier to see price alerts.</p>;
   }
 
   const alertRows: AlertRowData[] = formContext.rows
     .filter((row) => row.enteredPrice > 0 && row.productId)
     .flatMap((row) => {
       const data = qc.getQueryData<PriceInsightsLookup>([
-        "price-insights",
-        row.productId,
-        row.variantId ?? null,
-        formContext.partnerId,
-        formContext.orderType,
+        "price-insights", row.productId, row.variantId ?? null, formContext.partnerId, formContext.orderType,
       ]);
       if (!data?.enabled || !data?.hasData) return [];
       const signal = computePriceSignal(row.enteredPrice, data);
@@ -356,11 +353,7 @@ function PriceAlertsSection({ formContext }: { formContext: AqiraFormContext }) 
   const rowsWithPrice = formContext.rows.filter((r) => r.enteredPrice > 0);
 
   if (rowsWithPrice.length === 0) {
-    return (
-      <p className="text-[12px] text-[#9ca3af] text-center py-2">
-        Enter a price for a product to see price insights.
-      </p>
-    );
+    return <p className="text-[12px] text-[#9ca3af] text-center py-2">Enter a price to see insights.</p>;
   }
 
   if (alertRows.length === 0) {
@@ -372,40 +365,24 @@ function PriceAlertsSection({ formContext }: { formContext: AqiraFormContext }) 
     );
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      {alertRows.map((row, i) => <AlertCard key={i} row={row} />)}
-    </div>
-  );
+  return <div className="flex flex-col gap-2">{alertRows.map((row, i) => <AlertCard key={i} row={row} />)}</div>;
 }
 
 // ─── supplier comparison ──────────────────────────────────────────────────────
 
 function SupplierComparisonCard({
-  productId,
-  variantId,
-  productName,
-  partnerId,
-  orderType,
+  productId, variantId, productName, partnerId, orderType,
 }: {
-  productId: string;
-  variantId: string | null;
-  productName: string;
-  partnerId: string | null;
-  orderType: "purchase" | "sales";
+  productId: string; variantId: string | null; productName: string;
+  partnerId: string | null; orderType: "purchase" | "sales";
 }) {
   const { data, isLoading } = useQuery<SupplierComparisonResult>({
     queryKey: ["supplier-comparison", productId, variantId ?? null, orderType],
-    queryFn: () =>
-      priceInsightsService
-        .supplierComparison({ productId, variantId, orderType })
-        .then((r) => r.data),
+    queryFn: () => priceInsightsService.supplierComparison({ productId, variantId, orderType }).then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   });
 
-  if (isLoading) {
-    return <div className="h-14 rounded-lg bg-[#f3f4f6] animate-pulse" />;
-  }
+  if (isLoading) return <div className="h-14 rounded-lg bg-[#f3f4f6] animate-pulse" />;
   if (!data?.enabled || !data?.hasData) return null;
 
   const sorted = [...data.suppliers].sort((a, b) => a.lastUnitPrice - b.lastUnitPrice);
@@ -415,40 +392,22 @@ function SupplierComparisonCard({
     <div className="rounded-lg border border-[#e5e7eb] overflow-hidden">
       <div className="flex items-center justify-between px-3 py-2 bg-[#f9fafb] border-b border-[#e5e7eb]">
         <p className="text-[12px] font-semibold text-[#111827] truncate">{productName}</p>
-        {data.avgUnitPrice != null && (
-          <span className="text-[10px] text-[#6b7280] flex-shrink-0 ml-2">
-            avg {fmtPrice(data.avgUnitPrice)}
-          </span>
-        )}
+        {data.avgUnitPrice != null && <span className="text-[10px] text-[#6b7280] flex-shrink-0 ml-2">avg {fmtPrice(data.avgUnitPrice)}</span>}
       </div>
       <div className="flex flex-col divide-y divide-[#f3f4f6]">
         {sorted.map((s) => {
           const isSelected = !!partnerId && s.partnerId === partnerId;
           const isCheapest = s.lastUnitPrice === cheapest && sorted.length > 1;
           return (
-            <div
-              key={s.partnerId}
-              className={cn(
-                "flex items-center justify-between px-3 py-2 gap-2",
-                isSelected ? "bg-[#f0fdfa] border-l-[3px] border-l-[#0d9488]" : "bg-white border-l-[3px] border-l-transparent"
-              )}
-            >
+            <div key={s.partnerId} className={cn("flex items-center justify-between px-3 py-2 gap-2", isSelected ? "bg-[#f0fdfa] border-l-[3px] border-l-[#0d9488]" : "bg-white border-l-[3px] border-l-transparent")}>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className={cn("text-[12px] truncate", isSelected ? "font-semibold text-[#0d9488]" : "text-[#374151]")}>
-                    {s.partnerName}
-                  </p>
-                  {isCheapest && (
-                    <span className="flex-shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
-                      lowest
-                    </span>
-                  )}
+                  <p className={cn("text-[12px] truncate", isSelected ? "font-semibold text-[#0d9488]" : "text-[#374151]")}>{s.partnerName}</p>
+                  {isCheapest && <span className="flex-shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">lowest</span>}
                 </div>
                 <p className="text-[10px] text-[#9ca3af]">{s.daysAgo}d ago · {s.lastOrderNumber}</p>
               </div>
-              <span className={cn("text-[12px] font-semibold flex-shrink-0", isSelected ? "text-[#0d9488]" : "text-[#111827]")}>
-                {fmtPrice(s.lastUnitPrice)}
-              </span>
+              <span className={cn("text-[12px] font-semibold flex-shrink-0", isSelected ? "text-[#0d9488]" : "text-[#111827]")}>{fmtPrice(s.lastUnitPrice)}</span>
             </div>
           );
         })}
@@ -459,24 +418,16 @@ function SupplierComparisonCard({
 
 function SupplierComparisonSection({ formContext }: { formContext: AqiraFormContext }) {
   const rowsWithProducts = formContext.rows.filter((r) => !!r.productId);
-
   if (rowsWithProducts.length === 0) {
-    return (
-      <p className="text-[12px] text-[#9ca3af] text-center py-2">
-        Select a product to compare supplier prices.
-      </p>
-    );
+    return <p className="text-[12px] text-[#9ca3af] text-center py-2">Select a product to compare supplier prices.</p>;
   }
-
   return (
     <div className="flex flex-col gap-2">
       {rowsWithProducts.map((row) => (
         <SupplierComparisonCard
           key={row.productId + (row.variantId ?? "")}
-          productId={row.productId}
-          variantId={row.variantId}
-          productName={row.productName}
-          partnerId={formContext.partnerId}
+          productId={row.productId} variantId={row.variantId}
+          productName={row.productName} partnerId={formContext.partnerId}
           orderType={formContext.orderType}
         />
       ))}
@@ -489,29 +440,17 @@ function SupplierComparisonSection({ formContext }: { formContext: AqiraFormCont
 function BudgetWarningSection({ formContext }: { formContext: AqiraFormContext }) {
   const { data, isLoading } = useQuery<BudgetStatusResult>({
     queryKey: ["budget-status", formContext.partnerId, formContext.orderType],
-    queryFn: () =>
-      aqiraService
-        .getBudgetStatus(formContext.partnerId!, formContext.orderType)
-        .then((r) => r.data.data),
+    queryFn: () => aqiraService.getBudgetStatus(formContext.partnerId!, formContext.orderType).then((r) => r.data.data),
     enabled: !!formContext.partnerId,
     staleTime: 60 * 1000,
   });
 
-  if (!formContext.partnerId) return null;
-  if (isLoading) return <div className="h-12 rounded-lg bg-[#f3f4f6] animate-pulse" />;
-  if (!data?.hasBudget) return null;
+  if (!formContext.partnerId || isLoading || !data?.hasBudget) return null;
 
   const { monthlyLimit, spent, pct, isOver, currency } = data;
 
   return (
-    <div className={cn(
-      "rounded-lg border px-3 py-2.5",
-      isOver
-        ? "border-red-200 bg-red-50"
-        : pct >= 80
-        ? "border-amber-200 bg-amber-50"
-        : "border-[#e5e7eb] bg-[#f9fafb]"
-    )}>
+    <div className={cn("rounded-lg border px-3 py-2.5", isOver ? "border-red-200 bg-red-50" : pct >= 80 ? "border-amber-200 bg-amber-50" : "border-[#e5e7eb] bg-[#f9fafb]")}>
       <div className="flex items-center gap-1.5 mb-1.5">
         <Wallet size={12} className={isOver ? "text-red-500" : pct >= 80 ? "text-amber-500" : "text-[#6b7280]"} />
         <p className={cn("text-[12px] font-semibold", isOver ? "text-red-800" : pct >= 80 ? "text-amber-800" : "text-[#374151]")}>
@@ -519,78 +458,44 @@ function BudgetWarningSection({ formContext }: { formContext: AqiraFormContext }
         </p>
       </div>
       <div className="h-1.5 w-full rounded-full bg-white/70 mb-1.5">
-        <div
-          className={cn("h-1.5 rounded-full transition-all", isOver ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-[#0d9488]")}
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
+        <div className={cn("h-1.5 rounded-full", isOver ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-[#0d9488]")} style={{ width: `${Math.min(pct, 100)}%` }} />
       </div>
       <div className="flex items-center justify-between">
         <span className={cn("text-[11px]", isOver ? "text-red-700" : pct >= 80 ? "text-amber-700" : "text-[#6b7280]")}>
           {fmtAmount(spent)} spent of {fmtAmount(monthlyLimit!)} ({currency})
         </span>
-        <span className={cn("text-[11px] font-semibold", isOver ? "text-red-700" : pct >= 80 ? "text-amber-700" : "text-[#0d9488]")}>
-          {pct}%
-        </span>
+        <span className={cn("text-[11px] font-semibold", isOver ? "text-red-700" : pct >= 80 ? "text-amber-700" : "text-[#0d9488]")}>{pct}%</span>
       </div>
     </div>
   );
 }
 
-// ─── health digest ────────────────────────────────────────────────────────────
+// ─── health digest section ────────────────────────────────────────────────────
 
-function HealthDigestCard({ data }: { data: AqiraHomeData["healthDigest"] }) {
+function HealthSection({ data }: { data: AqiraHomeData["healthDigest"] }) {
   const router = useRouter();
   const { close } = useAqira();
 
   const items = [
-    {
-      label: "Overdue",
-      count: data.overdueCount,
-      icon: <AlertTriangle size={13} />,
-      color: data.overdueCount > 0 ? "text-red-600 bg-red-50" : "text-[#6b7280] bg-[#f3f4f6]",
-      onClick: () => { close(); router.push("/purchase-orders?status=confirmed"); },
-    },
-    {
-      label: "Drafts",
-      count: data.draftCount,
-      icon: <Clock size={13} />,
-      color: data.draftCount > 0 ? "text-amber-600 bg-amber-50" : "text-[#6b7280] bg-[#f3f4f6]",
-      onClick: () => { close(); router.push("/purchase-orders?status=draft"); },
-    },
-    {
-      label: "Due this week",
-      count: data.dueThisWeekCount,
-      icon: <Bell size={13} />,
-      color: data.dueThisWeekCount > 0 ? "text-blue-600 bg-blue-50" : "text-[#6b7280] bg-[#f3f4f6]",
-      onClick: () => { close(); router.push("/purchase-orders"); },
-    },
+    { label: "Overdue", count: data.overdueCount, icon: <AlertTriangle size={13} />, color: data.overdueCount > 0 ? "text-red-600 bg-red-50" : "text-[#6b7280] bg-[#f3f4f6]", onClick: () => { close(); router.push("/purchase-orders?status=confirmed"); } },
+    { label: "Drafts", count: data.draftCount, icon: <Clock size={13} />, color: data.draftCount > 0 ? "text-amber-600 bg-amber-50" : "text-[#6b7280] bg-[#f3f4f6]", onClick: () => { close(); router.push("/purchase-orders?status=draft"); } },
+    { label: "Due this week", count: data.dueThisWeekCount, icon: <Bell size={13} />, color: data.dueThisWeekCount > 0 ? "text-blue-600 bg-blue-50" : "text-[#6b7280] bg-[#f3f4f6]", onClick: () => { close(); router.push("/purchase-orders"); } },
   ];
 
   return (
-    <div className="rounded-lg border border-[#e5e7eb] overflow-hidden">
-      <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase px-3 py-2 border-b border-[#f3f4f6] bg-[#f9fafb]">
-        Order Health
-      </p>
-      <div className="grid grid-cols-3 divide-x divide-[#f3f4f6]">
-        {items.map((item) => (
-          <button
-            key={item.label}
-            onClick={item.onClick}
-            className="flex flex-col items-center gap-1 px-2 py-3 hover:bg-[#f9fafb] transition-colors"
-          >
-            <span className={cn("flex h-7 w-7 items-center justify-center rounded-full", item.color)}>
-              {item.icon}
-            </span>
-            <span className="text-[15px] font-bold text-[#111827]">{item.count}</span>
-            <span className="text-[10px] text-[#6b7280] text-center leading-tight">{item.label}</span>
-          </button>
-        ))}
-      </div>
+    <div className="grid grid-cols-3 gap-3">
+      {items.map((item) => (
+        <button key={item.label} onClick={item.onClick} className="flex flex-col items-center gap-1.5 rounded-lg border border-[#e5e7eb] p-3 hover:bg-[#f9fafb] transition-colors">
+          <span className={cn("flex h-8 w-8 items-center justify-center rounded-full", item.color)}>{item.icon}</span>
+          <span className="text-[18px] font-bold text-[#111827]">{item.count}</span>
+          <span className="text-[10px] text-[#6b7280] text-center leading-tight">{item.label}</span>
+        </button>
+      ))}
     </div>
   );
 }
 
-// ─── follow-up reminders ──────────────────────────────────────────────────────
+// ─── follow-up section ────────────────────────────────────────────────────────
 
 function FollowUpCard({ reminder }: { reminder: AqiraHomeData["followUpReminders"][0] }) {
   const router = useRouter();
@@ -600,10 +505,7 @@ function FollowUpCard({ reminder }: { reminder: AqiraHomeData["followUpReminders
   const message = `Hi, I wanted to follow up on Purchase Order ${reminder.poNumber} from ${fmtDate(reminder.deliveryDate)}. It was due ${reminder.daysOverdue} day${reminder.daysOverdue !== 1 ? "s" : ""} ago and we haven't received the goods yet. Could you please provide an update on the delivery status? Thank you.`;
 
   function handleCopy() {
-    navigator.clipboard.writeText(message).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(message).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   }
 
   return (
@@ -613,33 +515,24 @@ function FollowUpCard({ reminder }: { reminder: AqiraHomeData["followUpReminders
           <p className="text-[12px] font-semibold text-red-800 truncate">{reminder.poNumber}</p>
           <p className="text-[11px] text-red-600 truncate">{reminder.supplierName}</p>
         </div>
-        <span className="flex-shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
-          {reminder.daysOverdue}d overdue
-        </span>
+        <span className="flex-shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">{reminder.daysOverdue}d overdue</span>
       </div>
       <p className="text-[11px] text-red-600 mb-2">Due: {fmtDate(reminder.deliveryDate)} · No goods received</p>
       <div className="flex gap-1.5">
-        <button
-          onClick={() => { close(); router.push(`/purchase-orders/${reminder.orderId}`); }}
-          className="flex-1 flex items-center justify-center gap-1 rounded-md bg-white border border-red-200 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-100 transition-colors"
-        >
+        <button onClick={() => { close(); router.push(`/purchase-orders/${reminder.orderId}`); }} className="flex-1 flex items-center justify-center gap-1 rounded-md bg-white border border-red-200 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-100 transition-colors">
           <ArrowRight size={10} /> View PO
         </button>
-        <button
-          onClick={handleCopy}
-          className="flex items-center justify-center gap-1 rounded-md bg-white border border-red-200 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-100 transition-colors"
-        >
-          {copied ? <Check size={10} /> : <Copy size={10} />}
-          {copied ? "Copied" : "Copy message"}
+        <button onClick={handleCopy} className="flex items-center justify-center gap-1 rounded-md bg-white border border-red-200 px-2 py-1 text-[11px] font-medium text-red-700 hover:bg-red-100 transition-colors">
+          {copied ? <Check size={10} /> : <Copy size={10} />} {copied ? "Copied" : "Copy message"}
         </button>
       </div>
     </div>
   );
 }
 
-// ─── reorder suggestions ──────────────────────────────────────────────────────
+// ─── reorder section ──────────────────────────────────────────────────────────
 
-function ReorderSuggestionCard({ suggestion }: { suggestion: AqiraHomeData["reorderSuggestions"][0] }) {
+function ReorderCard({ suggestion }: { suggestion: AqiraHomeData["reorderSuggestions"][0] }) {
   const { setPendingDraft, close } = useAqira();
   const router = useRouter();
 
@@ -648,21 +541,8 @@ function ReorderSuggestionCard({ suggestion }: { suggestion: AqiraHomeData["reor
       orderType: "purchase",
       supplierId: suggestion.lastSupplierId || null,
       supplierName: suggestion.lastSupplierName || null,
-      products: [
-        {
-          productId: suggestion.productId,
-          productName: suggestion.productName,
-          variantId: null,
-          variantName: "",
-          quantity: suggestion.lastOrderedQty,
-          price: null,
-          uom: suggestion.lastUom,
-          gst: 0,
-        },
-      ],
-      deliveryDate: null,
-      paymentTerms: null,
-      notes: null,
+      products: [{ productId: suggestion.productId, productName: suggestion.productName, variantId: null, variantName: "", quantity: suggestion.lastOrderedQty, price: null, uom: suggestion.lastUom, gst: 0 }],
+      deliveryDate: null, paymentTerms: null, notes: null,
     });
     close();
     router.push("/purchase-orders/create");
@@ -672,25 +552,18 @@ function ReorderSuggestionCard({ suggestion }: { suggestion: AqiraHomeData["reor
     <div className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2.5">
       <div className="flex items-start justify-between gap-2 mb-1">
         <p className="text-[12px] font-semibold text-[#111827] truncate flex-1">{suggestion.productName}</p>
-        <span className="flex-shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-          {suggestion.daysOverdue}d overdue
-        </span>
+        <span className="flex-shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">{suggestion.daysOverdue}d overdue</span>
       </div>
-      <p className="text-[11px] text-[#6b7280] mb-1">
-        Avg every {suggestion.avgIntervalDays}d · Last: {suggestion.lastSupplierName}
-      </p>
+      <p className="text-[11px] text-[#6b7280] mb-1">Avg every {suggestion.avgIntervalDays}d · Last: {suggestion.lastSupplierName}</p>
       <p className="text-[11px] text-[#9ca3af] mb-2">{suggestion.daysSinceLastOrder}d since last order</p>
-      <button
-        onClick={handleDraftReorder}
-        className="w-full flex items-center justify-center gap-1.5 rounded-md bg-[#0d9488] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#0f766e] transition-colors"
-      >
+      <button onClick={handleDraftReorder} className="w-full flex items-center justify-center gap-1.5 rounded-md bg-[#0d9488] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#0f766e] transition-colors">
         <RefreshCcw size={10} /> Draft Reorder
       </button>
     </div>
   );
 }
 
-// ─── budgets manager ──────────────────────────────────────────────────────────
+// ─── budgets section ──────────────────────────────────────────────────────────
 
 function BudgetsSection() {
   const qc = useQueryClient();
@@ -713,14 +586,7 @@ function BudgetsSection() {
 
   const addMutation = useMutation({
     mutationFn: () => aqiraService.setBudget(addId.trim(), addName.trim(), parseFloat(addLimit)),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["aqira-budgets"] });
-      setShowAdd(false);
-      setAddId("");
-      setAddName("");
-      setAddLimit("");
-      setAddError("");
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["aqira-budgets"] }); setShowAdd(false); setAddId(""); setAddName(""); setAddLimit(""); setAddError(""); },
   });
 
   function handleAdd() {
@@ -736,90 +602,41 @@ function BudgetsSection() {
   return (
     <div className="flex flex-col gap-2">
       {isLoading && <div className="h-12 rounded-lg bg-[#f3f4f6] animate-pulse" />}
-
       {!isLoading && budgets.length === 0 && !showAdd && (
-        <p className="text-[12px] text-[#9ca3af] text-center py-1">
-          No supplier budgets set. Add one to track monthly spend.
-        </p>
+        <p className="text-[12px] text-[#9ca3af] text-center py-2">No supplier budgets set yet.</p>
       )}
-
       {budgets.map((b) => (
         <div key={b.entityId} className="rounded-lg border border-[#e5e7eb] px-3 py-2.5">
           <div className="flex items-center justify-between gap-2 mb-1.5">
-            <p className={cn("text-[12px] font-semibold truncate", b.isOver ? "text-red-700" : "text-[#111827]")}>
-              {b.entityName}
-            </p>
+            <p className={cn("text-[12px] font-semibold truncate", b.isOver ? "text-red-700" : "text-[#111827]")}>{b.entityName}</p>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {b.isOver && <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">Over</span>}
-              <button
-                onClick={() => deleteMutation.mutate(b.entityId)}
-                disabled={deleteMutation.isPending}
-                className="text-[#9ca3af] hover:text-red-500 transition-colors disabled:opacity-50"
-              >
-                <Trash2 size={12} />
-              </button>
+              <button onClick={() => deleteMutation.mutate(b.entityId)} disabled={deleteMutation.isPending} className="text-[#9ca3af] hover:text-red-500 transition-colors disabled:opacity-50"><Trash2 size={12} /></button>
             </div>
           </div>
           <div className="h-1.5 w-full rounded-full bg-[#f3f4f6] mb-1.5">
-            <div
-              className={cn("h-1.5 rounded-full", b.isOver ? "bg-red-500" : b.pct >= 80 ? "bg-amber-500" : "bg-[#0d9488]")}
-              style={{ width: `${Math.min(b.pct, 100)}%` }}
-            />
+            <div className={cn("h-1.5 rounded-full", b.isOver ? "bg-red-500" : b.pct >= 80 ? "bg-amber-500" : "bg-[#0d9488]")} style={{ width: `${Math.min(b.pct, 100)}%` }} />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-[#6b7280]">{fmtAmount(b.spent)} / {fmtAmount(b.monthlyLimit)}</span>
-            <span className={cn("text-[11px] font-semibold", b.isOver ? "text-red-600" : b.pct >= 80 ? "text-amber-600" : "text-[#0d9488]")}>
-              {b.pct}%
-            </span>
+            <span className={cn("text-[11px] font-semibold", b.isOver ? "text-red-600" : b.pct >= 80 ? "text-amber-600" : "text-[#0d9488]")}>{b.pct}%</span>
           </div>
         </div>
       ))}
-
       {showAdd ? (
         <div className="rounded-lg border border-[#e5e7eb] px-3 py-3 flex flex-col gap-2">
           <p className="text-[11px] font-semibold text-[#374151]">Add supplier budget</p>
-          <input
-            value={addId}
-            onChange={(e) => setAddId(e.target.value)}
-            placeholder="Supplier ID (MongoDB _id)"
-            className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]"
-          />
-          <input
-            value={addName}
-            onChange={(e) => setAddName(e.target.value)}
-            placeholder="Supplier name"
-            className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]"
-          />
-          <input
-            value={addLimit}
-            onChange={(e) => setAddLimit(e.target.value)}
-            placeholder="Monthly limit (₹)"
-            type="number"
-            min="1"
-            className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]"
-          />
+          <input value={addId} onChange={(e) => setAddId(e.target.value)} placeholder="Supplier ID (MongoDB _id)" className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]" />
+          <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Supplier name" className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]" />
+          <input value={addLimit} onChange={(e) => setAddLimit(e.target.value)} placeholder="Monthly limit (₹)" type="number" min="1" className="rounded border border-[#e5e7eb] px-2 py-1.5 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488]" />
           {addError && <p className="text-[11px] text-red-600">{addError}</p>}
           <div className="flex gap-2">
-            <button
-              onClick={handleAdd}
-              disabled={addMutation.isPending}
-              className="flex-1 rounded-md bg-[#0d9488] py-1.5 text-[11px] font-semibold text-white hover:bg-[#0f766e] disabled:opacity-50"
-            >
-              {addMutation.isPending ? "Saving…" : "Save Budget"}
-            </button>
-            <button
-              onClick={() => { setShowAdd(false); setAddError(""); }}
-              className="rounded-md border border-[#e5e7eb] px-3 py-1.5 text-[11px] text-[#6b7280] hover:bg-[#f3f4f6]"
-            >
-              Cancel
-            </button>
+            <button onClick={handleAdd} disabled={addMutation.isPending} className="flex-1 rounded-md bg-[#0d9488] py-1.5 text-[11px] font-semibold text-white hover:bg-[#0f766e] disabled:opacity-50">{addMutation.isPending ? "Saving…" : "Save Budget"}</button>
+            <button onClick={() => { setShowAdd(false); setAddError(""); }} className="rounded-md border border-[#e5e7eb] px-3 py-1.5 text-[11px] text-[#6b7280] hover:bg-[#f3f4f6]">Cancel</button>
           </div>
         </div>
       ) : (
-        <button
-          onClick={() => setShowAdd(true)}
-          className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#d1d5db] py-2 text-[12px] text-[#6b7280] hover:border-[#0d9488] hover:text-[#0d9488] transition-colors"
-        >
+        <button onClick={() => setShowAdd(true)} className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#d1d5db] py-2 text-[12px] text-[#6b7280] hover:border-[#0d9488] hover:text-[#0d9488] transition-colors">
           <Plus size={12} /> Add supplier budget
         </button>
       )}
@@ -827,29 +644,7 @@ function BudgetsSection() {
   );
 }
 
-// ─── mode tabs ────────────────────────────────────────────────────────────────
-
-function ModeTabs({ mode, onChange }: { mode: "draft" | "ask"; onChange: (m: "draft" | "ask") => void }) {
-  return (
-    <div className="flex rounded-lg border border-[#e5e7eb] overflow-hidden">
-      {(["draft", "ask"] as const).map((m) => (
-        <button
-          key={m}
-          onClick={() => onChange(m)}
-          className={cn(
-            "flex-1 py-1.5 text-[12px] font-medium transition-colors",
-            m === "ask" && "border-l border-[#e5e7eb]",
-            mode === m ? "bg-[#0d9488] text-white" : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
-          )}
-        >
-          {m === "draft" ? "Draft Order" : "Ask Aqira"}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ─── draft input ──────────────────────────────────────────────────────────────
+// ─── ask input ────────────────────────────────────────────────────────────────
 
 const SUGGESTIONS = [
   "Total spend this month",
@@ -859,13 +654,7 @@ const SUGGESTIONS = [
   "Orders by status",
 ];
 
-function AskInput({
-  result,
-  onResult,
-}: {
-  result: AskResult | null;
-  onResult: (r: AskResult | null) => void;
-}) {
+function AskInput({ result, onResult }: { result: AskResult | null; onResult: (r: AskResult | null) => void }) {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -891,53 +680,33 @@ function AskInput({
       {!result && (
         <div className="flex flex-wrap gap-1.5">
           {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              onClick={() => { setQuestion(s); submit(s); }}
-              disabled={loading}
-              className="rounded-full border border-[#e5e7eb] bg-white px-2.5 py-1 text-[11px] text-[#374151] hover:bg-[#f0fdfa] hover:border-[#0d9488] hover:text-[#0d9488] transition-colors disabled:opacity-50"
-            >
-              {s}
-            </button>
+            <button key={s} onClick={() => { setQuestion(s); submit(s); }} disabled={loading} className="rounded-full border border-[#e5e7eb] bg-white px-2.5 py-1 text-[11px] text-[#374151] hover:bg-[#f0fdfa] hover:border-[#0d9488] hover:text-[#0d9488] transition-colors disabled:opacity-50">{s}</button>
           ))}
         </div>
       )}
-
       <div className="flex gap-2">
-        <input
-          value={question}
-          onChange={(e) => { setQuestion(e.target.value); setError(""); }}
-          onKeyDown={(e) => { if (e.key === "Enter") submit(question); }}
-          placeholder="Ask anything about your orders…"
-          disabled={loading}
-          className="flex-1 rounded-lg border border-[#e5e7eb] px-3 py-2 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488] transition-colors disabled:opacity-50"
-        />
-        <button
-          onClick={() => submit(question)}
-          disabled={loading || !question.trim()}
-          className="flex-shrink-0 flex items-center justify-center rounded-lg bg-[#0d9488] px-3 py-2 text-white transition-colors hover:bg-[#0f766e] disabled:opacity-40 disabled:cursor-not-allowed"
-        >
+        <input value={question} onChange={(e) => { setQuestion(e.target.value); setError(""); }} onKeyDown={(e) => { if (e.key === "Enter") submit(question); }} placeholder="Ask anything about your orders…" disabled={loading} className="flex-1 rounded-lg border border-[#e5e7eb] px-3 py-2 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488] transition-colors disabled:opacity-50" />
+        <button onClick={() => submit(question)} disabled={loading || !question.trim()} className="flex-shrink-0 flex items-center justify-center rounded-lg bg-[#0d9488] px-3 py-2 text-white hover:bg-[#0f766e] disabled:opacity-40 disabled:cursor-not-allowed">
           {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
         </button>
       </div>
-
       {error && <p className="text-[11px] text-red-600">{error}</p>}
-
       {result && <AnswerBubble result={result} />}
-      {result && (
-        <button onClick={() => { onResult(null); setQuestion(""); }} className="text-[11px] text-[#9ca3af] hover:text-[#6b7280] text-center transition-colors">
-          Ask another question
-        </button>
-      )}
+      {result && <button onClick={() => { onResult(null); setQuestion(""); }} className="text-[11px] text-[#9ca3af] hover:text-[#6b7280] text-center transition-colors">Ask another question</button>}
     </div>
   );
 }
 
-function DraftInput() {
+// ─── draft input ──────────────────────────────────────────────────────────────
+
+function DraftInput({
+  prompt, setPrompt, orderType, setOrderType,
+}: {
+  prompt: string; setPrompt: (v: string) => void;
+  orderType: "purchase" | "sales"; setOrderType: (v: "purchase" | "sales") => void;
+}) {
   const router = useRouter();
   const { setPendingDraft, close } = useAqira();
-  const [orderType, setOrderType] = useState<"purchase" | "sales">("purchase");
-  const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -961,38 +730,14 @@ function DraftInput() {
     <div className="flex flex-col gap-3">
       <div className="flex rounded-lg border border-[#e5e7eb] overflow-hidden">
         {(["purchase", "sales"] as const).map((t, i) => (
-          <button
-            key={t}
-            onClick={() => setOrderType(t)}
-            className={cn(
-              "flex-1 py-1.5 text-[12px] font-medium transition-colors",
-              i > 0 && "border-l border-[#e5e7eb]",
-              orderType === t ? "bg-[#0d9488] text-white" : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]"
-            )}
-          >
+          <button key={t} onClick={() => setOrderType(t)} className={cn("flex-1 py-1.5 text-[12px] font-medium transition-colors", i > 0 && "border-l border-[#e5e7eb]", orderType === t ? "bg-[#0d9488] text-white" : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]")}>
             {t === "purchase" ? "Purchase Order" : "Sales Order"}
           </button>
         ))}
       </div>
-      <textarea
-        value={prompt}
-        onChange={(e) => { setPrompt(e.target.value); setError(""); }}
-        onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleDraft(); }}
-        placeholder={
-          orderType === "purchase"
-            ? "e.g. 300 Aquaguard filters from AquaTech, delivery by June 30, Net 30"
-            : "e.g. ship 200 units of Widget A to Acme Corp by May 20"
-        }
-        rows={3}
-        disabled={loading}
-        className="w-full resize-none rounded-lg border border-[#e5e7eb] px-3 py-2 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488] transition-colors disabled:opacity-50"
-      />
+      <textarea value={prompt} onChange={(e) => { setPrompt(e.target.value); setError(""); }} onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleDraft(); }} placeholder={orderType === "purchase" ? "e.g. 300 filters from AquaTech, delivery by June 30, Net 30" : "e.g. ship 200 units of Widget A to Acme Corp by May 20"} rows={3} disabled={loading} className="w-full resize-none rounded-lg border border-[#e5e7eb] px-3 py-2 text-[12px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#0d9488] transition-colors disabled:opacity-50" />
       {error && <p className="text-[11px] text-red-600">{error}</p>}
-      <button
-        onClick={handleDraft}
-        disabled={loading || !prompt.trim()}
-        className="flex items-center justify-center gap-1.5 rounded-lg bg-[#0d9488] px-4 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-[#0f766e] disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      <button onClick={handleDraft} disabled={loading || !prompt.trim()} className="flex items-center justify-center gap-1.5 rounded-lg bg-[#0d9488] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#0f766e] disabled:opacity-50 disabled:cursor-not-allowed">
         {loading ? <><Loader2 size={13} className="animate-spin" /> Drafting…</> : <><Sparkles size={13} /> Draft Order <ArrowRight size={13} /></>}
       </button>
       <p className="text-[10px] text-[#9ca3af] text-center">⌘↵ to submit</p>
@@ -1005,125 +750,140 @@ function DraftInput() {
 function AqiraFAB() {
   const { isOpen, toggle } = useAqira();
   return (
-    <button
-      onClick={toggle}
-      aria-label={isOpen ? "Close Aqira" : "Open Aqira"}
-      className={cn(
-        "fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200",
-        "hover:scale-105 active:scale-95 lg:hidden",
-        isOpen ? "bg-[#0f766e]" : "bg-[#0d9488] hover:bg-[#0f766e]"
-      )}
-    >
+    <button onClick={toggle} aria-label={isOpen ? "Close Aqira" : "Open Aqira"} className={cn("fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 lg:hidden", isOpen ? "bg-[#0f766e]" : "bg-[#0d9488] hover:bg-[#0f766e]")}>
       {isOpen ? <X className="h-5 w-5 text-white" strokeWidth={2} /> : <Sparkles className="h-5 w-5 text-white" strokeWidth={1.75} />}
     </button>
   );
 }
 
-// ─── home view sections ───────────────────────────────────────────────────────
+// ─── section back header ──────────────────────────────────────────────────────
 
-function AqiraHomeView({ mode, setMode, askResult, setAskResult, firstName }: {
-  mode: "draft" | "ask";
-  setMode: (m: "draft" | "ask") => void;
-  askResult: AskResult | null;
-  setAskResult: (r: AskResult | null) => void;
+function SectionBackHeader({ section, onBack }: { section: AqiraSection; onBack: () => void }) {
+  return (
+    <div className="flex items-center gap-2 px-4 py-3 border-b border-[#f3f4f6]">
+      <button onClick={onBack} className="flex items-center gap-1 text-[12px] text-[#0d9488] hover:text-[#0f766e] font-medium transition-colors">
+        <ChevronLeft size={14} /> Back
+      </button>
+      <span className="text-[#d1d5db] text-[12px]">·</span>
+      <p className="text-[13px] font-semibold text-[#111827]">{SECTION_LABELS[section]}</p>
+    </div>
+  );
+}
+
+// ─── home menu ────────────────────────────────────────────────────────────────
+
+interface MenuItemProps {
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  sublabel?: string;
+  sublabelColor?: string;
+  onClick: () => void;
+}
+
+function MenuItem({ icon, iconBg, label, sublabel, sublabelColor, onClick }: MenuItemProps) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-3 px-4 py-3.5 hover:bg-[#f9fafb] transition-colors border-b border-[#f3f4f6] last:border-0 w-full text-left">
+      <span className={cn("flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg", iconBg)}>
+        {icon}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-medium text-[#111827]">{label}</p>
+        {sublabel && <p className={cn("text-[11px] mt-0.5", sublabelColor ?? "text-[#9ca3af]")}>{sublabel}</p>}
+      </div>
+      <ChevronRight size={14} className="flex-shrink-0 text-[#d1d5db]" />
+    </button>
+  );
+}
+
+function HomeMenu({
+  homeData, homeLoading, firstName, onSelect,
+}: {
+  homeData: AqiraHomeData | undefined;
+  homeLoading: boolean;
   firstName: string;
+  onSelect: (s: AqiraSection) => void;
 }) {
-  const { data: homeData, isLoading: homeLoading } = useQuery<AqiraHomeData>({
-    queryKey: ["aqira-home"],
-    queryFn: () => aqiraService.homeData().then((r) => r.data.data),
-    staleTime: 2 * 60 * 1000,
-  });
+  const overdueCount = homeData?.healthDigest.overdueCount ?? 0;
+  const draftCount = homeData?.healthDigest.draftCount ?? 0;
+  const remindersCount = homeData?.followUpReminders.length ?? 0;
+  const reordersCount = homeData?.reorderSuggestions.length ?? 0;
 
-  const hasReminders = (homeData?.followUpReminders.length ?? 0) > 0;
-  const hasSuggestions = (homeData?.reorderSuggestions.length ?? 0) > 0;
-  const hasHealthAlerts =
-    homeData &&
-    (homeData.healthDigest.overdueCount > 0 ||
-      homeData.healthDigest.draftCount > 0 ||
-      homeData.healthDigest.dueThisWeekCount > 0);
+  function healthSublabel() {
+    if (homeLoading) return "Loading…";
+    if (overdueCount > 0) return `${overdueCount} overdue · ${draftCount} draft`;
+    if (draftCount > 0) return `${draftCount} draft`;
+    return "All clear";
+  }
+
+  function countSublabel(count: number, singular: string, plural: string) {
+    if (homeLoading) return "Loading…";
+    if (count === 0) return "All clear";
+    return `${count} ${count === 1 ? singular : plural}`;
+  }
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-4">
+    <div className="flex flex-col">
       {/* Greeting */}
-      <div className="flex items-center gap-2.5 pt-1">
+      <div className="flex items-center gap-2.5 px-4 py-4">
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#f0fdfa]">
           <Sparkles className="h-4 w-4 text-[#0d9488]" strokeWidth={1.5} />
         </div>
         <div>
           <p className="text-[13px] font-semibold text-[#111827]">Hi {firstName}</p>
-          <p className="text-[11px] text-[#6b7280]">How can I help you today?</p>
+          <p className="text-[11px] text-[#6b7280]">What would you like to do?</p>
         </div>
       </div>
 
-      {/* Health digest */}
-      {homeLoading ? (
-        <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" />
-      ) : homeData ? (
-        <HealthDigestCard data={homeData.healthDigest} />
-      ) : null}
-
-      {/* Follow-up reminders */}
-      {hasReminders && (
-        <>
-          <div className="border-t border-[#f3f4f6]" />
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-1.5">
-              <Bell size={12} className="text-red-500" />
-              <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Follow-up Needed</p>
-            </div>
-            {homeData!.followUpReminders.map((r) => (
-              <FollowUpCard key={r.orderId} reminder={r} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Reorder suggestions */}
-      {hasSuggestions && (
-        <>
-          <div className="border-t border-[#f3f4f6]" />
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-1.5">
-              <RefreshCcw size={12} className="text-amber-500" />
-              <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Reorder Suggestions</p>
-            </div>
-            {homeData!.reorderSuggestions.map((s) => (
-              <ReorderSuggestionCard key={s.productId} suggestion={s} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Budgets */}
-      <>
-        <div className="border-t border-[#f3f4f6]" />
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-1.5">
-            <Wallet size={12} className="text-[#0d9488]" />
-            <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Supplier Budgets</p>
-          </div>
-          <BudgetsSection />
-        </div>
-      </>
-
-      {/* Mode tabs + AI tools */}
       <div className="border-t border-[#f3f4f6]" />
-      <ModeTabs mode={mode} onChange={(m) => { setMode(m); if (m === "ask") setAskResult(null); }} />
 
-      {mode === "draft" ? (
-        <DraftInput />
-      ) : (
-        <AskInput result={askResult} onResult={setAskResult} />
-      )}
-
-      {mode === "ask" && !askResult && !hasHealthAlerts && !hasReminders && !hasSuggestions && (
-        <>
-          <div className="border-t border-[#f3f4f6]" />
-          <p className="text-[11px] text-[#9ca3af] text-center">
-            Open a PO or SO for an instant order summary.
-          </p>
-        </>
-      )}
+      {/* Menu items */}
+      <div className="flex flex-col">
+        <MenuItem
+          icon={<Heart size={15} className={overdueCount > 0 ? "text-red-500" : "text-[#0d9488]"} />}
+          iconBg={overdueCount > 0 ? "bg-red-50" : "bg-[#f0fdfa]"}
+          label="Order Health"
+          sublabel={healthSublabel()}
+          sublabelColor={overdueCount > 0 ? "text-red-500" : undefined}
+          onClick={() => onSelect("health")}
+        />
+        <MenuItem
+          icon={<Bell size={15} className={remindersCount > 0 ? "text-red-500" : "text-[#6b7280]"} />}
+          iconBg={remindersCount > 0 ? "bg-red-50" : "bg-[#f3f4f6]"}
+          label="Follow-up Needed"
+          sublabel={countSublabel(remindersCount, "reminder", "reminders")}
+          sublabelColor={remindersCount > 0 ? "text-red-500" : undefined}
+          onClick={() => onSelect("reminders")}
+        />
+        <MenuItem
+          icon={<RefreshCcw size={15} className={reordersCount > 0 ? "text-amber-500" : "text-[#6b7280]"} />}
+          iconBg={reordersCount > 0 ? "bg-amber-50" : "bg-[#f3f4f6]"}
+          label="Reorder Suggestions"
+          sublabel={countSublabel(reordersCount, "product", "products")}
+          sublabelColor={reordersCount > 0 ? "text-amber-600" : undefined}
+          onClick={() => onSelect("reorders")}
+        />
+        <MenuItem
+          icon={<Wallet size={15} className="text-[#6b7280]" />}
+          iconBg="bg-[#f3f4f6]"
+          label="Supplier Budgets"
+          onClick={() => onSelect("budgets")}
+        />
+        <MenuItem
+          icon={<Sparkles size={15} className="text-[#0d9488]" />}
+          iconBg="bg-[#f0fdfa]"
+          label="Draft Order"
+          sublabel="Create an order from text"
+          onClick={() => onSelect("draft")}
+        />
+        <MenuItem
+          icon={<ArrowRight size={15} className="text-[#0d9488]" />}
+          iconBg="bg-[#f0fdfa]"
+          label="Ask Aqira"
+          sublabel="Spend, top suppliers, overdue…"
+          onClick={() => onSelect("ask")}
+        />
+      </div>
     </div>
   );
 }
@@ -1136,8 +896,11 @@ export function AqiraPanel() {
   const pathname = usePathname();
   const qc = useQueryClient();
 
-  const [mode, setMode] = useState<"draft" | "ask">("ask");
+  // persistent state across section navigation
+  const [activeSection, setActiveSection] = useState<AqiraSection | null>(null);
   const [askResult, setAskResult] = useState<AskResult | null>(null);
+  const [draftPrompt, setDraftPrompt] = useState("");
+  const [draftOrderType, setDraftOrderType] = useState<"purchase" | "sales">("purchase");
 
   const poMatch = pathname.match(/^\/purchase-orders\/([^/]+)$/);
   const soMatch = pathname.match(/^\/sales-orders\/([^/]+)$/);
@@ -1152,23 +915,80 @@ export function AqiraPanel() {
     /^\/purchase-orders\/[^/]+\/edit$/.test(pathname) ||
     /^\/sales-orders\/[^/]+\/edit$/.test(pathname);
 
+  const isHomePage = !isFormPage && !(orderId && order);
+
+  const { data: homeData, isLoading: homeLoading } = useQuery<AqiraHomeData>({
+    queryKey: ["aqira-home"],
+    queryFn: () => aqiraService.homeData().then((r) => r.data.data),
+    staleTime: 2 * 60 * 1000,
+    enabled: isHomePage && isOpen,
+  });
+
   const firstName = user?.name?.split(" ")[0] ?? "there";
+
+  function handleClose() {
+    close();
+    setActiveSection(null);
+  }
+
+  function renderHomeBody() {
+    if (!activeSection) {
+      return (
+        <HomeMenu
+          homeData={homeData}
+          homeLoading={homeLoading}
+          firstName={firstName}
+          onSelect={setActiveSection}
+        />
+      );
+    }
+
+    return (
+      <div className="flex flex-col">
+        <SectionBackHeader section={activeSection} onBack={() => setActiveSection(null)} />
+        <div className="px-4 py-4 flex flex-col gap-4">
+          {activeSection === "health" && homeData && <HealthSection data={homeData.healthDigest} />}
+          {activeSection === "health" && !homeData && homeLoading && <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" />}
+          {activeSection === "reminders" && (
+            homeLoading ? <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" /> :
+            (homeData?.followUpReminders.length ?? 0) === 0 ? (
+              <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3">
+                <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
+                <p className="text-[12px] text-emerald-700">No follow-ups needed — all confirmed orders are on track.</p>
+              </div>
+            ) : homeData!.followUpReminders.map((r) => <FollowUpCard key={r.orderId} reminder={r} />)
+          )}
+          {activeSection === "reorders" && (
+            homeLoading ? <div className="h-24 rounded-lg bg-[#f3f4f6] animate-pulse" /> :
+            (homeData?.reorderSuggestions.length ?? 0) === 0 ? (
+              <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3">
+                <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
+                <p className="text-[12px] text-emerald-700">No reorder suggestions right now.</p>
+              </div>
+            ) : homeData!.reorderSuggestions.map((s) => <ReorderCard key={s.productId} suggestion={s} />)
+          )}
+          {activeSection === "budgets" && <BudgetsSection />}
+          {activeSection === "draft" && (
+            <DraftInput
+              prompt={draftPrompt} setPrompt={setDraftPrompt}
+              orderType={draftOrderType} setOrderType={setDraftOrderType}
+            />
+          )}
+          {activeSection === "ask" && <AskInput result={askResult} onResult={setAskResult} />}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <AqiraFAB />
 
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={close} />
+        <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={handleClose} />
       )}
 
-      <div
-        className={cn(
-          "fixed inset-y-0 right-0 z-50 flex flex-col bg-white border-l border-[#e5e7eb] shadow-xl transition-transform duration-300 ease-in-out",
-          "w-full sm:w-[380px]",
-          isOpen ? "translate-x-0" : "translate-x-full"
-        )}
-      >
+      <div className={cn("fixed inset-y-0 right-0 z-50 flex flex-col bg-white border-l border-[#e5e7eb] shadow-xl transition-transform duration-300 ease-in-out", "w-full sm:w-[380px]", isOpen ? "translate-x-0" : "translate-x-full")}>
         {/* Header */}
         <div className="flex h-[56px] flex-shrink-0 items-center justify-between border-b border-[#e5e7eb] px-4">
           <div className="flex items-center gap-2">
@@ -1176,7 +996,7 @@ export function AqiraPanel() {
             <span className="text-[14px] font-semibold text-[#111827]">Aqira</span>
             <span className="rounded-full bg-[#f0fdfa] px-1.5 py-0.5 text-[10px] font-semibold text-[#0d9488]">BETA</span>
           </div>
-          <button onClick={close} className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors" aria-label="Close Aqira">
+          <button onClick={handleClose} className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors" aria-label="Close Aqira">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -1187,21 +1007,10 @@ export function AqiraPanel() {
             /* ── Form page view ── */
             <div className="flex flex-col gap-4 px-4 py-4">
               <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Price Alerts</p>
-              {formContext ? (
-                <PriceAlertsSection formContext={formContext} />
-              ) : (
-                <p className="text-[12px] text-[#9ca3af] text-center py-2">Add products to get started.</p>
-              )}
-
+              {formContext ? <PriceAlertsSection formContext={formContext} /> : <p className="text-[12px] text-[#9ca3af] text-center py-2">Add products to get started.</p>}
               <div className="border-t border-[#f3f4f6]" />
-
               <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Supplier Comparison</p>
-              {formContext ? (
-                <SupplierComparisonSection formContext={formContext} />
-              ) : (
-                <p className="text-[12px] text-[#9ca3af] text-center py-2">Add products to compare supplier prices.</p>
-              )}
-
+              {formContext ? <SupplierComparisonSection formContext={formContext} /> : <p className="text-[12px] text-[#9ca3af] text-center py-2">Add products to compare.</p>}
               {formContext?.partnerId && (
                 <>
                   <div className="border-t border-[#f3f4f6]" />
@@ -1209,7 +1018,6 @@ export function AqiraPanel() {
                   <BudgetWarningSection formContext={formContext} />
                 </>
               )}
-
               <div className="border-t border-[#f3f4f6]" />
               <AskInput result={askResult} onResult={setAskResult} />
             </div>
@@ -1219,19 +1027,21 @@ export function AqiraPanel() {
               <OrderSummary order={order} orderType={orderType} />
               <div className="border-t border-[#f3f4f6]" />
               <div className="px-4 py-4 flex flex-col gap-4">
-                <ModeTabs mode={mode} onChange={setMode} />
-                {mode === "draft" ? <DraftInput /> : <AskInput result={askResult} onResult={setAskResult} />}
+                <div className="flex rounded-lg border border-[#e5e7eb] overflow-hidden">
+                  {(["draft", "ask"] as const).map((m, i) => (
+                    <button key={m} onClick={() => setActiveSection(m === activeSection ? null : m)} className={cn("flex-1 py-1.5 text-[12px] font-medium transition-colors", i > 0 && "border-l border-[#e5e7eb]", activeSection === m ? "bg-[#0d9488] text-white" : "bg-white text-[#6b7280] hover:bg-[#f3f4f6]")}>
+                      {m === "draft" ? "Draft Order" : "Ask Aqira"}
+                    </button>
+                  ))}
+                </div>
+                {activeSection === "draft" && <DraftInput prompt={draftPrompt} setPrompt={setDraftPrompt} orderType={draftOrderType} setOrderType={setDraftOrderType} />}
+                {activeSection === "ask" && <AskInput result={askResult} onResult={setAskResult} />}
+                {!activeSection && <p className="text-[11px] text-[#9ca3af] text-center">Select an option above.</p>}
               </div>
             </div>
           ) : (
             /* ── Home view ── */
-            <AqiraHomeView
-              mode={mode}
-              setMode={setMode}
-              askResult={askResult}
-              setAskResult={setAskResult}
-              firstName={firstName}
-            />
+            renderHomeBody()
           )}
         </div>
 
