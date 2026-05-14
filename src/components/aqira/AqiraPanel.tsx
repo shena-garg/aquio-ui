@@ -13,9 +13,10 @@ import {
   ArrowRight,
   Loader2,
 } from "lucide-react";
-import { useAqira } from "@/contexts/AqiraContext";
+import { useAqira, type AqiraFormContext } from "@/contexts/AqiraContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { aqiraService, type AskResult } from "@/services/aqira";
+import { computePriceSignal, type PriceInsightsLookup, type PriceSignal } from "@/services/price-insights";
 import { cn } from "@/lib/utils";
 import type { PurchaseOrder } from "@/services/purchase-orders";
 
@@ -208,6 +209,144 @@ function AnswerBubble({ result }: { result: AskResult }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── price alerts ─────────────────────────────────────────────────────────────
+
+function fmtPrice(n: number) {
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function pctDiff(entered: number, avg: number) {
+  return Math.round(((entered - avg) / avg) * 100);
+}
+
+interface AlertRowData {
+  productName: string;
+  enteredPrice: number;
+  signal: PriceSignal;
+  data: PriceInsightsLookup;
+}
+
+function AlertCard({ row }: { row: AlertRowData }) {
+  const avg = row.data.rolling90d?.avgUnitPrice ?? 0;
+  const last = row.data.lastFromPartner;
+  const samples = row.data.rolling90d?.sampleCount ?? 0;
+
+  if (row.signal === "above_avg") {
+    const diff = pctDiff(row.enteredPrice, avg);
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+        <div className="flex items-start gap-1.5 mb-1">
+          <AlertTriangle size={12} className="text-amber-500 flex-shrink-0 mt-0.5" />
+          <p className="text-[12px] font-semibold text-amber-800 truncate">{row.productName}</p>
+        </div>
+        <p className="text-[12px] text-amber-700 leading-relaxed">
+          {fmtPrice(row.enteredPrice)}/unit entered — <span className="font-semibold">+{diff}%</span> above your 90-day avg of {fmtPrice(avg)}.
+        </p>
+        {last && (
+          <p className="text-[11px] text-amber-600 mt-0.5">
+            Last ordered at {fmtPrice(last.unitPrice)}/unit ({last.daysAgo}d ago)
+          </p>
+        )}
+        <p className="text-[10px] text-amber-500 mt-0.5">Based on {samples} order{samples !== 1 ? "s" : ""} · 90 days</p>
+      </div>
+    );
+  }
+
+  if (row.signal === "below_avg") {
+    const diff = Math.abs(pctDiff(row.enteredPrice, avg));
+    return (
+      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+        <div className="flex items-start gap-1.5 mb-1">
+          <CheckCircle2 size={12} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+          <p className="text-[12px] font-semibold text-emerald-800 truncate">{row.productName}</p>
+        </div>
+        <p className="text-[12px] text-emerald-700 leading-relaxed">
+          {fmtPrice(row.enteredPrice)}/unit — <span className="font-semibold">{diff}% below</span> your 90-day avg of {fmtPrice(avg)}. Looks like a good deal.
+        </p>
+        <p className="text-[10px] text-emerald-500 mt-0.5">Based on {samples} order{samples !== 1 ? "s" : ""} · 90 days</p>
+      </div>
+    );
+  }
+
+  if (row.signal === "matches_last" && last) {
+    return (
+      <div className="rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2.5">
+        <div className="flex items-start gap-1.5 mb-1">
+          <CheckCircle2 size={12} className="text-[#0d9488] flex-shrink-0 mt-0.5" />
+          <p className="text-[12px] font-semibold text-[#111827] truncate">{row.productName}</p>
+        </div>
+        <p className="text-[12px] text-[#374151]">
+          {fmtPrice(row.enteredPrice)}/unit — matches your last order price.
+        </p>
+      </div>
+    );
+  }
+
+  if (row.signal === "first_time_partner") {
+    return (
+      <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5">
+        <div className="flex items-start gap-1.5 mb-1">
+          <Sparkles size={12} className="text-blue-400 flex-shrink-0 mt-0.5" />
+          <p className="text-[12px] font-semibold text-blue-800 truncate">{row.productName}</p>
+        </div>
+        <p className="text-[12px] text-blue-700">
+          No previous orders of this product with this supplier. Can&apos;t benchmark price.
+        </p>
+        {avg > 0 && (
+          <p className="text-[11px] text-blue-600 mt-0.5">Market avg (all suppliers): {fmtPrice(avg)}/unit</p>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function PriceAlertsSection({ formContext }: { formContext: AqiraFormContext }) {
+  const qc = useQueryClient();
+
+  const alertRows: AlertRowData[] = formContext.rows
+    .filter((row) => row.enteredPrice > 0 && row.productId)
+    .flatMap((row) => {
+      const data = qc.getQueryData<PriceInsightsLookup>([
+        "price-insights",
+        row.productId,
+        row.variantId ?? null,
+        formContext.partnerId,
+        formContext.orderType,
+      ]);
+      if (!data?.enabled || !data?.hasData) return [];
+      const signal = computePriceSignal(row.enteredPrice, data);
+      if (signal === "none") return [];
+      return [{ productName: row.productName, enteredPrice: row.enteredPrice, signal, data }];
+    });
+
+  const rowsWithPrice = formContext.rows.filter((r) => r.enteredPrice > 0);
+
+  if (rowsWithPrice.length === 0) {
+    return (
+      <p className="text-[12px] text-[#9ca3af] text-center py-2">
+        Enter a price for a product to see price insights.
+      </p>
+    );
+  }
+
+  if (alertRows.length === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2.5">
+        <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
+        <p className="text-[12px] text-emerald-700">All prices look fair based on your order history.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {alertRows.map((row, i) => <AlertCard key={i} row={row} />)}
     </div>
   );
 }
@@ -410,7 +549,7 @@ function AqiraFAB() {
 // ─── main panel ──────────────────────────────────────────────────────────────
 
 export function AqiraPanel() {
-  const { isOpen, close } = useAqira();
+  const { isOpen, close, formContext } = useAqira();
   const { user } = useAuth();
   const pathname = usePathname();
   const qc = useQueryClient();
@@ -424,6 +563,12 @@ export function AqiraPanel() {
   const orderType: "purchase" | "sales" = soMatch ? "sales" : "purchase";
   const queryKey = orderId ? [soMatch ? "sales-order" : "purchase-order", orderId] : null;
   const order = queryKey ? (qc.getQueryData<PurchaseOrder>(queryKey) ?? null) : null;
+
+  const isFormPage =
+    pathname === "/purchase-orders/create" ||
+    pathname === "/sales-orders/create" ||
+    /^\/purchase-orders\/[^/]+\/edit$/.test(pathname) ||
+    /^\/sales-orders\/[^/]+\/edit$/.test(pathname);
 
   const firstName = user?.name?.split(" ")[0] ?? "there";
 
@@ -456,7 +601,21 @@ export function AqiraPanel() {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
-          {orderId && order ? (
+          {isFormPage ? (
+            /* ── Form page view (price alerts) ── */
+            <div className="flex flex-col gap-4 px-4 py-4">
+              <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Price Alerts</p>
+              {formContext ? (
+                <PriceAlertsSection formContext={formContext} />
+              ) : (
+                <p className="text-[12px] text-[#9ca3af] text-center py-2">
+                  Select a supplier and add products to see price insights.
+                </p>
+              )}
+              <div className="border-t border-[#f3f4f6]" />
+              <AskInput result={askResult} onResult={setAskResult} />
+            </div>
+          ) : orderId && order ? (
             /* ── Order detail view ── */
             <div className="flex flex-col gap-0">
               <OrderSummary order={order} orderType={orderType} />

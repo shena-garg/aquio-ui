@@ -874,7 +874,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const router = useRouter();
   const { hasPermission } = useAuth();
   const canAddProduct = hasPermission("product.add");
-  const { pendingDraft, setPendingDraft } = useAqira();
+  const { pendingDraft, setPendingDraft, setFormContext } = useAqira();
   // Capture pendingDraft at mount time — the bootstrap effect runs once and
   // the context value may clear before the async data load finishes.
   const pendingDraftRef = useRef<AqiraDraft | null>(pendingDraft);
@@ -1346,6 +1346,23 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
   // ── Product rows ─────────────────────────────────────────────────────────
   const [productRows, setProductRows] = useState<ProductRow[]>([emptyRow()]);
+
+  // ── Sync Aqira form context for price alerts ─────────────────────────────
+  useEffect(() => {
+    const partnerId = orderType === "sales" ? buyerCompanyId : supplierCompanyId;
+    const rows = productRows
+      .filter((r) => r.product?._id)
+      .map((r) => ({
+        productId: r.product!._id,
+        variantId: r.variant?._id ?? null,
+        productName: r.product!.name,
+        enteredPrice: r.price,
+        hasVariants: (r.product!.variants?.length ?? 0) > 0,
+      }));
+    setFormContext(partnerId && rows.length > 0 ? { orderType, partnerId, rows } : null);
+  }, [supplierCompanyId, buyerCompanyId, productRows, orderType, setFormContext]);
+
+  useEffect(() => () => setFormContext(null), [setFormContext]);
 
   // ── Validate product availability after duplicate populate ───────────────
   // Runs once — but only after productRows is actually populated (not empty on mount).

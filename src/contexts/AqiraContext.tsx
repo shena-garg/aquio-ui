@@ -2,6 +2,24 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 
+// ─── form context (price alerts) ─────────────────────────────────────────────
+
+export interface AqiraFormRow {
+  productId: string;
+  variantId: string | null;
+  productName: string;
+  enteredPrice: number;
+  hasVariants: boolean;
+}
+
+export interface AqiraFormContext {
+  orderType: "purchase" | "sales";
+  partnerId: string;
+  rows: AqiraFormRow[];
+}
+
+// ─── draft ────────────────────────────────────────────────────────────────────
+
 export interface AqiraDraftProduct {
   productId: string | null;
   productName: string;
@@ -30,6 +48,8 @@ interface AqiraContextValue {
   toggle: () => void;
   pendingDraft: AqiraDraft | null;
   setPendingDraft: (draft: AqiraDraft | null) => void;
+  formContext: AqiraFormContext | null;
+  setFormContext: (ctx: AqiraFormContext | null) => void;
 }
 
 const AqiraContext = createContext<AqiraContextValue | null>(null);
@@ -37,6 +57,7 @@ const AqiraContext = createContext<AqiraContextValue | null>(null);
 export function AqiraProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingDraft, setPendingDraft] = useState<AqiraDraft | null>(null);
+  const [formContext, setFormContext] = useState<AqiraFormContext | null>(null);
 
   return (
     <AqiraContext.Provider
@@ -47,6 +68,8 @@ export function AqiraProvider({ children }: { children: ReactNode }) {
         toggle: () => setIsOpen((o) => !o),
         pendingDraft,
         setPendingDraft,
+        formContext,
+        setFormContext,
       }}
     >
       {children}
