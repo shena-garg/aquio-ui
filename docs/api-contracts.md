@@ -283,6 +283,62 @@ Both must be `enabled: true` for a digest email to send to a given user.
 
 ---
 
+---
+
+## Price Insights
+
+**Service:** `src/services/price-insights.ts`
+
+Requires `priceInsightsBetaEnabled: true` in org settings. All endpoints require `purchase-order.view` permission.
+
+| Method | Endpoint | Purpose | Request | Response |
+|--------|----------|---------|---------|----------|
+| GET | `/price-insights/lookup` | Get price signal for a specific product + partner | Query: `productId, variantId?, partnerId, orderType` | `{ enabled, hasData, baseUnit?, currency?, isFirstTimeWithPartner?, lastFromPartner?: { unitPrice, orderId, orderNumber, daysAgo }, rolling90d?: { avgUnitPrice, minUnitPrice, maxUnitPrice, sampleCount } }` |
+| GET | `/price-insights/supplier-comparison` | All suppliers for a product with last price | Query: `productId, variantId?, orderType` | `{ enabled, hasData, baseUnit?, avgUnitPrice?, suppliers: [{ partnerId, partnerName, lastUnitPrice, lastOrderNumber, daysAgo }] }` |
+| GET | `/price-insights/history` | Recent order history for a product | Query: `productId, variantId?, orderType, limit?` (max 25) | `[{ orderId, orderNumber, orderDate, partnerId, partnerName, quantity, unit, unitPrice, status }]` |
+| POST | `/price-insights/feedback` | Save thumbs up/down feedback | `{ signal: "thumbs_up"\|"thumbs_down", context: { productId, variantId?, partnerId, orderType, signalShown } }` | 204 No Content |
+| POST | `/price-insights/telemetry` | Log a UI telemetry event | `{ event: string, properties?: object }` | 204 No Content |
+
+**React Query cache key pattern:** `["price-insights", productId, variantId ?? null, partnerId, orderType]`
+**Supplier comparison cache key:** `["supplier-comparison", productId, variantId ?? null, orderType]`
+
+---
+
+## Aqira AI Copilot
+
+**Service:** `src/services/aqira.ts`
+
+| Method | Endpoint | Purpose | Request | Response |
+|--------|----------|---------|---------|----------|
+| POST | `/aqira/draft-order` | Generate a pre-filled order draft from plain text | `{ prompt: string, orderType: "purchase"\|"sales" }` | `{ data: AqiraDraft }` |
+| POST | `/aqira/ask` | Answer a natural language question about order data | `{ question: string }` | `{ data: { answer: string, items?: [{ label, value, sub? }] } }` |
+
+**`AqiraDraft` shape:**
+```
+{
+  orderType: "purchase" | "sales",
+  supplierId: string | null,
+  supplierName: string | null,
+  products: [{
+    productId: string | null,
+    productName: string,
+    variantId: string | null,
+    variantName: string,
+    quantity: number,
+    price: number | null,
+    uom: string,
+    gst: number
+  }],
+  deliveryDate: string | null,
+  paymentTerms: string | null,
+  notes: string | null
+}
+```
+
+**Permissions:** `draft-order` requires `purchase-order.add`, `ask` requires `purchase-order.view`.
+
+---
+
 ## Notes
 
 - **PO and SO share the same backend endpoints** — differentiated by `orderType` query parameter (`"purchase"` vs `"sales"`)

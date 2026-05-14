@@ -1,7 +1,7 @@
 # Aquio — Implemented Features
 
 Complete reference of everything built and live in production.
-Last updated: 2026-05-13
+Last updated: 2026-05-14
 
 ---
 
@@ -47,7 +47,6 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 - **Overview tab** — Morning check. Quick-action buttons (New PO / New SO) in header. Four KPI cards: Total Spend, Total Revenue, Gross Margin % (conditional — shown only when both buying and selling data exist in the period, otherwise "—" with tooltip), Fulfillment Rate. **Overdue Orders widget** (always visible): Watch / Warning / Critical severity pill buttons for both POs and SOs; clicking any pill opens a Radix Popover listing up to 10 orders with order number, counterparty, and days overdue (direct links). **Alerts & Insights** panel — auto-expands when critical or warning alerts are present. Combined Spend vs Revenue bar chart with Gross Margin % trend line (secondary Y-axis).
 - **Buying tab** — PO deep-dive. KPIs: Total Spend, Open POs (count + value), Overdue POs, Fulfillment Rate. Overdue PO severity widget. Monthly spend bar chart. Top Suppliers table (spend, fulfillment %, price trend). Top Products by Spend table.
 - **Selling tab** — SO deep-dive. KPIs: Total Revenue, Open SOs (count + value), Overdue SOs, Total SO count. Overdue SO severity widget. Monthly revenue bar chart. Top Buyers table (revenue, fulfillment %, price trend). Top Products by Revenue table.
-- **Old View tab** — Original dashboard layout preserved: 6 KPI cards, Alerts & Insights, Spend vs Revenue chart, Recent Activity feed, Top Products (both), Top Suppliers and Top Buyers.
 - **Onboarding checklist** — Shown instead of dashboard for new orgs. Five-step setup (Location → Settings → Category → Partner → Product) with inline quick-create modals. Progress bar. One-time celebration screen on completion.
 - **Dark mode** — Toggle in sidebar user menu. Persists across sessions.
 
@@ -193,6 +192,23 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 
 ---
 
+---
+
+## Aqira AI Copilot
+
+Aqira is an AI assistant built into Aquio, accessible from a teal button pinned above the user name in the sidebar (desktop) or a floating action button on mobile. The panel slides in from the right and is context-aware — it changes its content based on the current page.
+
+- **Trigger** — Sidebar button (desktop, above username, teal-tinted with BETA badge) + floating action button bottom-right (mobile only).
+- **Order Summary** — Open any PO or SO detail page and Aqira shows an instant plain-English summary: counterparty, status, receipt progress bar, key details (supplier/buyer, due date, payment terms, order value), and a line-item receipt breakdown. Reads from the React Query cache — no extra API call.
+- **Price Alerts** — On PO/SO create and edit forms, Aqira monitors entered prices in real time and flags anomalies per product: above 90-day avg (amber warning), below avg (green — good deal), matches last order price (neutral), or first time ordering with this supplier (blue info). Reads from the Price Insights React Query cache — zero extra network requests.
+- **Supplier Comparison** — On PO/SO create and edit forms, as soon as a product is selected Aqira shows a card listing every supplier previously used for that product, their last price, days since last order, sorted cheapest first with a "lowest" badge. The currently selected supplier is highlighted in teal. Activates before a price is entered, helping the user choose the best supplier upfront. Backed by `GET /price-insights/supplier-comparison`.
+- **Smart Order Draft** — User describes an order in plain text (e.g. "300 units of Aquaguard filters from AquaTech, delivery by June 30, Net 30"). Aqira calls `/aqira/draft-order` (Claude Haiku), which resolves real partner and product MongoDB IDs from the org's catalogue, then closes the panel and navigates to the create form with all fields pre-filled.
+- **Ask Anything** — Natural language queries over order data. Suggestion chips for common questions. Aqira calls `/aqira/ask`, which classifies the intent then runs one of 6 safe hardcoded MongoDB aggregations (total spend, top suppliers/buyers, overdue orders, top products, order counts by status). No raw query generation — safe by design.
+- **Context awareness** — Form pages show Price Alerts + Supplier Comparison + Ask. Order detail pages show Order Summary + Draft/Ask tabs. All other pages show the home view with Draft/Ask tabs.
+- **Backfill script** — `npm run backfill:pricing-stats` in `aquio-backend/` populates `productpricingstats` from all existing orders so Price Alerts and Supplier Comparison work for historical data on day one.
+
+---
+
 ## Key Component Patterns
 
 | Pattern | Where |
@@ -226,5 +242,6 @@ Four-tab layout with a shared period selector (This Month / This Quarter / Last 
 | PDF | `PATCH /purchase-orders/:id/pdf` — generates PDF, uploads to S3, returns file metadata |
 | Audit | Event-driven, no direct endpoints; emits `audit.event.written` after each flush |
 | Notifications | `GET/PATCH /notifications`, `GET /notifications/unread-count`, `POST /notifications/internal/trigger-digest` |
-| Price Insights | `GET /price-insights/lookup`, `GET /price-insights/history`, `POST /price-insights/feedback`, `POST /price-insights/telemetry` |
+| Price Insights | `GET /price-insights/lookup`, `GET /price-insights/history`, `GET /price-insights/supplier-comparison`, `POST /price-insights/feedback`, `POST /price-insights/telemetry` |
+| Aqira | `POST /aqira/draft-order`, `POST /aqira/ask` |
 | Platform Admin | `POST /platform/auth/login\|logout\|refresh\|forgot-password\|set-password`, `GET /platform/orgs`, `POST /platform/orgs/:id/support-token`, `POST /platform/support-session/use`, `GET\|POST /platform/admins`, `PATCH /platform/admins/:id/status` |
