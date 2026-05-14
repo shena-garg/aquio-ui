@@ -39,6 +39,22 @@ export type PriceSignal =
   | "first_time_partner"
   | "none";
 
+export interface SupplierComparisonEntry {
+  partnerId: string;
+  partnerName: string;
+  lastUnitPrice: number;
+  lastOrderNumber: string;
+  daysAgo: number;
+}
+
+export interface SupplierComparisonResult {
+  enabled: boolean;
+  hasData: boolean;
+  baseUnit?: string;
+  avgUnitPrice?: number | null;
+  suppliers: SupplierComparisonEntry[];
+}
+
 export const priceInsightsService = {
   lookup: (params: {
     productId: string;
@@ -57,6 +73,13 @@ export const priceInsightsService = {
     apiClient.get<PriceInsightsHistoryItem[]>("/price-insights/history", {
       params,
     }),
+
+  supplierComparison: (params: {
+    productId: string;
+    variantId?: string | null;
+    orderType: string;
+  }) =>
+    apiClient.get<SupplierComparisonResult>("/price-insights/supplier-comparison", { params }),
 
   saveFeedback: (payload: {
     signal: "thumbs_up" | "thumbs_down";

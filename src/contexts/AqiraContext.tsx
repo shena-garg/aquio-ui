@@ -14,7 +14,7 @@ export interface AqiraFormRow {
 
 export interface AqiraFormContext {
   orderType: "purchase" | "sales";
-  partnerId: string;
+  partnerId: string | null;
   rows: AqiraFormRow[];
 }
 

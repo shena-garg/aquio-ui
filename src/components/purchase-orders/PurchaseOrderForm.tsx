@@ -1359,7 +1359,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
         enteredPrice: r.price,
         hasVariants: (r.product!.variants?.length ?? 0) > 0,
       }));
-    setFormContext(partnerId && rows.length > 0 ? { orderType, partnerId, rows } : null);
+    setFormContext(rows.length > 0 ? { orderType, partnerId: partnerId || null, rows } : null);
   }, [supplierCompanyId, buyerCompanyId, productRows, orderType, setFormContext]);
 
   useEffect(() => () => setFormContext(null), [setFormContext]);

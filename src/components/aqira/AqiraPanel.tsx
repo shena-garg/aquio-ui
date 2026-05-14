@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   X,
   Sparkles,
@@ -16,7 +16,7 @@ import {
 import { useAqira, type AqiraFormContext } from "@/contexts/AqiraContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { aqiraService, type AskResult } from "@/services/aqira";
-import { computePriceSignal, type PriceInsightsLookup, type PriceSignal } from "@/services/price-insights";
+import { computePriceSignal, priceInsightsService, type PriceInsightsLookup, type PriceSignal, type SupplierComparisonResult } from "@/services/price-insights";
 import { cn } from "@/lib/utils";
 import type { PurchaseOrder } from "@/services/purchase-orders";
 
@@ -309,6 +309,14 @@ function AlertCard({ row }: { row: AlertRowData }) {
 function PriceAlertsSection({ formContext }: { formContext: AqiraFormContext }) {
   const qc = useQueryClient();
 
+  if (!formContext.partnerId) {
+    return (
+      <p className="text-[12px] text-[#9ca3af] text-center py-2">
+        Select a supplier to see price alerts.
+      </p>
+    );
+  }
+
   const alertRows: AlertRowData[] = formContext.rows
     .filter((row) => row.enteredPrice > 0 && row.productId)
     .flatMap((row) => {
@@ -347,6 +355,111 @@ function PriceAlertsSection({ formContext }: { formContext: AqiraFormContext }) 
   return (
     <div className="flex flex-col gap-2">
       {alertRows.map((row, i) => <AlertCard key={i} row={row} />)}
+    </div>
+  );
+}
+
+// ─── supplier comparison ──────────────────────────────────────────────────────
+
+function SupplierComparisonCard({
+  productId,
+  variantId,
+  productName,
+  partnerId,
+  orderType,
+}: {
+  productId: string;
+  variantId: string | null;
+  productName: string;
+  partnerId: string | null;
+  orderType: "purchase" | "sales";
+}) {
+  const { data, isLoading } = useQuery<SupplierComparisonResult>({
+    queryKey: ["supplier-comparison", productId, variantId ?? null, orderType],
+    queryFn: () =>
+      priceInsightsService
+        .supplierComparison({ productId, variantId, orderType })
+        .then((r) => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) {
+    return <div className="h-14 rounded-lg bg-[#f3f4f6] animate-pulse" />;
+  }
+  if (!data?.enabled || !data?.hasData) return null;
+
+  const sorted = [...data.suppliers].sort((a, b) => a.lastUnitPrice - b.lastUnitPrice);
+  const cheapest = sorted[0]?.lastUnitPrice;
+
+  return (
+    <div className="rounded-lg border border-[#e5e7eb] overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-[#f9fafb] border-b border-[#e5e7eb]">
+        <p className="text-[12px] font-semibold text-[#111827] truncate">{productName}</p>
+        {data.avgUnitPrice != null && (
+          <span className="text-[10px] text-[#6b7280] flex-shrink-0 ml-2">
+            avg {fmtPrice(data.avgUnitPrice)}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col divide-y divide-[#f3f4f6]">
+        {sorted.map((s) => {
+          const isSelected = !!partnerId && s.partnerId === partnerId;
+          const isCheapest = s.lastUnitPrice === cheapest && sorted.length > 1;
+          return (
+            <div
+              key={s.partnerId}
+              className={cn(
+                "flex items-center justify-between px-3 py-2 gap-2",
+                isSelected ? "bg-[#f0fdfa] border-l-[3px] border-l-[#0d9488]" : "bg-white border-l-[3px] border-l-transparent"
+              )}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className={cn("text-[12px] truncate", isSelected ? "font-semibold text-[#0d9488]" : "text-[#374151]")}>
+                    {s.partnerName}
+                  </p>
+                  {isCheapest && (
+                    <span className="flex-shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
+                      lowest
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-[#9ca3af]">{s.daysAgo}d ago · {s.lastOrderNumber}</p>
+              </div>
+              <span className={cn("text-[12px] font-semibold flex-shrink-0", isSelected ? "text-[#0d9488]" : "text-[#111827]")}>
+                {fmtPrice(s.lastUnitPrice)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SupplierComparisonSection({ formContext }: { formContext: AqiraFormContext }) {
+  const rowsWithProducts = formContext.rows.filter((r) => !!r.productId);
+
+  if (rowsWithProducts.length === 0) {
+    return (
+      <p className="text-[12px] text-[#9ca3af] text-center py-2">
+        Select a product to compare supplier prices.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {rowsWithProducts.map((row) => (
+        <SupplierComparisonCard
+          key={row.productId + (row.variantId ?? "")}
+          productId={row.productId}
+          variantId={row.variantId}
+          productName={row.productName}
+          partnerId={formContext.partnerId}
+          orderType={formContext.orderType}
+        />
+      ))}
     </div>
   );
 }
@@ -602,16 +715,28 @@ export function AqiraPanel() {
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {isFormPage ? (
-            /* ── Form page view (price alerts) ── */
+            /* ── Form page view (price alerts + supplier comparison) ── */
             <div className="flex flex-col gap-4 px-4 py-4">
               <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Price Alerts</p>
               {formContext ? (
                 <PriceAlertsSection formContext={formContext} />
               ) : (
                 <p className="text-[12px] text-[#9ca3af] text-center py-2">
-                  Select a supplier and add products to see price insights.
+                  Add products to get started.
                 </p>
               )}
+
+              <div className="border-t border-[#f3f4f6]" />
+
+              <p className="text-[10px] font-semibold tracking-[0.7px] text-[#9ca3af] uppercase">Supplier Comparison</p>
+              {formContext ? (
+                <SupplierComparisonSection formContext={formContext} />
+              ) : (
+                <p className="text-[12px] text-[#9ca3af] text-center py-2">
+                  Add products to compare supplier prices.
+                </p>
+              )}
+
               <div className="border-t border-[#f3f4f6]" />
               <AskInput result={askResult} onResult={setAskResult} />
             </div>
