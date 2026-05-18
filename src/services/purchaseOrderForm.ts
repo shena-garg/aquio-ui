@@ -150,7 +150,7 @@ export interface ProductLinePayload {
 
 export interface CreatePOPayload {
   supplier: PartnerPayload;
-  buyer: PartnerPayload;
+  consignee: PartnerPayload;
   biller: PartnerPayload;
   referenceId: string;
   supplierReferenceId: string;

@@ -1139,9 +1139,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       if (supLocId) setSupplierLocationId(supLocId);
     }
 
-    // Map buyer → consignee, biller → buyer in UI
-    const buyerData = order.buyer ?? order.biller;
-    const billerData = order.biller ?? order.buyer;
+    // Map consignee → consignee, biller → buyer in UI
+    const buyerData = order.consignee ?? order.biller;
+    const billerData = order.biller ?? order.consignee;
     if (buyerData?.id) {
       setConsigneeCompanyId(buyerData.id);
       const conLocId = resolveLocationId(allCompanies, buyerData.id, buyerData.address);
@@ -1254,8 +1254,8 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
       const supLocId = resolveLocationId(allCompanies, order.supplier.id, order.supplier.address);
       if (supLocId) setSupplierLocationId(supLocId);
     }
-    const buyerData = order.buyer ?? order.biller;
-    const billerData = order.biller ?? order.buyer;
+    const buyerData = order.consignee ?? order.biller;
+    const billerData = order.biller ?? order.consignee;
     if (buyerData?.id) {
       setConsigneeCompanyId(buyerData.id);
       const conLocId = resolveLocationId(allCompanies, buyerData.id, buyerData.address);
@@ -1759,7 +1759,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
       const payload: any = {
         supplier: buildPartnerPayload(supplierCompany!, supplierLocation!),
-        buyer: buildPartnerPayload(consigneeCompany!, consigneeLocation!),
+        consignee: buildPartnerPayload(consigneeCompany!, consigneeLocation!),
         biller: buildPartnerPayload(buyerCompany!, buyerLocation!),
         referenceId,
         supplierReferenceId: supplierRefId,

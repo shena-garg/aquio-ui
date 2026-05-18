@@ -119,7 +119,7 @@ export interface SalesOrder {
   referenceId: string;
   supplierReferenceId: string;
   supplier: Supplier;
-  buyer?: OrderEntity;
+  consignee?: OrderEntity;
   biller?: OrderEntity;
   purchaseOrderPDF?: { id: string; name: string };
   totalAmount: { $numberDecimal: string } | number;

@@ -81,7 +81,7 @@ function fmtPrice(n: number) {
 }
 
 function buildSummary(order: PurchaseOrder, orderType: "purchase" | "sales"): string {
-  const party = orderType === "purchase" ? order.supplier?.name : order.buyer?.name;
+  const party = orderType === "purchase" ? order.supplier?.name : order.consignee?.name;
   const partyLabel = orderType === "purchase" ? "from" : "to";
   const itemCount = order.products?.length ?? 0;
   const totalAmt = toNumber(order.totalAmount);
@@ -136,7 +136,7 @@ function StatusBadge({ order }: { order: PurchaseOrder }) {
 
 function OrderSummary({ order, orderType }: { order: PurchaseOrder; orderType: "purchase" | "sales" }) {
   const pct = order.receiptCompletionPercentage ?? 0;
-  const party = orderType === "purchase" ? order.supplier : order.buyer;
+  const party = orderType === "purchase" ? order.supplier : order.consignee;
   const deliveryLabel = orderType === "purchase" ? "Due Date" : "Ship Date";
 
   return (

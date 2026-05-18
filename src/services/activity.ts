@@ -205,7 +205,7 @@ const IGNORED_FIELDS = new Set([
   "files",
   "termsAndConditions",
   "supplier",
-  "buyer",
+  "consignee",
   "biller",
 ]);
 
@@ -405,7 +405,7 @@ export function computeDiff(
   // Partner fields — structured before/after diff
   const PARTNER_LABELS: Record<string, string> = {
     supplier: "Supplier",
-    buyer: "Consignee (Ship To)",
+    consignee: "Consignee (Ship To)",
     biller: "Buyer (Bill To)",
   };
 

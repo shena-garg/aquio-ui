@@ -139,7 +139,7 @@ export function POQuickView({ po, onClose }: POQuickViewProps) {
             </div>
             <div>
               <span className="block text-[11px] font-semibold text-[#6b7280] mb-0.5">Consignee</span>
-              <span className="text-[13px] font-medium text-[#111827]">{po.buyer?.name ?? "—"}</span>
+              <span className="text-[13px] font-medium text-[#111827]">{po.consignee?.name ?? "—"}</span>
             </div>
             <div>
               <span className="block text-[11px] font-semibold text-[#6b7280] mb-0.5">Buyer</span>
