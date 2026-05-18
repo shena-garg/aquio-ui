@@ -186,6 +186,122 @@ function FullPageSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
+// Partner company typeahead (searchable, filters pre-fetched list)
+// ---------------------------------------------------------------------------
+
+function PartnerTypeahead({
+  companies,
+  selectedCompanyId,
+  onCompanyChange,
+  disabled,
+}: {
+  companies: CompanyOption[];
+  selectedCompanyId: string;
+  onCompanyChange: (id: string) => void;
+  disabled?: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const selectedCompany = companies.find((c) => c._id === selectedCompanyId);
+  const displayName = selectedCompany
+    ? selectedCompany.name + (selectedCompany._type === "own" ? " (Your Org)" : "")
+    : "";
+
+  const filtered = query.trim()
+    ? companies.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
+    : companies;
+
+  function updateDropdownPosition() {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setDropdownStyle({ position: "fixed", top: rect.bottom + 4, left: rect.left, width: rect.width });
+  }
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    function reposition() { updateDropdownPosition(); }
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open]);
+
+  if (disabled) {
+    return (
+      <div className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] flex items-center bg-[#f9fafb] text-[#9ca3af] cursor-not-allowed">
+        {displayName || "Select company"}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={wrapperRef}>
+      <button
+        type="button"
+        ref={triggerRef}
+        onClick={() => { updateDropdownPosition(); setOpen((prev) => !prev); }}
+        className="w-full h-9 border border-[#e5e7eb] rounded-[6px] px-3 text-[13px] text-left outline-none focus:ring-2 focus:ring-[#0d9488] focus:border-[#0d9488] bg-white flex items-center justify-between"
+      >
+        {open ? (
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search company..."
+            className="flex-1 bg-transparent outline-none text-[13px] text-[#111827]"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span className={displayName ? "text-[#111827]" : "text-[#9ca3af]"}>
+            {displayName || "Select company"}
+          </span>
+        )}
+        <svg className="h-4 w-4 text-[#6b7280] flex-shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div style={dropdownStyle} className="z-[9999] bg-white border border-[#e5e7eb] rounded-md shadow-lg max-h-56 overflow-y-auto">
+          {filtered.length > 0
+            ? filtered.map((c) => (
+                <button
+                  key={c._id}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { onCompanyChange(c._id); setQuery(""); setOpen(false); }}
+                  className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f3f4f6] ${
+                    c._id === selectedCompanyId ? "bg-[#f0fdfa] text-[#0d9488] font-medium" : "text-[#111827]"
+                  }`}
+                >
+                  {c.name}{c._type === "own" ? " (Your Org)" : ""}
+                </button>
+              ))
+            : <div className="px-3 py-2 text-[13px] text-[#9ca3af]">No matching companies</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Partner column sub-component
 // ---------------------------------------------------------------------------
 
@@ -229,19 +345,11 @@ function PartnerCard({
       <div className="grid grid-cols-2 gap-4">
         {/* Left column: Company dropdown + Tax/Contact */}
         <div className="flex flex-col gap-2">
-          <CustomSelect
-            value={selectedCompanyId}
-            onChange={onCompanyChange}
-            options={[
-              { value: "", label: "Select company" },
-              ...companies.map((c) => ({
-                value: c._id,
-                label: c.name + (c._type === "own" ? " (Your Org)" : ""),
-              })),
-            ]}
-            placeholder="Select company"
+          <PartnerTypeahead
+            companies={companies}
+            selectedCompanyId={selectedCompanyId}
+            onCompanyChange={onCompanyChange}
             disabled={disabled}
-            className="w-full h-9"
           />
 
           {company ? (() => {
