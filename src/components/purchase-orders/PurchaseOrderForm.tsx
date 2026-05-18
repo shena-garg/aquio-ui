@@ -31,7 +31,7 @@ import { organizationSettingsService } from "@/services/organization-settings";
 import { productsService } from "@/services/products";
 import { QuickCreateProductModal } from "@/components/products/QuickCreateProductModal";
 import {
-  getVendorCompaniesWithLocations,
+  getPartnersWithLocations,
   getMyOrganization,
   getPOFormSettings,
   createPurchaseOrder,
@@ -41,7 +41,7 @@ import {
   buildProductLine,
   searchProducts,
   calculateLineTotal,
-  type VendorCompany,
+  type PartnerCompany,
   type Organization,
   type POFormSettings,
   type ProductSearchResult,
@@ -101,7 +101,7 @@ function defaultDeliveryDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-type CompanyOption = (VendorCompany | Organization) & { _type: "vendor" | "own" };
+type CompanyOption = (PartnerCompany | Organization) & { _type: "partner" | "own" };
 
 function numberToIndianWords(n: number): string {
   if (n === 0) return "Zero";
@@ -353,7 +353,7 @@ function PartnerCard({
           />
 
           {company ? (() => {
-            const taxNum = (company as VendorCompany).taxNumber;
+            const taxNum = (company as PartnerCompany).taxNumber;
             const contactNum = company.phoneNumber || company.contactNumber || location?.contactNumber;
             const countryCodeVal = company.countryCode || location?.countryCode;
             if (!taxNum && !contactNum) return null;
@@ -990,7 +990,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Bootstrap data ──────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [vendors, setVendors] = useState<VendorCompany[]>([]);
+  const [partners, setPartners] = useState<PartnerCompany[]>([]);
   const [ownOrg, setOwnOrg] = useState<Organization | null>(null);
   const [settings, setSettings] = useState<POFormSettings | null>(null);
   const [poNumberSettingsOpen, setPoNumberSettingsOpen] = useState(false);
@@ -998,12 +998,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   useEffect(() => {
     const fetchId = editId || duplicateFromId;
     const promises: [
-      Promise<VendorCompany[]>,
+      Promise<PartnerCompany[]>,
       Promise<Organization>,
       Promise<POFormSettings>,
       Promise<any> | Promise<null>,
     ] = [
-      getVendorCompaniesWithLocations(),
+      getPartnersWithLocations(),
       getMyOrganization(),
       getPOFormSettings(),
       fetchId ? getOrderForEdit(fetchId) : Promise.resolve(null),
@@ -1011,7 +1011,7 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
 
     Promise.all(promises)
       .then(([v, org, s, sourceOrder]) => {
-        setVendors(v);
+        setPartners(v);
         setOwnOrg(org);
         setSettings(s);
 
@@ -1034,9 +1034,9 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   const companies: CompanyOption[] = ownOrg
     ? [
         { ...ownOrg, status: "active" as const, _type: "own" },
-        ...vendors.map((v) => ({ ...v, _type: "vendor" as const })),
+        ...partners.map((v) => ({ ...v, _type: "partner" as const })),
       ]
-    : vendors.map((v) => ({ ...v, _type: "vendor" as const }));
+    : partners.map((v) => ({ ...v, _type: "partner" as const }));
 
   // ── Partner state ───────────────────────────────────────────────────────
   const [supplierCompanyId, setSupplierCompanyId] = useState("");
@@ -1124,13 +1124,13 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Populate form from existing order (edit mode) ──────────────────────
   function populateFromOrder(
     order: any,
-    _vendorList: VendorCompany[],
+    _partnerList: PartnerCompany[],
     _org: Organization
   ) {
     // Build unified company list from the just-loaded data for address matching
     const allCompanies: CompanyOption[] = _org
-      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._vendorList.map((v) => ({ ...v, _type: "vendor" as const }))]
-      : _vendorList.map((v) => ({ ...v, _type: "vendor" as const }));
+      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._partnerList.map((v) => ({ ...v, _type: "partner" as const }))]
+      : _partnerList.map((v) => ({ ...v, _type: "partner" as const }));
 
     // Partners
     if (order.supplier?.id) {
@@ -1241,12 +1241,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Populate form for duplicate (only copy relevant fields) ───────────
   function populateForDuplicate(
     order: any,
-    _vendorList: VendorCompany[],
+    _partnerList: PartnerCompany[],
     _org: Organization
   ) {
     const allCompanies: CompanyOption[] = _org
-      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._vendorList.map((v) => ({ ...v, _type: "vendor" as const }))]
-      : _vendorList.map((v) => ({ ...v, _type: "vendor" as const }));
+      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._partnerList.map((v) => ({ ...v, _type: "partner" as const }))]
+      : _partnerList.map((v) => ({ ...v, _type: "partner" as const }));
 
     // Partners
     if (order.supplier?.id) {
@@ -1340,12 +1340,12 @@ export function PurchaseOrderForm({ editId, duplicateFromId, orderType = "purcha
   // ── Apply Aqira AI draft ─────────────────────────────────────────────────
   function applyAqiraDraft(
     draft: AqiraDraft,
-    _vendorList: VendorCompany[],
+    _partnerList: PartnerCompany[],
     _org: Organization
   ) {
     const allCompanies: CompanyOption[] = _org
-      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._vendorList.map((v) => ({ ...v, _type: "vendor" as const }))]
-      : _vendorList.map((v) => ({ ...v, _type: "vendor" as const }));
+      ? [{ ..._org, status: "active" as const, _type: "own" }, ..._partnerList.map((v) => ({ ...v, _type: "partner" as const }))]
+      : _partnerList.map((v) => ({ ...v, _type: "partner" as const }));
 
     if (draft.supplierId) {
       const company = allCompanies.find((c) => c._id === draft.supplierId);

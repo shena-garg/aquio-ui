@@ -26,7 +26,7 @@ export interface Partner {
 }
 
 export interface PartnersResponse {
-  vendorCompanies: Partner[];
+  partners: Partner[];
   totalCount: number;
 }
 
@@ -56,18 +56,18 @@ export interface CreatePartnerPayload {
 
 export const partnersService = {
   list: (params: { page: number; limit: number }) =>
-    apiClient.get<PartnersResponse>("/vendor-companies", { params }),
+    apiClient.get<PartnersResponse>("/partners", { params }),
   getById: (id: string) =>
-    apiClient.get<Partner>(`/vendor-companies/${id}`),
+    apiClient.get<Partner>(`/partners/${id}`),
   create: (payload: CreatePartnerPayload) =>
-    apiClient.post<Partner>("/vendor-companies", payload),
+    apiClient.post<Partner>("/partners", payload),
   update: (id: string, payload: Partial<CreatePartnerPayload>) =>
-    apiClient.patch<Partner>(`/vendor-companies/${id}`, payload),
+    apiClient.patch<Partner>(`/partners/${id}`, payload),
   addLocation: (partnerId: string, payload: {
     name: string; gstNumber?: string; addressLine1: string;
     addressLine2?: string; city: string; state: string;
     country: string; zip: string; isDefault?: boolean;
-  }) => apiClient.post<Partner>(`/vendor-companies/${partnerId}/locations`, payload),
+  }) => apiClient.post<Partner>(`/partners/${partnerId}/locations`, payload),
   delete: (id: string) =>
-    apiClient.delete(`/vendor-companies/${id}`),
+    apiClient.delete(`/partners/${id}`),
 };

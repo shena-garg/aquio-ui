@@ -20,7 +20,7 @@ import { POCustomizePanel } from "@/components/purchase-orders/POCustomizePanel"
 import type { ColumnConfig } from "@/components/purchase-orders/POCustomizePanel";
 import { purchaseOrdersService } from "@/services/purchase-orders";
 import type { POFilterStatus, POActiveFilters, CsvPattern } from "@/services/purchase-orders";
-import { getVendorCompaniesWithLocations, getMyOrganization } from "@/services/purchaseOrderForm";
+import { getPartnersWithLocations, getMyOrganization } from "@/services/purchaseOrderForm";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { RequireVerification } from "@/components/auth/RequireVerification";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -133,9 +133,9 @@ export default function PurchaseOrdersPage() {
   }, [prefsLoaded, visibleColumns, columnOrder, frozenCount]);
 
   // ── Partner options for Supplier filter ──────────────────────────────────
-  const { data: vendors } = useQuery({
-    queryKey: ["vendor-companies"],
-    queryFn: getVendorCompaniesWithLocations,
+  const { data: partners } = useQuery({
+    queryKey: ["partners"],
+    queryFn: getPartnersWithLocations,
     staleTime: 5 * 60 * 1000,
   });
   const { data: ownOrg } = useQuery({
@@ -146,9 +146,9 @@ export default function PurchaseOrdersPage() {
   const partnerOptions = useMemo(() => {
     const opts: { value: string; label: string }[] = [];
     if (ownOrg) opts.push({ value: ownOrg._id, label: ownOrg.name });
-    if (vendors) vendors.forEach((v) => opts.push({ value: v._id, label: v.name }));
+    if (partners) partners.forEach((v) => opts.push({ value: v._id, label: v.name }));
     return opts;
-  }, [vendors, ownOrg]);
+  }, [partners, ownOrg]);
 
   // ── Data fetching ─────────────────────────────────────────────────────────
   const queryKey = useMemo(

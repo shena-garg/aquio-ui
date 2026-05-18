@@ -31,10 +31,10 @@ export interface Location {
 }
 
 // ---------------------------------------------------------------------------
-// Vendor company types
+// Partner company types
 // ---------------------------------------------------------------------------
 
-export interface VendorCompany {
+export interface PartnerCompany {
   _id: string;
   name: string;
   contactNumber?: string;
@@ -45,8 +45,8 @@ export interface VendorCompany {
   locations: Location[];
 }
 
-export interface VendorCompaniesResponse {
-  vendorCompanies: VendorCompany[];
+export interface PartnersResponse {
+  partners: PartnerCompany[];
 }
 
 // ---------------------------------------------------------------------------
@@ -170,11 +170,11 @@ export interface CreatePOPayload {
 // API functions
 // ---------------------------------------------------------------------------
 
-export async function getVendorCompaniesWithLocations(): Promise<VendorCompany[]> {
-  const { data } = await apiClient.get<VendorCompaniesResponse>(
-    "/vendor-companies/with-locations"
+export async function getPartnersWithLocations(): Promise<PartnerCompany[]> {
+  const { data } = await apiClient.get<PartnersResponse>(
+    "/partners/with-locations"
   );
-  return data.vendorCompanies;
+  return data.partners;
 }
 
 export async function getMyOrganization(): Promise<Organization> {
@@ -235,7 +235,7 @@ export async function getOrderForEdit(id: string): Promise<any> {
 // ---------------------------------------------------------------------------
 
 export function buildPartnerPayload(
-  company: VendorCompany | Organization,
+  company: PartnerCompany | Organization,
   location: Location
 ): PartnerPayload {
   return {

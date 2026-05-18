@@ -72,7 +72,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Products", href: "/products", icon: Package, permission: "product.view" },
       { label: "Categories", href: "/categories", icon: LayoutGrid, permission: "category.view" },
-      { label: "Partners", href: "/partners", icon: Building2, permission: "vendor.view" },
+      { label: "Partners", href: "/partners", icon: Building2, permission: "partner.view" },
     ],
   },
   {

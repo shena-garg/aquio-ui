@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const ALL_PERMISSIONS_BY_ENTITY: Record<string, string[]> = {
   category: ["category.view", "category.add", "category.edit"],
   product: ["product.view", "product.add", "product.edit", "product.archive", "product.analytics", "product.audit-log"],
-  vendor: ["vendor.view", "vendor.add", "vendor.edit"],
+  partner: ["partner.view", "partner.add", "partner.edit"],
   "purchase-order": [
     "purchase-order.view", "purchase-order.add", "purchase-order.edit",
     "purchase-order.cancel", "purchase-order.confirm",

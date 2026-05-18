@@ -35,7 +35,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 const entityLabels: Record<string, string> = {
   category: "Category",
   product: "Product",
-  vendor: "Vendor",
+  partner: "Partner",
   "purchase-order": "Purchase Order",
   "sales-order": "Sales Order",
   "auction-buy": "Auctions (Buy)",

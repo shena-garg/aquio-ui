@@ -37,7 +37,7 @@ export default function PartnersPage() {
   }
 
   const actions = (
-    <RequirePermission permission="vendor.add">
+    <RequirePermission permission="partner.add">
       <Button
         size="icon"
         onClick={() => setModalOpen(true)}
@@ -64,7 +64,7 @@ export default function PartnersPage() {
       <ErrorBoundary>
         <div className="flex-1 overflow-auto">
           <PartnersTable
-            partners={data?.vendorCompanies ?? []}
+            partners={data?.partners ?? []}
             isLoading={isLoading}
           />
         </div>

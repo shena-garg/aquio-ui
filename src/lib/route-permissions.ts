@@ -27,8 +27,8 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   { path: "/categories", permissions: ["category.view"] },
 
   // Partners
-  { path: "/partners/new", permissions: ["vendor.add"] },
-  { path: "/partners", permissions: ["vendor.view"] },
+  { path: "/partners/new", permissions: ["partner.add"] },
+  { path: "/partners", permissions: ["partner.view"] },
 
   // Sourcing
   { path: "/buy", permissions: ["auction-buy.view"] },
